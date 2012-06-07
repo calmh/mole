@@ -1,0 +1,26 @@
+{
+  "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
+  "name": "mole",
+  "description": "Furry ssh tunneller",
+  "version": "0.1.0",
+  "homepage": "https://github.com/calmh/mole",
+  "repository": {
+    "url": "https://github.com/calmh/mole.git"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -R spec"
+  },
+  "dependencies": {
+    "kexec": "0.0.3",
+    "should": "0.6.x",
+    "temp": "0.4.x",
+    "underscore": "1.3.x"
+  },
+  "devDependencies": {
+    "mocha": "1.1.x"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": "0.6.x"
+  }
+}
