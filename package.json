@@ -11,6 +11,7 @@
     "test": "./node_modules/.bin/mocha -R spec"
   },
   "dependencies": {
+    "cli": "0.4.x",
     "kexec": "0.0.3",
     "should": "0.6.x",
     "temp": "0.4.x",
