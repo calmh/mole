@@ -4,6 +4,7 @@ var sshConfig = require('../lib/ssh-config');
 describe('sshConfig', function () {
     it('should return a simple host config', function () {
         var config = {
+            sshConfig: '/tmp/sshconf',
             hosts: {
                 test: {
                     addr: '1.2.3.4',
@@ -19,7 +20,7 @@ describe('sshConfig', function () {
             '  User testuser',
             '  Hostname 1.2.3.4',
             '  Port 1234',
-            '  ProxyCommand ssh another-host nc -w 1800 %h %p'
+            '  ProxyCommand ssh -F /tmp/sshconf another-host nc -w 1800 %h %p'
         ].join('\n');
 
         sshConfig(config).should.equal(expected);
@@ -27,6 +28,7 @@ describe('sshConfig', function () {
 
     it('should return multiple hosts', function () {
         var config = {
+            sshConfig: '/tmp/sshconf',
             hosts: {
                 'another-host': {
                     addr: '2.2.3.4',
@@ -49,7 +51,7 @@ describe('sshConfig', function () {
             '  User testuser',
             '  Hostname 1.2.3.4',
             '  Port 1234',
-            '  ProxyCommand ssh another-host nc -w 1800 %h %p'
+            '  ProxyCommand ssh -F /tmp/sshconf another-host nc -w 1800 %h %p'
         ].join('\n');
 
         sshConfig(config).should.equal(expected);
