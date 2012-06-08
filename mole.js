@@ -70,8 +70,8 @@ function serverSend(name, data, callback) {
     req.end();
 }
 
-function serverRegister(host, token, callback) {
-    server({ host: host, path: '/register/' + token }, function (result) {
+function serverRegister(token, callback) {
+    server({ host: nconf.get('server:hostname'), path: '/register/' + token }, function (result) {
         if (result.length === 0) {
             cli.fatal('Empty response from server - verify that the token is correct and not already used.');
         } else {
@@ -80,8 +80,8 @@ function serverRegister(host, token, callback) {
     });
 }
 
-function serverToken(host, callback) {
-    server({ host: host, path: '/newtoken', method: 'POST' }, function (result) {
+function serverToken(callback) {
+    server({ host: nconf.get('server:hostname'), path: '/newtoken', method: 'POST' }, function (result) {
         if (result.length === 0) {
             cli.fatal('Empty response from server - are you registered?');
         } else {
@@ -90,8 +90,8 @@ function serverToken(host, callback) {
     });
 }
 
-function serverList(host, callback) {
-    server({ host: host, path: '/store', method: 'GET' }, function (result) {
+function serverList(callback) {
+    server({ host: nconf.get('server:hostname'), path: '/store', method: 'GET' }, function (result) {
         if (result.length === 0) {
             cli.fatal('Empty response from server - are you registered?');
         } else {
@@ -112,7 +112,7 @@ function serverFetch(fname, callback) {
     });
 }
 
-cli.parse({ sshdebug: [ 'v', 'Enable verbose ssh sessions' ] }, ['register', 'connect', 'list', 'token', 'sync', 'put']);
+cli.parse({ sshdebug: [ 'v', 'Enable verbose ssh sessions' ] }, ['connect', 'list', 'sync', 'put', 'register', 'newtoken']);
 
 cli.main(function(args, options) {
     // External modules.
@@ -130,12 +130,12 @@ cli.main(function(args, options) {
             cli.fatal('Please register a mole token.');
         } else {
             cli.info('Requesting registration from server');
-            serverRegister(args[0], args[1], function (result) {
+            nconf.set('server:hostname', args[0]);
+            serverRegister(args[1], function (result) {
                 cli.info('Received certificate and key from server');
                 fs.writeFileSync(certFile, result.cert);
                 fs.writeFileSync(keyFile, result.key);
                 fs.chmodSync(certFile, 0600);
-                nconf.set('server:hostname', args[0]);
                 nconf.save();
                 cli.ok('Fully registered');
             });
@@ -149,9 +149,9 @@ cli.main(function(args, options) {
         cli.fatal('Please register a mole token.');
     }
 
-    if (cli.command === 'token') {
+    if (cli.command === 'newtoken') {
         cli.info('Requesting new token from server');
-        serverToken(nconf.get('server:hostname'), function (result) {
+        serverToken(function (result) {
             cli.ok('New token: ' + result.token);
         });
         return;
@@ -179,7 +179,7 @@ cli.main(function(args, options) {
 
     if (cli.command === 'sync') {
         cli.info('Requesting recipe list from server');
-        serverList(nconf.get('server:hostname'), function (result) {
+        serverList(function (result) {
             cli.ok('List recieved');
             result.forEach(function (res) {
                 var local = path.join(recipeDir, res.name);
