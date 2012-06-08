@@ -10,6 +10,9 @@
   "scripts": {
     "test": "./node_modules/.bin/mocha -R spec"
   },
+  "bin": {
+    "mole": "./mole.js"
+  },
   "dependencies": {
     "cli": "0.4.x",
     "kexec": "0.0.3",
