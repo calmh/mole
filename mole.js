@@ -5,7 +5,6 @@ var commander = require('commander');
 var fs = require('fs');
 var https = require('https');
 var inireader = require('inireader');
-var kexec = require('kexec');
 var mkdirp = require('mkdirp');
 var path = require('path');
 var temp = require('temp');
