@@ -8,10 +8,10 @@ var inireader = require('inireader');
 var kexec = require('kexec');
 var mkdirp = require('mkdirp');
 var path = require('path');
-var table = require('easy-table');
 var temp = require('temp');
 var util = require('util');
 
+var table = require('./lib/table');
 var con = require('./lib/console');
 
 var configDir = path.join(process.env['HOME'], '.mole');
@@ -218,7 +218,8 @@ function cmdList() {
     con.debug('listing files in ' + recipeDir);
     fs.readdir(recipeDir, function (err, files) {
         con.debug('got ' + files.length + ' files');
-        var t = new table();
+
+        var rows = [];
         files.sort().forEach(function (file) {
             var descr;
             try {
@@ -227,11 +228,11 @@ function cmdList() {
             } catch (err) {
                 descr = '(Unparseable)';
             }
-            t.cell('Tunnel', file.replace(/\.js$/, ''));
-            t.cell('Description', descr);
-            t.newLine();
+            var tname = file.replace(/\.js$/, '');
+            rows.push([ tname, descr ]);
         });
-        console.log(t.toString());
+
+        table([ 'Tunnel', 'Description' ], rows);
     });
 }
 
