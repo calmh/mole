@@ -1,35 +1,115 @@
 #!/usr/bin/env node
 
-var cli = require('cli').enable('status');
-var https = require('https');
-var nconf = require('nconf');
+var _ = require('underscore');
+var commander = require('commander');
 var fs = require('fs');
-var path = require('path');
+var https = require('https');
+var inireader = require('inireader');
+var kexec = require('kexec');
 var mkdirp = require('mkdirp');
+var path = require('path');
 var table = require('easy-table');
+var temp = require('temp');
+var util = require('util');
 
-function getUserHome() {
-    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+var con = require('./lib/console');
+
+var configDir = path.join(process.env['HOME'], '.mole');
+var configFile = path.join(configDir, 'mole.ini');
+var certFile = path.join(configDir, 'mole.crt');
+var keyFile = path.join(configDir, 'mole.key');
+var recipeDir = path.join(configDir, 'tunnels');
+
+var cert = {};
+try {
+    cert.key = fs.readFileSync(keyFile, 'utf-8');
+    cert.cert = fs.readFileSync(certFile, 'utf-8');
+} catch (err) {
+    // We don't have a certificate yet.
 }
 
-var userHome = getUserHome();
-var configFile = path.join(userHome, '.mole.json');
-var certFile = path.join(userHome, '.mole.crt');
-var keyFile = path.join(userHome, '.mole.key');
-var recipeDir = path.join(userHome, '.mole.recipes');
+mkdirp.sync(recipeDir);
 
-nconf.file({ file: configFile });
-mkdirp(recipeDir);
+var config = new inireader.IniReader();
+try {
+    config.load(configFile);
+} catch (err) {
+    config.param('server.host', 'localhost');
+    config.param('server.port', 9443);
+    config.write();
+}
+
+commander
+.command('dig <destination>')
+.description('dig a tunnel to the destination')
+.action(cmdDig);
+
+commander
+.command('list')
+.description('list available tunnel definitions')
+.action(cmdList);
+
+commander
+.command('pull')
+.description('get tunnel definitions from the server')
+.action(cmdPull);
+
+commander
+.command('push <file>')
+.description('send a tunnel definition to the server')
+.action(cmdPush);
+
+commander
+.command('register <server> <token>')
+.description('register with a mole server')
+.option('-p, --port', 'server port', config.param('server.port'))
+.action(cmdRegister);
+
+commander
+.command('gettoken')
+.description('generate a new registration token')
+.action(cmdToken);
+
+commander
+.command('newuser <username>')
+.description('create a new user')
+.option('-a, --admin', 'create an admin user')
+.action(cmdNewUser);
+
+commander
+.option('-d, --debug', 'display debug information')
+.on('--help', function () {
+    console.log('  Examples:');
+    console.log();
+    console.log('    Register with server "mole.example.com" and a token:');
+    console.log('      ' + commander.name + ' register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2');
+    console.log();
+    console.log('    Dig a tunnel to "operator3":');
+    console.log('      ' + commander.name + ' dig operator3');
+    console.log();
+    console.log('    Fetch new and updated tunnel specifications from the server:');
+    console.log('      ' + commander.name + ' pull');
+    console.log();
+});
+
+commander.parse(process.argv);
+
+if (commander.args.length === 0 || commander.args.length === 1 && typeof commander.args[0] === 'string') {
+    process.stdout.write(commander.helpInformation());
+    commander.emit('--help');
+    process.exit(0);
+}
 
 function server(options, callback) {
-    options.port = options.port || 9443;
-    options.agent = false;
-    try {
-        options.key = fs.readFileSync(keyFile, 'utf-8');
-        options.cert = fs.readFileSync(certFile, 'utf-8');
-    } catch (err) {
-        // We don't have a certificate yet.
-    }
+    var defaults = {
+        host: config.param('server.host'),
+        port: config.param('server.port'),
+        key: cert.key,
+        cert: cert.cert,
+        method: 'GET',
+        agent: false
+    };
+    _.defaults(options, defaults);
 
     var buffer = '';
     var req = https.request(options, function (res) {
@@ -41,220 +121,205 @@ function server(options, callback) {
             callback(buffer);
         });
     });
-    req.end();
+    return req;
 }
 
 function serverSend(name, data, callback) {
-    var options = { host: nconf.get('server:hostname'), path: '/store/' + name, method: 'PUT' };
-    options.port = options.port || 9443;
-    options.agent = false;
-    try {
-        options.key = fs.readFileSync(keyFile, 'utf-8');
-        options.cert = fs.readFileSync(certFile, 'utf-8');
-    } catch (err) {
-        // We don't have a certificate yet.
-    }
-
-    var buffer = '';
-    var req = https.request(options, function (res) {
-        res.setEncoding('utf-8');
-        res.on('data', function (chunk) {
-            buffer += chunk;
-        });
-        res.on('end', function () {
-            callback(buffer);
-        });
-    });
-
+    var req = server({ path: '/store/' + name, method: 'PUT' }, callback);
     req.write(data);
     req.end();
 }
 
-function serverRegister(token, callback) {
-    server({ host: nconf.get('server:hostname'), path: '/register/' + token }, function (result) {
-        if (result.length === 0) {
-            cli.fatal('Empty response from server - verify that the token is correct and not already used.');
-        } else {
-            callback(JSON.parse(result));
-        }
-    });
-}
-
-function serverToken(callback) {
-    server({ host: nconf.get('server:hostname'), path: '/newtoken', method: 'POST' }, function (result) {
-        if (result.length === 0) {
-            cli.fatal('Empty response from server - are you registered?');
-        } else {
-            callback(JSON.parse(result));
-        }
-    });
-}
-
 function serverList(callback) {
-    server({ host: nconf.get('server:hostname'), path: '/store', method: 'GET' }, function (result) {
+    server({ path: '/store' }, function (result) {
         if (result.length === 0) {
-            cli.fatal('Empty response from server - are you registered?');
+            con.fatal('Empty response from server - are you registered?');
         } else {
             callback(JSON.parse(result));
         }
-    });
+    }).end();
 }
 
 function serverFetch(fname, callback) {
-    server({ host: nconf.get('server:hostname'), path: '/store/' + fname, method: 'GET' }, function (result) {
+    con.debug('get ' + fname);
+    server({ path: '/store/' + fname }, function (result) {
         if (result.length === 0) {
-            cli.fatal('Empty response from server - are you registered?');
+            con.fatal('Empty response from server - are you registered?');
         } else {
             var local = path.join(recipeDir, fname);
             fs.writeFileSync(local, result);
-            cli.ok('Fetched ' + fname);
+            con.debug('fetched ' + fname);
+            callback(result);
         }
+    }).end();
+}
+
+// Register using a token, get certificate and key
+
+function serverRegister(token, callback) {
+    server({ path: '/register/' + token }, function (result) {
+        if (result.length === 0) {
+            con.fatal('Empty response from server - verify that the token is correct and not already used.');
+        } else {
+            callback(JSON.parse(result));
+        }
+    }).end();
+}
+
+function cmdRegister(host, token) {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('Requesting registration from server ' + host);
+    config.param('server.host', host);
+    serverRegister(token, function (result) {
+        con.debug('Received certificate and key from server');
+        fs.writeFileSync(certFile, result.cert);
+        fs.chmodSync(certFile, 0600);
+        fs.writeFileSync(keyFile, result.key);
+        fs.chmodSync(keyFile, 0600);
+        config.write();
+        con.debug('Fully registered');
     });
 }
 
-cli.parse({ sshdebug: [ 'v', 'Enable verbose ssh sessions' ] }, ['connect', 'list', 'sync', 'put', 'register', 'newtoken']);
+// Get a new token that can be used to register another host
 
-cli.main(function(args, options) {
-    // External modules.
-
-    cli.debug('Starting up');
-    var _ = require('underscore')._;
-    var fs = require('fs');
-    var kexec = require('kexec');
-    var temp = require('temp');
-    var util = require('util');
-
-    if (cli.command === 'register') {
-        if (this.argc !== 2) {
-            cli.info('Usage: ' + cli.app + ' register <host> <token>');
-            cli.fatal('Please register a mole token.');
+function serverToken(callback) {
+    server({ path: '/newtoken', method: 'POST' }, function (result) {
+        if (result.length === 0) {
+            con.fatal('Empty response from server - are you registered?');
         } else {
-            cli.info('Requesting registration from server');
-            nconf.set('server:hostname', args[0]);
-            serverRegister(args[1], function (result) {
-                cli.info('Received certificate and key from server');
-                fs.writeFileSync(certFile, result.cert);
-                fs.writeFileSync(keyFile, result.key);
-                fs.chmodSync(certFile, 0600);
-                nconf.save();
-                cli.ok('Fully registered');
-            });
-            return;
+            callback(JSON.parse(result));
         }
-    }
+    }).end();
+}
 
-    if (!path.existsSync(certFile)) {
-        cli.info('Mole needs to be registered for first use.');
-        cli.info('Usage: ' + cli.app + ' register <host> <token>');
-        cli.fatal('Please register a mole token.');
-    }
+function serverNewUser(name, callback) {
+    server({ path: '/users/' + name, method: 'POST' }, function (result) {
+        if (result.length === 0) {
+            con.fatal('Empty response from server - are you a registered admin?');
+        } else {
+            callback(JSON.parse(result));
+        }
+    }).end();
+}
 
-    if (cli.command === 'newtoken') {
-        cli.info('Requesting new token from server');
-        serverToken(function (result) {
-            cli.ok('New token: ' + result.token);
+function cmdToken() {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('Requesting new token from server');
+    con.info('A token can be used only once');
+    con.info('Only the most recently generated token is valid.');
+    serverToken(function (result) {
+        con.ok(result.token);
+    });
+}
+
+function cmdList() {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('listing files in ' + recipeDir);
+    fs.readdir(recipeDir, function (err, files) {
+        con.debug('got ' + files.length + ' files');
+        var t = new table();
+        files.sort().forEach(function (file) {
+            var descr;
+            try {
+                var r = require(path.join(recipeDir, file));
+                descr = r.description;
+            } catch (err) {
+                descr = '(Unparseable)';
+            }
+            t.cell('Tunnel', file.replace(/\.js$/, ''));
+            t.cell('Description', descr);
+            t.newLine();
         });
-        return;
-    }
+        console.log(t.toString());
+    });
+}
 
-    if (cli.command === 'list') {
-        fs.readdir(recipeDir, function (err, files) {
-            var t = new table();
-            files.forEach(function (file) {
-                var descr;
-                try {
-                    var r = require(path.join(recipeDir, file));
-                    descr = r.description;
-                } catch (err) {
-                    descr = '(Unparseable)';
+function cmdPull() {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('requesting tunnel list from server');
+    serverList(function (result) {
+        con.debug('list recieved, ' + result.length + ' entries');
+        _.sortBy(result, 'name').forEach(function (res) {
+            var local = path.join(recipeDir, res.name);
+            var tname = res.name.replace(/\.js$/, '');
+            if (!path.existsSync(local)) {
+                serverFetch(res.name, function () {
+                    con.ok(tname + ' (new)');
+                });
+            } else {
+                var s = fs.statSync(local);
+                if (s.mtime.getTime() < res.mtime) {
+                    serverFetch(res.name, function () {
+                        con.ok(tname + ' (updated)');
+                    });
                 }
-                t.cell('Recipe', file.replace(/\.js$/, ''));
-                t.cell('Description', descr);
-                t.newLine();
-            });
-            console.log(t.toString());
+            }
         });
-        return;
-    }
+    });
+}
 
-    if (cli.command === 'sync') {
-        cli.info('Requesting recipe list from server');
-        serverList(function (result) {
-            cli.ok('List recieved');
-            result.forEach(function (res) {
-                var local = path.join(recipeDir, res.name);
-                if (!path.existsSync(local)) {
-                    cli.info(res.name + ' -- missing');
-                    serverFetch(res.name);
-                } else {
-                    var s = fs.statSync(local);
-                    if (s.mtime.getTime() < res.mtime) {
-                        cli.info(res.name + ' -- out of date');
-                        serverFetch(res.name);
-                    } else {
-                        cli.ok(res.name + ' -- in sync');
-                    }
-                }
-            });
-        });
-        return;
-    }
+function cmdPush(file) {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('reading ' + file);
+    var data = fs.readFileSync(file, 'utf-8');
+    con.debug('got ' + data.length + ' bytes');
+    serverSend(path.basename(file), data, function (result) {
+        con.ok('sent ' + data.length + ' bytes');
+    });
+}
 
-    if (cli.command === 'put') {
-        cli.info('Uploading data');
-        var data = fs.readFileSync(args[0], 'utf-8');
-        serverSend(args[0], data, function (result) {
-        });
-        return;
-    }
+function cmdNewUser(name) {
+    if (commander.debug) { con.enableDebug(); }
+    con.debug('requesting user ' + name);
+    serverNewUser(name, function (result) {
+        con.info(result.fingerprint);
+        con.ok(result.token);
+    });
+}
 
-    if (cli.command === 'connect' && !this.argc) {
-        cli.fatal('Usage: ' + cli.app + ' connect <destination>');
-    }
-
+function cmdDig(tunnel) {
+    if (commander.debug) { con.enableDebug(); }
     // Internal modules.
 
-    cli.debug('Loading modules');
+    con.debug('loading modules');
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
 
     // Load a configuration, generate a temporary filename for ssh config.
 
-    cli.debug('Loading configuration');
-    var config = require(path.join(recipeDir, args[0]));
+    con.debug('loading tunnel');
+    var config = require(path.join(recipeDir, tunnel));
     config.sshConfig = temp.path({suffix: '.sshconfig'});
 
     // Create and save the ssh config
 
-    cli.debug('Creating SSH configuration');
+    con.debug('creating ssh configuration');
     var defaults = ['Host *', '  UserKnownHostsFile /dev/null', '  StrictHostKeyChecking no'].join('\n') + '\n';
     var conf = defaults + sshConfig(config) + '\n';
     fs.writeFileSync(config.sshConfig, conf);
-    cli.debug('SSH configuration was saved to ' + config.sshConfig);
-    cli.ok('Created SSH configuration');
+    con.debug(config.sshConfig);
 
     // Set up local IP:s needed for forwarding and execute the expect scipt.
 
-    cli.debug('Setting up local IP:s for forwarding');
-    setupLocalIPs(config, cli, options, function (c) {
+    con.debug('setting up local IP:s for forwarding');
+    setupLocalIPs(config, function (c) {
         if (!c) {
-            cli.error('Failed to set up IP:s for forwarding');
-            cli.info('Continuing without forwarding');
+            con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding');
             delete config.forwards;
         }
 
         // Create the expect script and save it to a temp file.
 
-        cli.debug('Creating Expect script');
-        var expect = expectConfig(config, cli, options) + '\n';
+        con.debug('creating Expect script');
+        var expect = expectConfig(config, commander.debug) + '\n';
         var expectFile = temp.path({suffix: '.expect'});
         fs.writeFileSync(expectFile, expect);
-        cli.debug('Expect script was saved to ' + expectFile);
-        cli.ok('Created Expect script');
+        con.debug(expectFile);
 
-        cli.ok('Shifting into cyberspace');
+        con.ok('Shifting into cyberspace');
         kexec('expect ' + expectFile);
     });
-});
+};
 
