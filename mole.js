@@ -10,6 +10,7 @@ var mkdirp = require('mkdirp');
 var path = require('path');
 var temp = require('temp');
 var util = require('util');
+var spawn = require('child_process').spawn;
 
 var table = require('./lib/table');
 var con = require('./lib/console');
@@ -323,7 +324,10 @@ function cmdDig(tunnel) {
         con.debug(expectFile);
 
         con.info('Hang on, digging the tunnel');
-        kexec('expect ' + expectFile);
+        spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
+        .on('exit', function (code) {
+            con.ok('Done');
+        });
     });
 };
 
