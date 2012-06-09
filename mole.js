@@ -121,6 +121,11 @@ function server(options, callback) {
             callback(buffer);
         });
     });
+
+    req.on('error', function (err) {
+        con.fatal(err);
+    });
+
     return req;
 }
 
@@ -141,14 +146,14 @@ function serverList(callback) {
 }
 
 function serverFetch(fname, callback) {
-    con.debug('get ' + fname);
+    con.debug('Get ' + fname);
     server({ path: '/store/' + fname }, function (result) {
         if (result.length === 0) {
             con.fatal('Empty response from server - are you registered?');
         } else {
             var local = path.join(recipeDir, fname);
             fs.writeFileSync(local, result);
-            con.debug('fetched ' + fname);
+            con.debug('Fetched ' + fname);
             callback(result);
         }
     }).end();
@@ -177,7 +182,8 @@ function cmdRegister(host, token) {
         fs.writeFileSync(keyFile, result.key);
         fs.chmodSync(keyFile, 0600);
         config.write();
-        con.debug('Fully registered');
+        con.ok('Registered');
+        cmdPull();
     });
 }
 
@@ -207,7 +213,7 @@ function cmdToken() {
     if (commander.debug) { con.enableDebug(); }
     con.debug('Requesting new token from server');
     con.info('A token can be used only once');
-    con.info('Only the most recently generated token is valid.');
+    con.info('Only the most recently generated token is valid');
     serverToken(function (result) {
         con.ok(result.token);
     });
@@ -217,7 +223,7 @@ function cmdList() {
     if (commander.debug) { con.enableDebug(); }
     con.debug('listing files in ' + recipeDir);
     fs.readdir(recipeDir, function (err, files) {
-        con.debug('got ' + files.length + ' files');
+        con.debug('Got ' + files.length + ' files');
 
         var rows = [];
         files.sort().forEach(function (file) {
@@ -238,21 +244,21 @@ function cmdList() {
 
 function cmdPull() {
     if (commander.debug) { con.enableDebug(); }
-    con.debug('requesting tunnel list from server');
+    con.debug('Requesting tunnel list from server');
     serverList(function (result) {
-        con.debug('list recieved, ' + result.length + ' entries');
+        con.debug('Got ' + result.length + ' entries');
         _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(recipeDir, res.name);
             var tname = res.name.replace(/\.js$/, '');
             if (!path.existsSync(local)) {
                 serverFetch(res.name, function () {
-                    con.ok(tname + ' (new)');
+                    con.ok('Pulled ' + tname.bold + ' (new)');
                 });
             } else {
                 var s = fs.statSync(local);
                 if (s.mtime.getTime() < res.mtime) {
                     serverFetch(res.name, function () {
-                        con.ok(tname + ' (updated)');
+                        con.ok('Pulled ' + tname.bold + ' (updated)');
                     });
                 }
             }
@@ -262,41 +268,38 @@ function cmdPull() {
 
 function cmdPush(file) {
     if (commander.debug) { con.enableDebug(); }
-    con.debug('reading ' + file);
+    con.debug('Reading ' + file);
     var data = fs.readFileSync(file, 'utf-8');
-    con.debug('got ' + data.length + ' bytes');
+    con.debug('Got ' + data.length + ' bytes');
     serverSend(path.basename(file), data, function (result) {
-        con.ok('sent ' + data.length + ' bytes');
+        con.ok('Sent ' + data.length + ' bytes');
     });
 }
 
 function cmdNewUser(name) {
     if (commander.debug) { con.enableDebug(); }
-    con.debug('requesting user ' + name);
+    con.debug('Requesting user ' + name);
     serverNewUser(name, function (result) {
-        con.info(result.fingerprint);
         con.ok(result.token);
     });
 }
 
 function cmdDig(tunnel) {
     if (commander.debug) { con.enableDebug(); }
-    // Internal modules.
 
-    con.debug('loading modules');
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
 
     // Load a configuration, generate a temporary filename for ssh config.
 
-    con.debug('loading tunnel');
+    con.debug('Loading tunnel');
     var config = require(path.join(recipeDir, tunnel));
     config.sshConfig = temp.path({suffix: '.sshconfig'});
 
     // Create and save the ssh config
 
-    con.debug('creating ssh configuration');
+    con.debug('Creating ssh configuration');
     var defaults = ['Host *', '  UserKnownHostsFile /dev/null', '  StrictHostKeyChecking no'].join('\n') + '\n';
     var conf = defaults + sshConfig(config) + '\n';
     fs.writeFileSync(config.sshConfig, conf);
@@ -304,7 +307,7 @@ function cmdDig(tunnel) {
 
     // Set up local IP:s needed for forwarding and execute the expect scipt.
 
-    con.debug('setting up local IP:s for forwarding');
+    con.debug('Setting up local IP:s for forwarding');
     setupLocalIPs(config, function (c) {
         if (!c) {
             con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding');
@@ -313,13 +316,13 @@ function cmdDig(tunnel) {
 
         // Create the expect script and save it to a temp file.
 
-        con.debug('creating Expect script');
+        con.debug('Creating expect script');
         var expect = expectConfig(config, commander.debug) + '\n';
         var expectFile = temp.path({suffix: '.expect'});
         fs.writeFileSync(expectFile, expect);
         con.debug(expectFile);
 
-        con.ok('Shifting into cyberspace');
+        con.info('Hang on, digging the tunnel');
         kexec('expect ' + expectFile);
     });
 };
