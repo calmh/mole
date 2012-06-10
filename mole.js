@@ -403,7 +403,7 @@ function loadIniTunnel(name) {
         if (m) {
             // SSH keys have newlines replaced by spaces
             if (val.key) {
-                val.key = val.key.replace(/ /g, '\n');
+                val.key = val.key.replace(/ /g, '\n').replace(/\nRSA\nPRIVATE\nKEY/g, ' RSA PRIVATE KEY');
             }
             config.hosts[m[1]] = val;
             return
