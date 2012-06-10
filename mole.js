@@ -257,22 +257,38 @@ function cmdPull() {
     con.debug('Requesting tunnel list from server');
     serverList(function (result) {
         con.debug('Got ' + result.length + ' entries');
+        var inProgress = 0;
         _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(recipeDir, res.name);
             var tname = tunnelName(res.name);
             if (!path.existsSync(local)) {
+                inProgress += 1;
                 serverFetch(res.name, function () {
                     con.ok('Pulled ' + tname.bold + ' (new)');
+                    inProgress -= 1;
+                    if (inProgress === 0) {
+                        con.ok(result.length + ' tunnel definitions in sync');
+                        inProgress = -1;
+                    }
                 });
             } else {
                 var s = fs.statSync(local);
                 if (s.mtime.getTime() < res.mtime) {
+                    inProgress += 1;
                     serverFetch(res.name, function () {
                         con.ok('Pulled ' + tname.bold + ' (updated)');
+                        inProgress -= 1;
+                        if (inProgress === 0) {
+                            con.ok(result.length + ' tunnel definitions in sync');
+                            inProgress = -1;
+                        }
                     });
                 }
             }
         });
+        if (inProgress === 0) {
+            con.ok(result.length + ' tunnel definitions in sync');
+        }
     });
 }
 
