@@ -370,8 +370,8 @@ function tunnelName(file) {
 function loadTunnel(name) {
     var local;
 
-    if (name.indexOf('/') >= 0) {
-        // Name contains slashes, we assume it's a full path name
+    if (path.existsSync(name)) {
+        // Obviously a file name already
         local = name
     } else {
         // Unqualified names should be in the tunnel dir
