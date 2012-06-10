@@ -34,6 +34,7 @@ var config = new inireader.IniReader();
 try {
     config.load(configFile);
 } catch (err) {
+    con.info('No config, using defaults.');
     config.param('server.host', 'localhost');
     config.param('server.port', 9443);
     config.write();
@@ -77,6 +78,16 @@ commander
 .action(cmdNewUser);
 
 commander
+.command('export <tunnel> <outfile>')
+.description('export tunnel definition to a file')
+.action(cmdExport);
+
+commander
+.command('view <tunnel>')
+.description('show tunnel definition')
+.action(cmdView);
+
+commander
 .option('-d, --debug', 'display debug information')
 .on('--help', function () {
     console.log('  Examples:');
@@ -94,7 +105,8 @@ commander
 
 commander.parse(process.argv);
 
-if (commander.args.length === 0 || commander.args.length === 1 && typeof commander.args[0] === 'string') {
+// There should be a 'command' (typeof 'object') among the arguments
+if (!_.any(commander.args, function (a) { return typeof a === 'object' })) {
     process.stdout.write(commander.helpInformation());
     commander.emit('--help');
     process.exit(0);
@@ -227,14 +239,9 @@ function cmdList() {
 
         var rows = [];
         files.sort().forEach(function (file) {
-            var descr;
-            try {
-                var r = require(path.join(recipeDir, file));
-                descr = r.description;
-            } catch (err) {
-                descr = '(Unparseable)';
-            }
-            var tname = file.replace(/\.js$/, '');
+            var r = loadTunnel(file);
+            var descr = r.description;
+            var tname = tunnelName(file);
             rows.push([ tname, descr ]);
         });
 
@@ -249,7 +256,7 @@ function cmdPull() {
         con.debug('Got ' + result.length + ' entries');
         _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(recipeDir, res.name);
-            var tname = res.name.replace(/\.js$/, '');
+            var tname = tunnelName(res.name);
             if (!path.existsSync(local)) {
                 serverFetch(res.name, function () {
                     con.ok('Pulled ' + tname.bold + ' (new)');
@@ -269,7 +276,11 @@ function cmdPull() {
 function cmdPush(file) {
     if (commander.debug) { con.enableDebug(); }
     con.debug('Reading ' + file);
-    var data = fs.readFileSync(file, 'utf-8');
+    try {
+        var data = fs.readFileSync(file, 'utf-8');
+    } catch (err) {
+        con.fatal(err);
+    }
     con.debug('Got ' + data.length + ' bytes');
     serverSend(path.basename(file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
@@ -294,7 +305,7 @@ function cmdDig(tunnel) {
     // Load a configuration, generate a temporary filename for ssh config.
 
     con.debug('Loading tunnel');
-    var config = require(path.join(recipeDir, tunnel));
+    var config = loadTunnel(tunnel);
     config.sshConfig = temp.path({suffix: '.sshconfig'});
 
     // Create and save the ssh config
@@ -325,8 +336,150 @@ function cmdDig(tunnel) {
         con.info('Hang on, digging the tunnel');
         spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
         .on('exit', function (code) {
+            fs.unlinkSync(expectFile);
+            fs.unlinkSync(configFile);
+            // FIXME: Unlink ssh keys
             con.ok('Done');
         });
     });
+};
+
+function tunnelName(file) {
+    return path.basename(file).replace(/\.js|\.ini$/, '');
+}
+
+function loadTunnel(name) {
+    var local;
+
+    if (name.indexOf('/') >= 0) {
+        // Name contains slashes, we assume it's a full path name
+        local = name
+    } else {
+        // Unqualified names should be in the tunnel dir
+        local = path.join(recipeDir, name);
+        con.debug('Qualifying ' + name + ' to ' + local);
+    }
+
+    if (!name.match(/(\.ini|\.js)$/)) {
+        // No extension given, find the file
+        if (path.existsSync(local + '.ini')) {
+            local = local + '.ini';
+        } else if (path.existsSync(local + '.js')) {
+            local = local + '.js';
+        }
+    }
+
+    if (!path.existsSync(local)) {
+        con.fatal('Could not find a tunnel matching ' + name);
+    }
+
+    if (local.match(/\.js$/)) {
+        con.debug('Loading ini format');
+        return loadJsTunnel(local);
+    } else if (local.match(/\.ini$/)) {
+        return loadIniTunnel(local);
+    } else {
+        con.fatal('Unknown format config ' + local);
+    }
+}
+
+function loadIniTunnel(name) {
+    var ini = new inireader.IniReader();
+    ini.load(name);
+    var obj = ini.getBlock();
+
+    var config = _.clone(obj.general);
+    config.hosts = {};
+    config.forwards = {};
+
+    _.each(obj, function (val, key) {
+        var m, arr;
+
+        // Host sections look like [host host_name]   
+        m = key.match(/^host ([^ ]+)$/);
+        if (m) {
+            // SSH keys have newlines replaced by spaces
+            if (val.key) {
+                val.key = val.key.replace(/ /g, '\n');
+            }
+            config.hosts[m[1]] = val;
+            return
+        }
+
+        // Forward sections look like [forward A description here] 
+        m = key.match(/^forward +(.+)$/);
+        if (m) {
+            arr = [];
+            _.each(val, function (to, from) {
+                arr.push({ from: from, to: to });
+            });
+            config.forwards[m[1]] = arr;
+            return
+        }
+    });
+
+    return config;
+}
+
+function loadJsTunnel(name) {
+    try {
+        con.debug('Loading ' + name);
+        return require(name);
+    } catch (err) {
+        con.error('Could not load ' + name);
+        con.fatal(err);
+    }
+};
+
+function saveIniTunnel(config, name) {
+    var ini = new inireader.IniReader();
+    ini.param('general', { description: config.description, main: config.main });
+
+    _.each(config.hosts, function (host, name) {
+        if (host.key) {
+            // The ini format doesn't handle multiline strings, so we replace newlines with spaces in ssh keys.
+            host = _.clone(host);
+            host.key = host.key.replace(/\n/g, ' ');
+        }
+        ini.param('host ' + name, host);
+    });
+
+    _.each(config.forwards, function (fwd, name) {
+        var obj = {};
+        fwd.forEach(function (f) {
+            obj[f.from] = f.to;
+        });
+        ini.param('forward ' + name, obj);
+    });
+
+    ini.write(name);
+}
+
+function cmdExport(tunnel, outfile) {
+    if (commander.debug) { con.enableDebug(); }
+
+    con.debug('Loading tunnel');
+    var config = loadTunnel(tunnel);
+
+    con.debug('Saving to INI format');
+    saveIniTunnel(config, outfile);
+
+    con.ok(outfile);
+};
+
+function cmdView(tunnel) {
+    if (commander.debug) { con.enableDebug(); }
+
+    con.debug('Loading tunnel');
+    var config = loadTunnel(tunnel);
+
+    con.debug('Saving to INI format');
+    var path = temp.path({ suffix: '.ini' });
+    saveIniTunnel(config, path);
+
+    con.debug('Show ' + path);
+    console.log(fs.readFileSync(path, 'utf-8'));
+
+    fs.unlinkSync(path);
 };
 
