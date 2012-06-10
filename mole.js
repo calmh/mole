@@ -20,14 +20,6 @@ var certFile = path.join(configDir, 'mole.crt');
 var keyFile = path.join(configDir, 'mole.key');
 var recipeDir = path.join(configDir, 'tunnels');
 
-var cert = {};
-try {
-    cert.key = fs.readFileSync(keyFile, 'utf-8');
-    cert.cert = fs.readFileSync(certFile, 'utf-8');
-} catch (err) {
-    // We don't have a certificate yet.
-}
-
 mkdirp.sync(recipeDir);
 
 var config = new inireader.IniReader();
@@ -95,6 +87,9 @@ commander
     console.log('    Register with server "mole.example.com" and a token:');
     console.log('      ' + commander.name + ' register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2');
     console.log();
+    console.log('    List available tunnels:');
+    console.log('      ' + commander.name + ' list');
+    console.log();
     console.log('    Dig a tunnel to "operator3":');
     console.log('      ' + commander.name + ' dig operator3');
     console.log();
@@ -113,6 +108,14 @@ if (!_.any(commander.args, function (a) { return typeof a === 'object' })) {
 }
 
 function server(options, callback) {
+    var cert = {};
+    try {
+        cert.key = fs.readFileSync(keyFile, 'utf-8');
+        cert.cert = fs.readFileSync(certFile, 'utf-8');
+    } catch (err) {
+        // We don't have a certificate yet.
+    }
+
     var defaults = {
         host: config.param('server.host'),
         port: config.param('server.port'),
@@ -337,7 +340,7 @@ function cmdDig(tunnel) {
         spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
         .on('exit', function (code) {
             fs.unlinkSync(expectFile);
-            fs.unlinkSync(configFile);
+            fs.unlinkSync(config.sshConfig);
             // FIXME: Unlink ssh keys
             con.ok('Done');
         });
