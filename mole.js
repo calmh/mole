@@ -479,7 +479,7 @@ function loadJsTunnel(name) {
 
 function saveIniTunnel(config, name) {
     var ini = new inireader.IniReader();
-    ini.param('general', { description: config.description, main: config.main });
+    ini.param('general', { description: config.description, author: config.author, main: config.main });
 
     _.each(config.hosts, function (host, name) {
         if (host.key) {
