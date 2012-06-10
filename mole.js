@@ -366,7 +366,13 @@ function cmdDig(tunnel) {
             fs.unlinkSync(expectFile);
             fs.unlinkSync(config.sshConfig);
             // FIXME: Unlink ssh keys
-            con.ok('Done');
+            if (code === 0) {
+                con.ok('Great success');
+            } else {
+                con.error('Unsuccessful');
+                con.info('Debug tunnel definition by digging with -d, or talk to the author:');
+                con.info(config.author);
+            }
         });
     });
 };
