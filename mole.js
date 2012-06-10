@@ -2,15 +2,16 @@
 
 var _ = require('underscore');
 var commander = require('commander');
+var exec = require('child_process').exec;
 var fs = require('fs');
 var https = require('https');
 var inireader = require('inireader');
+var iso8601 = require('iso8601');
 var mkdirp = require('mkdirp');
 var path = require('path');
+var spawn = require('child_process').spawn;
 var temp = require('temp');
 var util = require('util');
-var spawn = require('child_process').spawn;
-var exec = require('child_process').exec;
 
 var table = require('./lib/table');
 var con = require('./lib/console');
@@ -175,7 +176,7 @@ function serverFetch(fname, callback) {
             var local = path.join(recipeDir, fname);
             fs.writeFileSync(local, result);
             con.debug('Fetched ' + fname);
-            callback(result);
+            callback(local);
         }
     }).end();
 }
@@ -250,11 +251,12 @@ function cmdList() {
         files.sort().forEach(function (file) {
             var r = loadTunnel(file);
             var descr = r.description;
+            var mtime = r.stat.mtime;
             var tname = tunnelName(file);
-            rows.push([ tname, descr ]);
+            rows.push([ tname, descr, iso8601.fromDate(mtime).slice(0, 10) ]);
         });
 
-        table([ 'Tunnel', 'Description' ], rows);
+        table([ 'Tunnel', 'Description', 'Modified' ], rows);
     });
 }
 
@@ -263,32 +265,30 @@ function cmdPull() {
     con.debug('Requesting tunnel list from server');
     serverList(function (result) {
         con.debug('Got ' + result.length + ' entries');
+        con.debug(util.inspect(result));
         var inProgress = 0;
+
         _.sortBy(result, 'name').forEach(function (res) {
+            function fileFetched(file) {
+                fs.utimesSync(file, Math.floor(res.mtime / 1000), Math.floor(res.mtime / 1000));
+                con.ok('Pulled ' + tname.bold);
+                inProgress -= 1;
+                if (inProgress === 0) {
+                    con.ok(result.length + ' tunnel definitions in sync');
+                    inProgress = -1;
+                }
+            };
+
             var local = path.join(recipeDir, res.name);
             var tname = tunnelName(res.name);
             if (!path.existsSync(local)) {
                 inProgress += 1;
-                serverFetch(res.name, function () {
-                    con.ok('Pulled ' + tname.bold + ' (new)');
-                    inProgress -= 1;
-                    if (inProgress === 0) {
-                        con.ok(result.length + ' tunnel definitions in sync');
-                        inProgress = -1;
-                    }
-                });
+                serverFetch(res.name, fileFetched);
             } else {
                 var s = fs.statSync(local);
-                if (s.mtime.getTime() < res.mtime) {
+                if (s.mtime.getTime() !== parseInt(res.mtime, 10)) {
                     inProgress += 1;
-                    serverFetch(res.name, function () {
-                        con.ok('Pulled ' + tname.bold + ' (updated)');
-                        inProgress -= 1;
-                        if (inProgress === 0) {
-                            con.ok(result.length + ' tunnel definitions in sync');
-                            inProgress = -1;
-                        }
-                    });
+                    serverFetch(res.name, fileFetched);
                 }
             }
         });
@@ -395,7 +395,7 @@ function tunnelName(file) {
 }
 
 function loadTunnel(name) {
-    var local;
+    var local, stat, obj;
 
     if (path.existsSync(name)) {
         // Obviously a file name already
@@ -419,11 +419,17 @@ function loadTunnel(name) {
         con.fatal('Could not find a tunnel matching ' + name);
     }
 
+    stat = fs.statSync(local);
+
     if (local.match(/\.js$/)) {
         con.debug('Loading ini format');
-        return loadJsTunnel(local);
+        obj = loadJsTunnel(local);
+        obj.stat = stat;
+        return obj;
     } else if (local.match(/\.ini$/)) {
-        return loadIniTunnel(local);
+        obj = loadIniTunnel(local);
+        obj.stat = stat;
+        return obj;
     } else {
         con.fatal('Unknown format config ' + local);
     }
