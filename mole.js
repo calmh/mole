@@ -10,6 +10,7 @@ var path = require('path');
 var temp = require('temp');
 var util = require('util');
 var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
 
 var table = require('./lib/table');
 var con = require('./lib/console');
@@ -322,6 +323,18 @@ function cmdNewUser(name) {
 function cmdDig(tunnel) {
     if (commander.debug) { con.enableDebug(); }
 
+    exec('expect -v', function (error, stdout, stderr) {
+        if (error) {
+            con.error(error.toString().trim());
+            con.error('Verify that "expect" is installed and available in the path.');
+        } else {
+            con.debug(stdout.trim());
+            cmdDigReal(tunnel);
+        }
+    });
+}
+
+function cmdDigReal(tunnel) {
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
