@@ -14,7 +14,7 @@ mole
 What
 ----
 
-Mole is an ssh tunnel manager with sweet features for teams and a think layer of pure awesome.
+Mole is an ssh tunnel manager with sweet features for teams and a thick layer of pure awesome.
 
 How
 ---
