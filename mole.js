@@ -335,7 +335,10 @@ function cmdDig(tunnel) {
     // Create and save the ssh config
 
     con.debug('Creating ssh configuration');
-    var defaults = ['Host *', '  UserKnownHostsFile /dev/null', '  StrictHostKeyChecking no'].join('\n') + '\n';
+    var defaults = ['Host *',
+        '  UserKnownHostsFile /dev/null',
+        '  StrictHostKeyChecking no',
+        '  IdentitiesOnly yes'].join('\n') + '\n';
     var conf = defaults + sshConfig(config) + '\n';
     fs.writeFileSync(config.sshConfig, conf);
     con.debug(config.sshConfig);

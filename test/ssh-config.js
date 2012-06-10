@@ -10,20 +10,53 @@ describe('sshConfig', function () {
                     addr: '1.2.3.4',
                     user: 'testuser',
                     port: 1234,
+                    password: 'something',
                     via: 'another-host',
                 }
             }
         };
 
         var expected = [
-            'Host test',
-            '  User testuser',
-            '  Hostname 1.2.3.4',
-            '  Port 1234',
-            '  ProxyCommand ssh -F /tmp/sshconf another-host nc -w 1800 %h %p'
-        ].join('\n');
+            /Host test/,
+            /User testuser/,
+            /Hostname 1.2.3.4/,
+            /Port 1234/,
+            /ProxyCommand ssh -F \/tmp\/sshconf another-host nc -w 1800 %h %p/,
+            /PubkeyAuthentication no/,
+            /PasswordAuthentication yes/,
+        ];
 
-        sshConfig(config).should.equal(expected);
+        expected.forEach(function (line) {
+            sshConfig(config).should.match(line);
+        });
+    });
+
+    it('should return a host config with key', function () {
+        var config = {
+            sshConfig: '/tmp/sshconf',
+            hosts: {
+                test: {
+                    addr: '1.2.3.4',
+                    user: 'testuser',
+                    port: 1234,
+                    key: 'something',
+                }
+            }
+        };
+
+        var expected = [
+            /Host test/,
+            /User testuser/,
+            /Hostname 1.2.3.4/,
+            /Port 1234/,
+            /PubkeyAuthentication yes/,
+            /PasswordAuthentication no/,
+            /IdentityFile \//,
+        ];
+
+        expected.forEach(function (line) {
+            sshConfig(config).should.match(line);
+        });
     });
 
     it('should return multiple hosts', function () {
@@ -33,28 +66,32 @@ describe('sshConfig', function () {
                 'another-host': {
                     addr: '2.2.3.4',
                     user: 'test1',
+                    password: 'something',
                 },
                 test: {
                     addr: '1.2.3.4',
                     user: 'testuser',
                     port: 1234,
                     via: 'another-host',
+                    password: 'something',
                 }
             }
         };
 
         var expected = [
-            'Host another-host',
-            '  User test1',
-            '  Hostname 2.2.3.4',
-            'Host test',
-            '  User testuser',
-            '  Hostname 1.2.3.4',
-            '  Port 1234',
-            '  ProxyCommand ssh -F /tmp/sshconf another-host nc -w 1800 %h %p'
-        ].join('\n');
+            /Host another-host/,
+            /User test1/,
+            /Hostname 2.2.3.4/,
+            /Host test/,
+            /User testuser/,
+            /Hostname 1.2.3.4/,
+            /Port 1234/,
+            /ProxyCommand ssh -F \/tmp\/sshconf another-host nc -w 1800 %h %p/,
+        ];
 
-        sshConfig(config).should.equal(expected);
+        expected.forEach(function (line) {
+            sshConfig(config).should.match(line);
+        });
     });
 
     it('should return a config with forwards', function () {
@@ -72,20 +109,25 @@ describe('sshConfig', function () {
             hosts: {
                 test: {
                     addr: '1.2.3.4',
+                    user: 'something',
+                    password: 'something',
                 }
             }
         };
 
         var expected = [
-            'Host test',
-            '  Hostname 1.2.3.4',
-            '  # Foo',
-            '  LocalForward 127.0.0.1:3994 127.0.0.1:3994',
-            '  # Bar',
-            '  LocalForward 127.0.0.1:42000 10.0.0.5:42000',
-            '  LocalForward 127.0.0.1:42002 10.0.0.5:42002',
-        ].join('\n');
+            /Host test/,
+            /User something/,
+            /Hostname 1.2.3.4/,
+            /# Foo/,
+            /LocalForward 127.0.0.1:3994 127.0.0.1:3994/,
+            /# Bar/,
+            /LocalForward 127.0.0.1:42000 10.0.0.5:42000/,
+            /LocalForward 127.0.0.1:42002 10.0.0.5:42002/,
+        ];
 
-        sshConfig(config).should.equal(expected);
+        expected.forEach(function (line) {
+            sshConfig(config).should.match(line);
+        });
     });
 });
