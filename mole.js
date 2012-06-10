@@ -27,7 +27,6 @@ try {
     config.load(configFile);
 } catch (err) {
     con.info('No config, using defaults.');
-    config.param('server.host', 'localhost');
     config.param('server.port', 9443);
     config.write();
 }
@@ -114,6 +113,12 @@ function server(options, callback) {
         cert.cert = fs.readFileSync(certFile, 'utf-8');
     } catch (err) {
         // We don't have a certificate yet.
+    }
+
+    if (!config.param('server.host')) {
+        con.info('Mole is not currently registered with a server.');
+        con.info('Use "mole register <server> <token>" to register.');
+        process.exit(0);
     }
 
     var defaults = {
