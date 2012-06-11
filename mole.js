@@ -250,12 +250,16 @@ function cmdList() {
 
         var rows = [];
         files.sort().forEach(function (file) {
-            var r = tun.load(path.join(tunnelDefDir, file));
-            var descr = r.description;
-            var hosts = _.keys(r.hosts).sort().join(', ');
-            var mtime = r.stat.mtime;
             var tname = tun.name(file);
-            rows.push([ tname, descr, hosts, iso8601.fromDate(mtime).slice(0, 10) ]);
+            try {
+                var r = tun.load(path.join(tunnelDefDir, file));
+                var descr = r.description;
+                var hosts = _.keys(r.hosts).sort().join(', ');
+                var mtime = r.stat.mtime;
+                rows.push([ tname, descr, hosts, iso8601.fromDate(mtime).slice(0, 10) ]);
+            } catch (err) {
+                rows.push([ tname, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
+            }
         });
 
         table([ 'Tunnel', 'Description', 'Hosts', 'Modified' ], rows);
@@ -346,6 +350,7 @@ function cmdDig(tunnel, host) {
 }
 
 function cmdDigReal(tunnel, host) {
+    var config;
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
@@ -353,7 +358,11 @@ function cmdDigReal(tunnel, host) {
     // Load a configuration, generate a temporary filename for ssh config.
 
     con.debug('Loading tunnel');
-    var config = tun.load(tunnel, tunnelDefDir);
+    try {
+        config = tun.load(tunnel, tunnelDefDir);
+    } catch (err) {
+        con.fatal(err);
+    }
     config.sshConfig = temp.path({suffix: '.sshconfig'});
 
     // Create and save the ssh config
@@ -406,10 +415,16 @@ function cmdDigReal(tunnel, host) {
 };
 
 function cmdExport(tunnel, outfile) {
+    var config;
+
     if (commander.debug) { con.enableDebug(); }
 
-    con.debug('Loading tunnel');
-    var config = tun.load(tunnel, tunnelDefDir);
+    try {
+        con.debug('Loading tunnel');
+        config = tun.load(tunnel, tunnelDefDir);
+    } catch (err) {
+        con.fatal(err);
+    }
 
     con.debug('Saving to INI format');
     tun.save(config, outfile);
@@ -418,10 +433,16 @@ function cmdExport(tunnel, outfile) {
 };
 
 function cmdView(tunnel) {
+    var config;
+
     if (commander.debug) { con.enableDebug(); }
 
-    con.debug('Loading tunnel');
-    var config = tun.load(tunnel, tunnelDefDir);
+    try {
+        con.debug('Loading tunnel');
+        config = tun.load(tunnel, tunnelDefDir);
+    } catch (err) {
+        con.fatal(err);
+    }
 
     con.debug('Saving to INI format');
     var path = temp.path({ suffix: '.ini' });
