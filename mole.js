@@ -15,7 +15,7 @@ var util = require('util');
 
 var table = require('./lib/table');
 var con = require('./lib/console');
-var validate = require('./lib/validate');
+var tun = require('./lib/tunnel');
 
 var configDir = path.join(process.env['HOME'], '.mole');
 var configFile = path.join(configDir, 'mole.ini');
@@ -250,11 +250,11 @@ function cmdList() {
 
         var rows = [];
         files.sort().forEach(function (file) {
-            var r = loadTunnel(path.join(tunnelDefDir, file));
+            var r = tun.load(path.join(tunnelDefDir, file));
             var descr = r.description;
             var hosts = _.keys(r.hosts).sort().join(', ');
             var mtime = r.stat.mtime;
-            var tname = tunnelName(file);
+            var tname = tun.name(file);
             rows.push([ tname, descr, hosts, iso8601.fromDate(mtime).slice(0, 10) ]);
         });
 
@@ -282,7 +282,7 @@ function cmdPull() {
             };
 
             var local = path.join(tunnelDefDir, res.name);
-            var tname = tunnelName(res.name);
+            var tname = tun.name(res.name);
             if (!path.existsSync(local)) {
                 inProgress += 1;
                 serverFetch(res.name, fileFetched);
@@ -312,7 +312,7 @@ function cmdPush(file) {
 
     con.debug('Testing ' + file);
     try {
-        loadTunnel(file);
+        tun.load(file);
         con.debug('It passed validation');
     } catch (err) {
         con.fatal(err);
@@ -353,7 +353,7 @@ function cmdDigReal(tunnel, host) {
     // Load a configuration, generate a temporary filename for ssh config.
 
     con.debug('Loading tunnel');
-    var config = loadTunnel(tunnel);
+    var config = tun.load(tunnel, tunnelDefDir);
     config.sshConfig = temp.path({suffix: '.sshconfig'});
 
     // Create and save the ssh config
@@ -405,132 +405,14 @@ function cmdDigReal(tunnel, host) {
     });
 };
 
-function tunnelName(file) {
-    return path.basename(file).replace(/\.js|\.ini$/, '');
-}
-
-function loadTunnel(name) {
-    var local, stat, obj;
-
-    if (path.existsSync(name)) {
-        // Obviously a file name already
-        local = name
-    } else {
-        // Unqualified names should be in the tunnel dir
-        local = path.join(tunnelDefDir, name);
-        con.debug('Qualifying ' + name + ' to ' + local);
-    }
-
-    if (!name.match(/(\.ini|\.js)$/)) {
-        // No extension given, find the file
-        if (path.existsSync(local + '.ini')) {
-            local = local + '.ini';
-        } else if (path.existsSync(local + '.js')) {
-            local = local + '.js';
-        }
-    }
-
-    if (!path.existsSync(local)) {
-        con.fatal('Could not find a tunnel matching ' + name);
-    }
-
-    stat = fs.statSync(local);
-
-    if (local.match(/\.js$/)) {
-        con.debug('Loading ini format');
-        obj = loadJsTunnel(local);
-        obj.stat = stat;
-    } else if (local.match(/\.ini$/)) {
-        obj = loadIniTunnel(local);
-        obj.stat = stat;
-    } else {
-        con.fatal('Unknown format config ' + local);
-    }
-
-    validate(obj);
-    return obj;
-}
-
-function loadIniTunnel(name) {
-    var ini = new inireader.IniReader();
-    ini.load(name);
-    var obj = ini.getBlock();
-
-    var config = _.clone(obj.general);
-    config.hosts = {};
-    config.forwards = {};
-
-    _.each(obj, function (val, key) {
-        var m, arr;
-
-        // Host sections look like [host host_name]   
-        m = key.match(/^host ([^ ]+)$/);
-        if (m) {
-            // SSH keys have newlines replaced by spaces
-            if (val.key) {
-                val.key = val.key.replace(/ /g, '\n').replace(/\nRSA\nPRIVATE\nKEY/g, ' RSA PRIVATE KEY');
-            }
-            config.hosts[m[1]] = val;
-            return
-        }
-
-        // Forward sections look like [forward A description here] 
-        m = key.match(/^forward +(.+)$/);
-        if (m) {
-            arr = [];
-            _.each(val, function (to, from) {
-                arr.push({ from: from, to: to });
-            });
-            config.forwards[m[1]] = arr;
-            return
-        }
-    });
-
-    return config;
-}
-
-function loadJsTunnel(name) {
-    try {
-        con.debug('Loading ' + name);
-        return require(name);
-    } catch (err) {
-        con.error('Could not load ' + name);
-        con.fatal(err);
-    }
-};
-
-function saveIniTunnel(config, name) {
-    var ini = new inireader.IniReader();
-    ini.param('general', { description: config.description, author: config.author, main: config.main });
-
-    _.each(config.hosts, function (host, name) {
-        if (host.key) {
-            // The ini format doesn't handle multiline strings, so we replace newlines with spaces in ssh keys.
-            host = _.clone(host);
-            host.key = host.key.replace(/\n/g, ' ');
-        }
-        ini.param('host ' + name, host);
-    });
-
-    _.each(config.forwards, function (fwd, name) {
-        var obj = {};
-        fwd.forEach(function (f) {
-            obj[f.from] = f.to;
-        });
-        ini.param('forward ' + name, obj);
-    });
-
-    ini.write(name);
-}
-
 function cmdExport(tunnel, outfile) {
     if (commander.debug) { con.enableDebug(); }
 
     con.debug('Loading tunnel');
-    var config = loadTunnel(tunnel);
+    var config = tun.load(tunnel, tunnelDefDir);
 
     con.debug('Saving to INI format');
-    saveIniTunnel(config, outfile);
+    tun.save(config, outfile);
 
     con.ok(outfile);
 };
@@ -539,11 +421,11 @@ function cmdView(tunnel) {
     if (commander.debug) { con.enableDebug(); }
 
     con.debug('Loading tunnel');
-    var config = loadTunnel(tunnel);
+    var config = tun.load(tunnel, tunnelDefDir);
 
     con.debug('Saving to INI format');
     var path = temp.path({ suffix: '.ini' });
-    saveIniTunnel(config, path);
+    tun.save(config, path);
 
     con.debug('Show ' + path);
     console.log(fs.readFileSync(path, 'utf-8'));
