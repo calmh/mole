@@ -250,7 +250,7 @@ function cmdList() {
 
         var rows = [];
         files.sort().forEach(function (file) {
-            var r = loadTunnel(file);
+            var r = loadTunnel(path.join(recipeDir, file));
             var descr = r.description;
             var mtime = r.stat.mtime;
             var tname = tunnelName(file);
