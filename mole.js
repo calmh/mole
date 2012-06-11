@@ -35,7 +35,7 @@ try {
 }
 
 commander
-.command('dig <destination>')
+.command('dig <destination> [host]')
 .description('dig a tunnel to the destination')
 .action(cmdDig);
 
@@ -330,7 +330,7 @@ function cmdNewUser(name) {
     });
 }
 
-function cmdDig(tunnel) {
+function cmdDig(tunnel, host) {
     if (commander.debug) { con.enableDebug(); }
 
     exec('expect -v', function (error, stdout, stderr) {
@@ -339,12 +339,12 @@ function cmdDig(tunnel) {
             con.error('Verify that "expect" is installed and available in the path.');
         } else {
             con.debug(stdout.trim());
-            cmdDigReal(tunnel);
+            cmdDigReal(tunnel, host);
         }
     });
 }
 
-function cmdDigReal(tunnel) {
+function cmdDigReal(tunnel, host) {
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
@@ -378,10 +378,14 @@ function cmdDigReal(tunnel) {
         // Create the expect script and save it to a temp file.
 
         con.debug('Creating expect script');
-        var expect = expectConfig(config, commander.debug) + '\n';
-        var expectFile = temp.path({suffix: '.expect'});
-        fs.writeFileSync(expectFile, expect);
-        con.debug(expectFile);
+        try {
+            var expect = expectConfig(config, commander.debug, host) + '\n';
+            var expectFile = temp.path({suffix: '.expect'});
+            fs.writeFileSync(expectFile, expect);
+            con.debug(expectFile);
+        } catch (err) {
+            con.fatal(err);
+        }
 
         con.info('Hang on, digging the tunnel');
         spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
