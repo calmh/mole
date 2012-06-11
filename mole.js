@@ -21,9 +21,9 @@ var configDir = path.join(process.env['HOME'], '.mole');
 var configFile = path.join(configDir, 'mole.ini');
 var certFile = path.join(configDir, 'mole.crt');
 var keyFile = path.join(configDir, 'mole.key');
-var recipeDir = path.join(configDir, 'tunnels');
+var tunnelDefDir = path.join(configDir, 'tunnels');
 
-mkdirp.sync(recipeDir);
+mkdirp.sync(tunnelDefDir);
 
 var config = new inireader.IniReader();
 try {
@@ -174,7 +174,7 @@ function serverFetch(fname, callback) {
         if (result.length === 0) {
             con.fatal('Empty response from server - are you registered?');
         } else {
-            var local = path.join(recipeDir, fname);
+            var local = path.join(tunnelDefDir, fname);
             fs.writeFileSync(local, result);
             con.debug('Fetched ' + fname);
             callback(local);
@@ -244,13 +244,13 @@ function cmdToken() {
 
 function cmdList() {
     if (commander.debug) { con.enableDebug(); }
-    con.debug('listing files in ' + recipeDir);
-    fs.readdir(recipeDir, function (err, files) {
+    con.debug('listing files in ' + tunnelDefDir);
+    fs.readdir(tunnelDefDir, function (err, files) {
         con.debug('Got ' + files.length + ' files');
 
         var rows = [];
         files.sort().forEach(function (file) {
-            var r = loadTunnel(path.join(recipeDir, file));
+            var r = loadTunnel(path.join(tunnelDefDir, file));
             var descr = r.description;
             var mtime = r.stat.mtime;
             var tname = tunnelName(file);
@@ -280,7 +280,7 @@ function cmdPull() {
                 }
             };
 
-            var local = path.join(recipeDir, res.name);
+            var local = path.join(tunnelDefDir, res.name);
             var tname = tunnelName(res.name);
             if (!path.existsSync(local)) {
                 inProgress += 1;
@@ -412,7 +412,7 @@ function loadTunnel(name) {
         local = name
     } else {
         // Unqualified names should be in the tunnel dir
-        local = path.join(recipeDir, name);
+        local = path.join(tunnelDefDir, name);
         con.debug('Qualifying ' + name + ' to ' + local);
     }
 
