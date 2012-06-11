@@ -15,6 +15,7 @@ var util = require('util');
 
 var table = require('./lib/table');
 var con = require('./lib/console');
+var validate = require('./lib/validate');
 
 var configDir = path.join(process.env['HOME'], '.mole');
 var configFile = path.join(configDir, 'mole.ini');
@@ -303,10 +304,19 @@ function cmdPush(file) {
     con.debug('Reading ' + file);
     try {
         var data = fs.readFileSync(file, 'utf-8');
+        con.debug('Got ' + data.length + ' bytes');
     } catch (err) {
         con.fatal(err);
     }
-    con.debug('Got ' + data.length + ' bytes');
+
+    con.debug('Testing ' + file);
+    try {
+        loadTunnel(file);
+        con.debug('It passed validation');
+    } catch (err) {
+        con.fatal(err);
+    }
+
     serverSend(path.basename(file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
     });
@@ -425,14 +435,15 @@ function loadTunnel(name) {
         con.debug('Loading ini format');
         obj = loadJsTunnel(local);
         obj.stat = stat;
-        return obj;
     } else if (local.match(/\.ini$/)) {
         obj = loadIniTunnel(local);
         obj.stat = stat;
-        return obj;
     } else {
         con.fatal('Unknown format config ' + local);
     }
+
+    validate(obj);
+    return obj;
 }
 
 function loadIniTunnel(name) {
