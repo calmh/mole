@@ -2,7 +2,7 @@
   "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
   "name": "mole",
   "description": "Furry ssh tunneller",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "homepage": "https://github.com/calmh/mole",
   "repository": {
     "url": "https://github.com/calmh/mole.git"
