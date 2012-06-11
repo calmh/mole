@@ -252,12 +252,13 @@ function cmdList() {
         files.sort().forEach(function (file) {
             var r = loadTunnel(path.join(tunnelDefDir, file));
             var descr = r.description;
+            var hosts = _.keys(r.hosts).sort().join(', ');
             var mtime = r.stat.mtime;
             var tname = tunnelName(file);
-            rows.push([ tname, descr, iso8601.fromDate(mtime).slice(0, 10) ]);
+            rows.push([ tname, descr, hosts, iso8601.fromDate(mtime).slice(0, 10) ]);
         });
 
-        table([ 'Tunnel', 'Description', 'Modified' ], rows);
+        table([ 'Tunnel', 'Description', 'Hosts', 'Modified' ], rows);
     });
 }
 
