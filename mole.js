@@ -4,7 +4,6 @@ var _ = require('underscore');
 var commander = require('commander');
 var exec = require('child_process').exec;
 var fs = require('fs');
-var https = require('https');
 var inireader = require('inireader');
 var iso8601 = require('iso8601');
 var mkdirp = require('mkdirp');
@@ -16,6 +15,7 @@ var util = require('util');
 var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
+var srv = require('./lib/server');
 
 var configDir = path.join(process.env['HOME'], '.mole');
 var configFile = path.join(configDir, 'mole.ini');
@@ -109,96 +109,37 @@ if (!_.any(commander.args, function (a) { return typeof a === 'object' })) {
     process.exit(0);
 }
 
-function server(options, callback) {
-    var cert = {};
+function readCert() {
     try {
-        cert.key = fs.readFileSync(keyFile, 'utf-8');
-        cert.cert = fs.readFileSync(certFile, 'utf-8');
+        var key, cert;
+        con.debug('Trying to load ' + keyFile);
+        key = fs.readFileSync(keyFile, 'utf-8');
+        con.debug('Trying to load ' + certFile);
+        cert = fs.readFileSync(certFile, 'utf-8');
+        srv.init({ key: key, cert: cert });
     } catch (err) {
+        con.debug('No certificate loaded');
         // We don't have a certificate yet.
     }
+}
 
-    if (!config.param('server.host')) {
-        con.info('Mole is not currently registered with a server.');
-        con.info('Use "mole register <server> <token>" to register.');
-        process.exit(0);
+function init() {
+    if (commander.debug) {
+        con.enableDebug();
     }
 
-    var defaults = {
-        host: config.param('server.host'),
-        port: config.param('server.port'),
-        key: cert.key,
-        cert: cert.cert,
-        method: 'GET',
-        agent: false
-    };
-    _.defaults(options, defaults);
+    srv.init({ host: config.param('server.host'), port: config.param('server.port') || 9443 });
 
-    var buffer = '';
-    var req = https.request(options, function (res) {
-        res.setEncoding('utf-8');
-        res.on('data', function (chunk) {
-            buffer += chunk;
-        });
-        res.on('end', function () {
-            callback(buffer);
-        });
-    });
-
-    req.on('error', function (err) {
-        con.fatal(err);
-    });
-
-    return req;
-}
-
-function serverSend(name, data, callback) {
-    var req = server({ path: '/store/' + name, method: 'PUT' }, callback);
-    req.write(data);
-    req.end();
-}
-
-function serverList(callback) {
-    server({ path: '/store' }, function (result) {
-        if (result.length === 0) {
-            con.fatal('Empty response from server - are you registered?');
-        } else {
-            callback(JSON.parse(result));
-        }
-    }).end();
-}
-
-function serverFetch(fname, callback) {
-    con.debug('Get ' + fname);
-    server({ path: '/store/' + fname }, function (result) {
-        if (result.length === 0) {
-            con.fatal('Empty response from server - are you registered?');
-        } else {
-            var local = path.join(tunnelDefDir, fname);
-            fs.writeFileSync(local, result);
-            con.debug('Fetched ' + fname);
-            callback(local);
-        }
-    }).end();
-}
-
-// Register using a token, get certificate and key
-
-function serverRegister(token, callback) {
-    server({ path: '/register/' + token }, function (result) {
-        if (result.length === 0) {
-            con.fatal('Empty response from server - verify that the token is correct and not already used.');
-        } else {
-            callback(JSON.parse(result));
-        }
-    }).end();
-}
+    readCert();
+};
 
 function cmdRegister(host, token) {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('Requesting registration from server ' + host);
     config.param('server.host', host);
-    serverRegister(token, function (result) {
+    srv.init({ host: host });
+    srv.register(token, function (result) {
         con.debug('Received certificate and key from server');
         fs.writeFileSync(certFile, result.cert);
         fs.chmodSync(certFile, 0600);
@@ -206,44 +147,25 @@ function cmdRegister(host, token) {
         fs.chmodSync(keyFile, 0600);
         config.write();
         con.ok('Registered');
+        readCert();
         cmdPull();
     });
 }
 
-// Get a new token that can be used to register another host
-
-function serverToken(callback) {
-    server({ path: '/newtoken', method: 'POST' }, function (result) {
-        if (result.length === 0) {
-            con.fatal('Empty response from server - are you registered?');
-        } else {
-            callback(JSON.parse(result));
-        }
-    }).end();
-}
-
-function serverNewUser(name, callback) {
-    server({ path: '/users/' + name, method: 'POST' }, function (result) {
-        if (result.length === 0) {
-            con.fatal('Empty response from server - are you a registered admin?');
-        } else {
-            callback(JSON.parse(result));
-        }
-    }).end();
-}
-
 function cmdToken() {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('Requesting new token from server');
     con.info('A token can be used only once');
     con.info('Only the most recently generated token is valid');
-    serverToken(function (result) {
+    srv.token(function (result) {
         con.ok(result.token);
     });
 }
 
 function cmdList() {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('listing files in ' + tunnelDefDir);
     fs.readdir(tunnelDefDir, function (err, files) {
         con.debug('Got ' + files.length + ' files');
@@ -267,45 +189,54 @@ function cmdList() {
 }
 
 function cmdPull() {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('Requesting tunnel list from server');
-    serverList(function (result) {
+    srv.list(function (result) {
         con.debug('Got ' + result.length + ' entries');
         con.debug(util.inspect(result));
         var inProgress = 0;
 
-        _.sortBy(result, 'name').forEach(function (res) {
-            function fileFetched(file) {
-                fs.utimesSync(file, Math.floor(res.mtime / 1000), Math.floor(res.mtime / 1000));
-                con.ok('Pulled ' + tname.bold);
-                inProgress -= 1;
-                if (inProgress === 0) {
-                    con.ok(result.length + ' tunnel definitions in sync');
-                    inProgress = -1;
-                }
-            };
+        function done() {
+            inProgress -= 1;
+            if (inProgress === 0) {
+                con.ok(result.length + ' tunnel definitions in sync');
+                inProgress = -1;
+            }
+        };
 
+        _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(tunnelDefDir, res.name);
-            var tname = tun.name(res.name);
-            if (!path.existsSync(local)) {
                 inProgress += 1;
-                serverFetch(res.name, fileFetched);
+
+            var fetch = false;
+            if (!path.existsSync(local)) {
+                fetch = true;
             } else {
                 var s = fs.statSync(local);
                 if (s.mtime.getTime() !== parseInt(res.mtime, 10)) {
-                    inProgress += 1;
-                    serverFetch(res.name, fileFetched);
+                    fetch = true;
                 }
             }
+
+            if (fetch) {
+                srv.fetch(res.name, function (result) {
+                    var mtime = Math.floor(res.mtime / 1000);
+                    fs.writeFileSync(local, result);
+                    fs.utimesSync(local, mtime, mtime);
+                    con.ok('Pulled ' + tun.name(res.name));
+                    done();
+                });
+            } else {
+                done();
+            }
         });
-        if (inProgress === 0) {
-            con.ok(result.length + ' tunnel definitions in sync');
-        }
     });
 }
 
 function cmdPush(file) {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('Reading ' + file);
     try {
         var data = fs.readFileSync(file, 'utf-8');
@@ -322,21 +253,22 @@ function cmdPush(file) {
         con.fatal(err);
     }
 
-    serverSend(path.basename(file), data, function (result) {
+    srv.send(path.basename(file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
     });
 }
 
 function cmdNewUser(name) {
-    if (commander.debug) { con.enableDebug(); }
+    init();
+
     con.debug('Requesting user ' + name);
-    serverNewUser(name, function (result) {
+    srv.newUser(name, function (result) {
         con.ok(result.token);
     });
 }
 
 function cmdDig(tunnel, host) {
-    if (commander.debug) { con.enableDebug(); }
+    init();
 
     exec('expect -v', function (error, stdout, stderr) {
         if (error) {
@@ -417,7 +349,7 @@ function cmdDigReal(tunnel, host) {
 function cmdExport(tunnel, outfile) {
     var config;
 
-    if (commander.debug) { con.enableDebug(); }
+    init();
 
     try {
         con.debug('Loading tunnel');
@@ -435,7 +367,7 @@ function cmdExport(tunnel, outfile) {
 function cmdView(tunnel) {
     var config;
 
-    if (commander.debug) { con.enableDebug(); }
+    init();
 
     try {
         con.debug('Loading tunnel');
