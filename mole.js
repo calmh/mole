@@ -37,49 +37,49 @@ try {
 commander
 .command('dig <destination> [host]')
 .description('dig a tunnel to the destination')
-.action(cmdDig);
+.action(dig);
 
 commander
 .command('list')
 .description('list available tunnel definitions')
-.action(cmdList);
+.action(list);
 
 commander
 .command('pull')
 .description('get tunnel definitions from the server')
-.action(cmdPull);
+.action(pull);
 
 commander
 .command('push <file>')
 .description('send a tunnel definition to the server')
-.action(cmdPush);
+.action(push);
 
 commander
 .command('register <server> <token>')
 .description('register with a mole server')
 .option('-p, --port', 'server port', config.param('server.port'))
-.action(cmdRegister);
+.action(register);
 
 commander
 .command('gettoken')
 .description('generate a new registration token')
-.action(cmdToken);
+.action(token);
 
 commander
 .command('newuser <username>')
 .description('create a new user')
 .option('-a, --admin', 'create an admin user')
-.action(cmdNewUser);
+.action(newUser);
 
 commander
 .command('export <tunnel> <outfile>')
 .description('export tunnel definition to a file')
-.action(cmdExport);
+.action(exportf);
 
 commander
 .command('view <tunnel>')
 .description('show tunnel definition')
-.action(cmdView);
+.action(view);
 
 commander
 .option('-d, --debug', 'display debug information')
@@ -133,7 +133,7 @@ function init() {
     readCert();
 };
 
-function cmdRegister(host, token) {
+function register(host, token) {
     init();
 
     con.debug('Requesting registration from server ' + host);
@@ -148,11 +148,11 @@ function cmdRegister(host, token) {
         config.write();
         con.ok('Registered');
         readCert();
-        cmdPull();
+        pull();
     });
 }
 
-function cmdToken() {
+function token() {
     init();
 
     con.debug('Requesting new token from server');
@@ -163,7 +163,7 @@ function cmdToken() {
     });
 }
 
-function cmdList() {
+function list() {
     init();
 
     con.debug('listing files in ' + tunnelDefDir);
@@ -188,7 +188,7 @@ function cmdList() {
     });
 }
 
-function cmdPull() {
+function pull() {
     init();
 
     con.debug('Requesting tunnel list from server');
@@ -234,7 +234,7 @@ function cmdPull() {
     });
 }
 
-function cmdPush(file) {
+function push(file) {
     init();
 
     con.debug('Reading ' + file);
@@ -258,7 +258,7 @@ function cmdPush(file) {
     });
 }
 
-function cmdNewUser(name) {
+function newUser(name) {
     init();
 
     con.debug('Requesting user ' + name);
@@ -267,7 +267,7 @@ function cmdNewUser(name) {
     });
 }
 
-function cmdDig(tunnel, host) {
+function dig(tunnel, host) {
     init();
 
     exec('expect -v', function (error, stdout, stderr) {
@@ -276,12 +276,12 @@ function cmdDig(tunnel, host) {
             con.error('Verify that "expect" is installed and available in the path.');
         } else {
             con.debug(stdout.trim());
-            cmdDigReal(tunnel, host);
+            digReal(tunnel, host);
         }
     });
 }
 
-function cmdDigReal(tunnel, host) {
+function digReal(tunnel, host) {
     var config;
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
@@ -346,7 +346,7 @@ function cmdDigReal(tunnel, host) {
     });
 };
 
-function cmdExport(tunnel, outfile) {
+function exportf(tunnel, outfile) {
     var config;
 
     init();
@@ -364,7 +364,7 @@ function cmdExport(tunnel, outfile) {
     con.ok(outfile);
 };
 
-function cmdView(tunnel) {
+function view(tunnel) {
     var config;
 
     init();
