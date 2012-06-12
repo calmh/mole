@@ -207,7 +207,7 @@ function pull() {
 
         _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(tunnelDefDir, res.name);
-                inProgress += 1;
+            inProgress += 1;
 
             var fetch = false;
             if (!path.existsSync(local)) {
@@ -228,7 +228,7 @@ function pull() {
                     done();
                 });
             } else {
-                done();
+                process.nextTick(done);
             }
         });
     });
