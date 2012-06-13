@@ -37,54 +37,54 @@ try {
 
 commander
 .command('dig <destination> [host]')
-.description('dig a tunnel to the destination')
+.description(' - dig a tunnel to the destination')
 .action(dig);
 
 commander
 .command('list')
-.description('list available tunnel definitions')
+.description(' - list available tunnel definitions')
 .action(list);
 
 commander
 .command('pull')
-.description('get tunnel definitions from the server')
+.description(' - get tunnel definitions from the server')
 .action(pull);
 
 commander
 .command('push <file>')
-.description('send a tunnel definition to the server')
+.description(' - send a tunnel definition to the server')
 .action(push);
 
 commander
 .command('register <server> <token>')
-.description('register with a mole server')
+.description(' - register with a mole server')
 .option('-p, --port', 'server port', config.param('server.port'))
 .action(register);
 
 commander
 .command('gettoken')
-.description('generate a new registration token')
+.description(' - generate a new registration token')
 .action(token);
 
 commander
 .command('export <tunnel> <outfile>')
-.description('export tunnel definition to a file')
+.description(' - export tunnel definition to a file')
 .action(exportf);
 
 commander
 .command('view <tunnel>')
-.description('show tunnel definition')
+.description(' - show tunnel definition')
 .action(view);
 
 commander
 .command('newuser <username>')
-.description('create a new user (requires admin privileges)')
+.description(' - create a new user (requires admin privileges)')
 .option('-a, --admin', 'create an admin user')
 .action(newUser);
 
 commander
 .command('deluser <username>')
-.description('delete a user (requires admin privileges)')
+.description(' - delete a user (requires admin privileges)')
 .action(delUser);
 
 commander
