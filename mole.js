@@ -66,12 +66,6 @@ commander
 .action(token);
 
 commander
-.command('newuser <username>')
-.description('create a new user')
-.option('-a, --admin', 'create an admin user')
-.action(newUser);
-
-commander
 .command('export <tunnel> <outfile>')
 .description('export tunnel definition to a file')
 .action(exportf);
@@ -80,6 +74,17 @@ commander
 .command('view <tunnel>')
 .description('show tunnel definition')
 .action(view);
+
+commander
+.command('newuser <username>')
+.description('create a new user (requires admin privileges)')
+.option('-a, --admin', 'create an admin user')
+.action(newUser);
+
+commander
+.command('deluser <username>')
+.description('delete a user (requires admin privileges)')
+.action(delUser);
 
 commander
 .option('-d, --debug', 'display debug information')
@@ -264,6 +269,15 @@ function newUser(name) {
     con.debug('Requesting user ' + name);
     srv.newUser(name, function (result) {
         con.ok(result.token);
+    });
+}
+
+function delUser(name) {
+    init();
+
+    con.debug('Deleting user ' + name);
+    srv.delUser(name, function (result) {
+        con.ok('deleted');
     });
 }
 
