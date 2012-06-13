@@ -134,7 +134,11 @@ function init() {
         con.enableDebug();
     }
 
-    srv.init({ host: config.param('server.host'), port: config.param('server.port') || 9443 });
+    srv.init({
+        host: config.param('server.host'),
+        port: config.param('server.port') || 9443,
+        fingerprint: config.param('server.fingerprint')
+    });
 
     readCert();
 };
@@ -149,6 +153,7 @@ function register(host, token) {
         con.debug('Received certificate and key from server');
         fs.writeFileSync(certFile, result.cert);
         fs.writeFileSync(keyFile, result.key);
+        config.param('server.fingerprint', result.fingerprint);
         config.write();
         con.ok('Registered');
         readCert();
