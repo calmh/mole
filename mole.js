@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var _ = require('underscore');
-var commander = require('commander');
+var parser = require('nomnom');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var inireader = require('inireader');
@@ -35,85 +35,78 @@ try {
     config.write();
 }
 
-commander
-.command('dig <destination> [host]')
-.description(' - dig a tunnel to the destination')
-.action(dig);
+parser.script('mole');
 
-commander
-.command('list')
-.description(' - list available tunnel definitions')
-.action(list);
+parser.command('dig')
+.help('Dig a tunnel to the destination')
+.option('tunnel', { position: 1, help: 'Tunnel name or file name', required: true })
+.option('host', { abbr: 'H', metavar: 'HOST', help: 'Host name within tunnel definition' })
+.callback(dig);
 
-commander
-.command('pull')
-.description(' - get tunnel definitions from the server')
-.action(pull);
+parser.command('list')
+.help('List available tunnel definitions')
+.callback(list);
 
-commander
-.command('push <file>')
-.description(' - send a tunnel definition to the server')
-.action(push);
+parser.command('pull')
+.help('Get tunnel definitions from the server')
+.callback(pull);
 
-commander
-.command('register <server> <token>')
-.description(' - register with a mole server')
-.option('-p, --port', 'server port', config.param('server.port'))
-.action(register);
+parser.command('push')
+.help('Send a tunnel definition to the server')
+.option('file', { position: 1, help: 'File name', required: true })
+.callback(push);
 
-commander
-.command('gettoken')
-.description(' - generate a new registration token')
-.action(token);
+parser.command('register')
+.help('Register with a mole server')
+.option('server', { position: 1, help: 'Server name', required: true })
+.option('token', { position: 2, help: 'One time registration token', required: true })
+.option('port', { abbr: 'p', metafile: 'PORT', help: 'Server port (default 9443)', default: 9443 })
+.callback(register);
 
-commander
-.command('export <tunnel> <outfile>')
-.description(' - export tunnel definition to a file')
-.action(exportf);
+parser.command('gettoken')
+.help('Generate a new registration token')
+.callback(token);
 
-commander
-.command('view <tunnel>')
-.description(' - show tunnel definition')
-.action(view);
+parser.command('export')
+.option('tunnel', { position: 1, help: 'Tunnel name', required: true })
+.option('file', { position: 2, help: 'File name to write tunnel definition to', required: true })
+.help('Export tunnel definition to a file')
+.callback(exportf);
 
-commander
-.command('newuser <username>')
-.description(' - create a new user (requires admin privileges)')
-.option('-a, --admin', 'create an admin user')
-.action(newUser);
+parser.command('newuser')
+.option('name', { position: 1, help: 'User name', required: true })
+.option('admin', { flag: true, abbr: 'a', help: 'Create an admin user' })
+.help('Create a new user (requires admin privileges)')
+.callback(newUser);
 
-commander
-.command('deluser <username>')
-.description(' - delete a user (requires admin privileges)')
-.action(delUser);
+parser.command('deluser')
+.option('name', { position: 1, help: 'User name', required: true })
+.help('Delete a user (requires admin privileges)')
+.callback(delUser);
 
-commander
-.option('-d, --debug', 'display debug information')
-.on('--help', function () {
-    console.log('  Examples:');
-    console.log();
-    console.log('    Register with server "mole.example.com" and a token:');
-    console.log('      ' + commander.name + ' register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2');
-    console.log();
-    console.log('    List available tunnels:');
-    console.log('      ' + commander.name + ' list');
-    console.log();
-    console.log('    Dig a tunnel to "operator3":');
-    console.log('      ' + commander.name + ' dig operator3');
-    console.log();
-    console.log('    Fetch new and updated tunnel specifications from the server:');
-    console.log('      ' + commander.name + ' pull');
-    console.log();
-});
+parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
 
-commander.parse(process.argv);
+parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 
-// There should be a 'command' (typeof 'object') among the arguments
-if (!_.any(commander.args, function (a) { return typeof a === 'object' })) {
-    process.stdout.write(commander.helpInformation());
-    commander.emit('--help');
+parser.nocommand().callback(function () {
+    console.log(parser.getUsage());
     process.exit(0);
-}
+})
+.help([ 'Examples:',
+'',
+'Register with server "mole.example.com" and a token:',
+'  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2',
+'',
+'List available tunnels:',
+'  mole list',
+'',
+'Dig a tunnel to "operator3":',
+'  mole dig operator3',
+'',
+'Fetch new and updated tunnel specifications from the server:',
+'  mole pull' ].join('\n'));
+
+parser.parse();
 
 function readCert() {
     try {
@@ -129,8 +122,8 @@ function readCert() {
     }
 }
 
-function init() {
-    if (commander.debug) {
+function init(opts) {
+    if (opts.debug) {
         con.enableDebug();
     }
 
@@ -143,13 +136,14 @@ function init() {
     readCert();
 };
 
-function register(host, token) {
-    init();
+function register(opts) {
+    init(opts);
 
-    con.debug('Requesting registration from server ' + host);
-    config.param('server.host', host);
-    srv.init({ host: host });
-    srv.register(token, function (result) {
+    con.debug('Requesting registration from server ' + opts.server + ':' + opts.port);
+    config.param('server.host', opts.server);
+    config.param('server.port', opts.port);
+    srv.init({ host: opts.server, port: opts.port });
+    srv.register(opts.token, function (result) {
         con.debug('Received certificate and key from server');
         fs.writeFileSync(certFile, result.cert);
         fs.writeFileSync(keyFile, result.key);
@@ -157,12 +151,12 @@ function register(host, token) {
         config.write();
         con.ok('Registered');
         readCert();
-        pull();
+        pull(opts);
     });
 }
 
-function token() {
-    init();
+function token(opts) {
+    init(opts);
 
     con.debug('Requesting new token from server');
     con.info('A token can be used only once');
@@ -172,8 +166,8 @@ function token() {
     });
 }
 
-function list() {
-    init();
+function list(opts) {
+    init(opts);
 
     con.debug('listing files in ' + tunnelDefDir);
     fs.readdir(tunnelDefDir, function (err, files) {
@@ -197,8 +191,8 @@ function list() {
     });
 }
 
-function pull() {
-    init();
+function pull(opts) {
+    init(opts);
 
     con.debug('Requesting tunnel list from server');
     srv.list(function (result) {
@@ -243,50 +237,50 @@ function pull() {
     });
 }
 
-function push(file) {
-    init();
+function push(opts) {
+    init(opts);
 
-    con.debug('Reading ' + file);
+    con.debug('Reading ' + opts.file);
     try {
-        var data = fs.readFileSync(file, 'utf-8');
+        var data = fs.readFileSync(opts.file, 'utf-8');
         con.debug('Got ' + data.length + ' bytes');
     } catch (err) {
         con.fatal(err);
     }
 
-    con.debug('Testing ' + file);
+    con.debug('Testing ' + opts.file);
     try {
-        tun.load(file);
+        tun.load(opts.file);
         con.debug('It passed validation');
     } catch (err) {
         con.fatal(err);
     }
 
-    srv.send(path.basename(file), data, function (result) {
+    srv.send(path.basename(opts.file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
     });
 }
 
-function newUser(name) {
-    init();
+function newUser(opts) {
+    init(opts);
 
-    con.debug('Requesting user ' + name);
-    srv.newUser(name, function (result) {
+    con.debug('Requesting user ' + opts.name);
+    srv.newUser(opts.name, function (result) {
         con.ok(result.token);
     });
 }
 
-function delUser(name) {
-    init();
+function delUser(opts) {
+    init(opts);
 
-    con.debug('Deleting user ' + name);
-    srv.delUser(name, function (result) {
+    con.debug('Deleting user ' + opts.name);
+    srv.delUser(opts.name, function (result) {
         con.ok('deleted');
     });
 }
 
-function dig(tunnel, host) {
-    init();
+function dig(opts) {
+    init(opts);
 
     exec('expect -v', function (error, stdout, stderr) {
         if (error) {
@@ -294,12 +288,12 @@ function dig(tunnel, host) {
             con.error('Verify that "expect" is installed and available in the path.');
         } else {
             con.debug(stdout.trim());
-            digReal(tunnel, host);
+            digReal(opts.tunnel, opts.host, opts.debug);
         }
     });
 }
 
-function digReal(tunnel, host) {
+function digReal(tunnel, host, debug) {
     var config;
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
@@ -339,7 +333,7 @@ function digReal(tunnel, host) {
 
         con.debug('Creating expect script');
         try {
-            var expect = expectConfig(config, commander.debug, host) + '\n';
+            var expect = expectConfig(config, debug, host) + '\n';
             var expectFile = temp.path({suffix: '.expect'});
             fs.writeFileSync(expectFile, expect);
             con.debug(expectFile);
@@ -364,22 +358,22 @@ function digReal(tunnel, host) {
     });
 };
 
-function exportf(tunnel, outfile) {
+function exportf(opts) {
     var config;
 
-    init();
+    init(opts);
 
     try {
         con.debug('Loading tunnel');
-        config = tun.load(tunnel, tunnelDefDir);
+        config = tun.load(opts.tunnel, tunnelDefDir);
     } catch (err) {
         con.fatal(err);
     }
 
     con.debug('Saving to INI format');
-    tun.save(config, outfile);
+    tun.save(config, opts.file);
 
-    con.ok(outfile);
+    con.ok(opts.file);
 };
 
 function view(tunnel) {
