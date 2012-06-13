@@ -24,6 +24,7 @@ var keyFile = path.join(configDir, 'mole.key');
 var tunnelDefDir = path.join(configDir, 'tunnels');
 
 mkdirp.sync(tunnelDefDir);
+fs.chmodSync(configDir, 0700);
 
 var config = new inireader.IniReader();
 try {
@@ -147,9 +148,7 @@ function register(host, token) {
     srv.register(token, function (result) {
         con.debug('Received certificate and key from server');
         fs.writeFileSync(certFile, result.cert);
-        fs.chmodSync(certFile, 0600);
         fs.writeFileSync(keyFile, result.key);
-        fs.chmodSync(keyFile, 0600);
         config.write();
         con.ok('Registered');
         readCert();
