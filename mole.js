@@ -298,6 +298,7 @@ function digReal(tunnel, host, debug) {
     var sshConfig = require('./lib/ssh-config');
     var expectConfig = require('./lib/expect-config');
     var setupLocalIPs = require('./lib/setup-local-ips');
+    var vpncConfig = require('./lib/vpnc-config.js');
 
     // Load a configuration, generate a temporary filename for ssh config.
 
@@ -307,7 +308,7 @@ function digReal(tunnel, host, debug) {
     } catch (err) {
         con.fatal(err);
     }
-    config.sshConfig = temp.path({suffix: '.sshconfig'});
+    config.sshConfig = temp.path({suffix: '.ssh.conf'});
 
     // Create and save the ssh config
 
@@ -316,9 +317,30 @@ function digReal(tunnel, host, debug) {
         '  UserKnownHostsFile /dev/null',
         '  StrictHostKeyChecking no',
         '  IdentitiesOnly yes'].join('\n') + '\n';
-    var conf = defaults + sshConfig(config) + '\n';
+    var conf = defaults + sshConfig(config);
     fs.writeFileSync(config.sshConfig, conf);
     con.debug(config.sshConfig);
+
+    if (config.vpnc) {
+        con.debug('Creating vpnc config');
+        var vpnc = vpncConfig(config);
+        var vpncFile = temp.path({suffix: '.vpnc.conf'});
+
+        fs.writeFileSync(vpncFile, vpnc);
+
+        config.vpncConfig = vpncFile;
+        con.debug(config.vpncConfig);
+    }
+
+    con.debug('Creating expect script');
+    try {
+        var expect = expectConfig(config, debug, host);
+        var expectFile = temp.path({suffix: '.expect'});
+        fs.writeFileSync(expectFile, expect);
+        con.debug(expectFile);
+    } catch (err) {
+        con.fatal(err);
+    }
 
     // Set up local IP:s needed for forwarding and execute the expect scipt.
 
@@ -330,16 +352,6 @@ function digReal(tunnel, host, debug) {
         }
 
         // Create the expect script and save it to a temp file.
-
-        con.debug('Creating expect script');
-        try {
-            var expect = expectConfig(config, debug, host) + '\n';
-            var expectFile = temp.path({suffix: '.expect'});
-            fs.writeFileSync(expectFile, expect);
-            con.debug(expectFile);
-        } catch (err) {
-            con.fatal(err);
-        }
 
         con.info('Hang on, digging the tunnel');
         spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
