@@ -40,7 +40,7 @@ parser.script('mole');
 parser.command('dig')
 .help('Dig a tunnel to the destination')
 .option('tunnel', { position: 1, help: 'Tunnel name or file name', required: true })
-.option('host', { abbr: 'H', metavar: 'HOST', help: 'Host name within tunnel definition' })
+.option('host', { position: 2, help: 'Host name within tunnel definition' })
 .callback(dig);
 
 parser.command('list')
