@@ -8,6 +8,7 @@ var inireader = require('inireader');
 var iso8601 = require('iso8601');
 var mkdirp = require('mkdirp');
 var path = require('path');
+var pidof = require('pidof');
 var spawn = require('child_process').spawn;
 var temp = require('temp');
 var util = require('util');
@@ -326,18 +327,28 @@ function digReal(tunnel, host, debug) {
     if (config.vpnc) {
         vpnc.available(function (err, version) {
             if (err) {
+                con.error(err);
                 con.fatal('vpnc unavailable, cannot connect VPN');
             } else {
                 con.debug('Using ' +  version);
 
-                con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
-                vpnc.connect(config.vpnc, function (err, results) {
+                pidof('vpnc', function (err, pid) {
                     if (err) {
-                        con.fatal(err);
+                        con.error(err);
+                        con.fatal('could not check if vpnc was running');
+                    } else if (pid) {
+                        con.fatal('vpnc already running, will not start another instance');
                     }
-                    con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                    con.info('manually by running "sudo vpnc-disconnect".');
-                    launchExpect(config, debug, host);
+
+                    con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
+                    vpnc.connect(config.vpnc, function (err, results) {
+                        if (err) {
+                            con.fatal(err);
+                        }
+                        con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
+                        con.info('manually by running "sudo vpnc-disconnect".');
+                        launchExpect(config, debug, host);
+                    });
                 });
             }
         });
