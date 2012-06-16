@@ -11,6 +11,7 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 var temp = require('temp');
 var util = require('util');
+var vpnc = require('vpnc');
 
 var table = require('./lib/table');
 var con = require('./lib/console');
@@ -296,9 +297,6 @@ function dig(opts) {
 function digReal(tunnel, host, debug) {
     var config;
     var sshConfig = require('./lib/ssh-config');
-    var expectConfig = require('./lib/expect-config');
-    var setupLocalIPs = require('./lib/setup-local-ips');
-    var vpncConfig = require('./lib/vpnc-config.js');
 
     // Load a configuration, generate a temporary filename for ssh config.
 
@@ -322,15 +320,23 @@ function digReal(tunnel, host, debug) {
     con.debug(config.sshConfig);
 
     if (config.vpnc) {
-        con.debug('Creating vpnc config');
-        var vpnc = vpncConfig(config);
-        var vpncFile = temp.path({suffix: '.vpnc.conf'});
-
-        fs.writeFileSync(vpncFile, vpnc);
-
-        config.vpncConfig = vpncFile;
-        con.debug(config.vpncConfig);
+        con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
+        vpnc.connect(config.vpnc, function (err, results) {
+            if (err) {
+                con.fatal(err);
+            }
+            con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
+            con.info('manually by running "sudo vpnc-disconnect".');
+            launchExpect(config, debug, host);
+        });
+    } else {
+        launchExpect(config, debug, host);
     }
+};
+
+function launchExpect(config, debug, host) {
+    var setupLocalIPs = require('./lib/setup-local-ips');
+    var expectConfig = require('./lib/expect-config');
 
     con.debug('Creating expect script');
     try {
@@ -347,7 +353,7 @@ function digReal(tunnel, host, debug) {
     con.debug('Setting up local IP:s for forwarding');
     setupLocalIPs(config, function (c) {
         if (!c) {
-            con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding');
+            con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding.');
             delete config.forwards;
         }
 
@@ -359,6 +365,17 @@ function digReal(tunnel, host, debug) {
             fs.unlinkSync(expectFile);
             fs.unlinkSync(config.sshConfig);
             // FIXME: Unlink ssh keys
+
+            if (config.vpnc) {
+                con.debug('Disconnecting VPN');
+                vpnc.disconnect(function (err, status) {
+                    if (err) {
+                        con.fatal(err);
+                    }
+                    con.info('VPN disconnected');
+                });
+            }
+
             if (code === 0) {
                 con.ok('Great success');
             } else {
@@ -368,7 +385,7 @@ function digReal(tunnel, host, debug) {
             }
         });
     });
-};
+}
 
 function exportf(opts) {
     var config;

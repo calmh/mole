@@ -20,7 +20,8 @@
     "mkdirp": "~0.3.3",
     "colors": "~0.6.0-1",
     "iso8601": "~1.1.0",
-    "nomnom": "git://github.com/calmh/nomnom.git"
+    "nomnom": "git://github.com/calmh/nomnom.git",
+    "vpnc": "~1.0.0"
   },
   "devDependencies": {
     "should": "0.6.x",
