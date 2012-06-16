@@ -380,7 +380,7 @@ function launchExpect(config, debug, host) {
                 con.ok('Great success');
             } else {
                 con.error('Unsuccessful');
-                con.info('Debug tunnel definition by digging with -d, or talk to the author:');
+                con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
                 con.info(config.author);
             }
         });
