@@ -93,19 +93,21 @@ parser.nocommand().callback(function () {
     console.log(parser.getUsage());
     process.exit(0);
 })
-.help([ 'Examples:',
-'',
-'Register with server "mole.example.com" and a token:',
-'  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2',
-'',
-'List available tunnels:',
-'  mole list',
-'',
-'Dig a tunnel to "operator3":',
-'  mole dig operator3',
-'',
-'Fetch new and updated tunnel specifications from the server:',
-'  mole pull' ].join('\n'));
+.help([
+      'Examples:',
+      '',
+      'Register with server "mole.example.com" and a token:',
+      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2',
+      '',
+      'List available tunnels:',
+      '  mole list',
+      '',
+      'Dig a tunnel to "operator3":',
+      '  mole dig operator3',
+      '',
+      'Fetch new and updated tunnel specifications from the server:',
+      '  mole pull'
+].join('\n'));
 
 parser.parse();
 
@@ -311,23 +313,33 @@ function digReal(tunnel, host, debug) {
     // Create and save the ssh config
 
     con.debug('Creating ssh configuration');
-    var defaults = ['Host *',
+    var defaults = [
+        'Host *',
         '  UserKnownHostsFile /dev/null',
         '  StrictHostKeyChecking no',
-        '  IdentitiesOnly yes'].join('\n') + '\n';
+        '  IdentitiesOnly yes'
+    ].join('\n') + '\n';
     var conf = defaults + sshConfig(config);
     fs.writeFileSync(config.sshConfig, conf);
     con.debug(config.sshConfig);
 
     if (config.vpnc) {
-        con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
-        vpnc.connect(config.vpnc, function (err, results) {
+        vpnc.available(function (err, version) {
             if (err) {
-                con.fatal(err);
+                con.fatal('vpnc unavailable, cannot connect VPN');
+            } else {
+                con.debug('Using ' +  version);
+
+                con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
+                vpnc.connect(config.vpnc, function (err, results) {
+                    if (err) {
+                        con.fatal(err);
+                    }
+                    con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
+                    con.info('manually by running "sudo vpnc-disconnect".');
+                    launchExpect(config, debug, host);
+                });
             }
-            con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-            con.info('manually by running "sudo vpnc-disconnect".');
-            launchExpect(config, debug, host);
         });
     } else {
         launchExpect(config, debug, host);
