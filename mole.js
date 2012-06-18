@@ -440,10 +440,24 @@ function install(opts) {
 
     var file = [ opts.package, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
     var local = path.join(pkgDir, file);
-    con.debug('Looking for ' + file);
+    var tmp = temp.path();
+    mkdirp(tmp);
 
+    con.info('Fetching ' + file);
     srv.serverRaw({ path: '/extra/' + file}, function () {
-        con.debug('Saved ' + local);
+        con.info('Unpacking ' + file);
+        exec('cd ' + tmp + ' && tar zxf ' + local, function (err, stdout, stderr) {
+            con.debug('Extracted in ' + tmp);
+            con.info('Running installation, you might now be asked for your local (sudo) password.');
+            var inst = spawn('sudo', [ path.join(tmp, 'install.sh'), tmp ], { customFds: [ 0, 1, 2 ] });
+            inst.on('exit', function (code) {
+                if (code === 0) {
+                con.info('Installation complete');
+                } else {
+                con.info('Installation failed. Sorry.');
+                }
+            });
+        });
     }, local).end();
 };
 
