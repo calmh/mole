@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 var _ = require('underscore');
-var parser = require('nomnom');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var inireader = require('inireader');
 var iso8601 = require('iso8601');
 var mkdirp = require('mkdirp');
+var os = require('os');
+var parser = require('nomnom');
 var path = require('path');
 var pidof = require('pidof');
 var spawn = require('child_process').spawn;
@@ -24,8 +25,10 @@ var configFile = path.join(configDir, 'mole.ini');
 var certFile = path.join(configDir, 'mole.crt');
 var keyFile = path.join(configDir, 'mole.key');
 var tunnelDefDir = path.join(configDir, 'tunnels');
+var pkgDir = path.join(configDir, 'pkg');
 
 mkdirp.sync(tunnelDefDir);
+mkdirp.sync(pkgDir);
 fs.chmodSync(configDir, 0700);
 
 var config = new inireader.IniReader();
@@ -85,6 +88,10 @@ parser.command('deluser')
 .option('name', { position: 1, help: 'User name', required: true })
 .help('Delete a user (requires admin privileges)')
 .callback(delUser);
+
+parser.command('install')
+.option('package', { position: 1, help: 'Package name', required: true })
+.callback(install);
 
 parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
 
@@ -428,25 +435,15 @@ function exportf(opts) {
     con.ok(opts.file);
 };
 
-function view(tunnel) {
-    var config;
+function install(opts) {
+    init(opts);
 
-    init();
+    var file = [ opts.package, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
+    var local = path.join(pkgDir, file);
+    con.debug('Looking for ' + file);
 
-    try {
-        con.debug('Loading tunnel');
-        config = tun.load(tunnel, tunnelDefDir);
-    } catch (err) {
-        con.fatal(err);
-    }
-
-    con.debug('Saving to INI format');
-    var path = temp.path({ suffix: '.ini' });
-    tun.save(config, path);
-
-    con.debug('Show ' + path);
-    console.log(fs.readFileSync(path, 'utf-8'));
-
-    fs.unlinkSync(path);
+    srv.serverRaw({ path: '/extra/' + file}, function () {
+        con.debug('Saved ' + local);
+    }, local).end();
 };
 
