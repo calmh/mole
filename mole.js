@@ -349,7 +349,6 @@ function digReal(tunnel, host, debug) {
                     }
 
                     con.info('Connecting VPN; you might be asked for your local (sudo) password now');
-                    console.log(config);
                     vpnc.connect(config.vpnc, config.vpnRoutes, function (err, code) {
                         if (err) {
                             con.fatal(err);
