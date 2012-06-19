@@ -335,7 +335,8 @@ function digReal(tunnel, host, debug) {
         vpnc.available(function (err, version) {
             if (err) {
                 con.error(err);
-                con.fatal('vpnc unavailable, cannot connect VPN');
+                con.error('vpnc unavailable; try "mole install vpnc"');
+                con.fatal('Not continuing without vpnc');
             } else {
                 con.debug('Using ' +  version);
 
@@ -347,13 +348,13 @@ function digReal(tunnel, host, debug) {
                         con.fatal('vpnc already running, will not start another instance');
                     }
 
-                    con.info('Connecting VPN; you might be asked for your local (sudo) password now.');
+                    con.info('Connecting VPN; you might be asked for your local (sudo) password now');
                     vpnc.connect(config.vpnc, function (err, results) {
                         if (err) {
                             con.fatal(err);
                         }
                         con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running "sudo vpnc-disconnect".');
+                        con.info('manually by running "sudo vpnc-disconnect"');
                         launchExpect(config, debug, host);
                     });
                 });
@@ -452,9 +453,9 @@ function install(opts) {
             var inst = spawn('sudo', [ path.join(tmp, 'install.sh'), tmp ], { customFds: [ 0, 1, 2 ] });
             inst.on('exit', function (code) {
                 if (code === 0) {
-                con.info('Installation complete');
+                    con.info('Installation complete');
                 } else {
-                con.info('Installation failed. Sorry.');
+                    con.info('Installation failed. Sorry.');
                 }
             });
         });
