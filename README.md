@@ -93,3 +93,8 @@ How
       Fetch new and updated tunnel specifications from the server:
         mole pull
 
+License
+-------
+
+2-Clause BSD
+

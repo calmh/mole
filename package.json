@@ -14,13 +14,15 @@
     "mole": "./mole.js"
   },
   "dependencies": {
-    "temp": "~0.4.0",
-    "underscore": "1.3.x",
-    "commander": "~0.6.1",
-    "inireader": "~0.2.4",
-    "mkdirp": "~0.3.3",
     "colors": "~0.6.0-1",
-    "iso8601": "~1.1.0"
+    "inireader": "~0.2.4",
+    "iso8601": "~1.1.0",
+    "mkdirp": "~0.3.3",
+    "nomnom": "https://github.com/calmh/nomnom/tarball/master",
+    "pidof": "1.0.x",
+    "temp": "0.4.x",
+    "underscore": "1.3.x",
+    "vpnc": "1.3.x"
   },
   "devDependencies": {
     "should": "0.6.x",
