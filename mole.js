@@ -318,6 +318,13 @@ function digReal(tunnel, host, debug) {
     }
     config.sshConfig = temp.path({suffix: '.ssh.conf'});
 
+    // Set overridden host to be main
+
+    if (host) {
+        con.debug('Using specified main host ' + host);
+        config.main = host;
+    }
+
     // Create and save the ssh config
 
     con.debug('Creating ssh configuration');
@@ -357,23 +364,23 @@ function digReal(tunnel, host, debug) {
                         }
                         con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
                         con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
-                        launchExpect(config, debug, host);
+                        launchExpect(config, debug);
                     });
                 });
             }
         });
     } else {
-        launchExpect(config, debug, host);
+        launchExpect(config, debug);
     }
 };
 
-function launchExpect(config, debug, host) {
+function launchExpect(config, debug) {
     var setupLocalIPs = require('./lib/setup-local-ips');
     var expectConfig = require('./lib/expect-config');
 
     con.debug('Creating expect script');
     try {
-        var expect = expectConfig(config, debug, host);
+        var expect = expectConfig(config, debug);
         var expectFile = temp.path({suffix: '.expect'});
         fs.writeFileSync(expectFile, expect);
         con.debug(expectFile);
