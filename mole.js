@@ -332,13 +332,13 @@ function digReal(tunnel, host, debug) {
     con.debug(config.sshConfig);
 
     if (config.vpnc) {
-        vpnc.available(function (err, version) {
+        vpnc.available(function (err, result) {
             if (err) {
                 con.error(err);
                 con.error('vpnc unavailable; try "mole install vpnc"');
                 con.fatal('Not continuing without vpnc');
             } else {
-                con.debug('Using ' +  version);
+                con.debug('Using ' +  result.version);
 
                 pidof('vpnc', function (err, pid) {
                     if (err) {
@@ -349,12 +349,14 @@ function digReal(tunnel, host, debug) {
                     }
 
                     con.info('Connecting VPN; you might be asked for your local (sudo) password now');
-                    vpnc.connect(config.vpnc, function (err, results) {
+                    vpnc.connect(config.vpnc, function (err, code) {
                         if (err) {
                             con.fatal(err);
+                        } else if (code !== 0) {
+                            con.fatal('vpnc returned an error - investigate and act on it, nothing more I can do :(');
                         }
                         con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running "sudo vpnc-disconnect"');
+                        con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
                         launchExpect(config, debug, host);
                     });
                 });
@@ -445,7 +447,7 @@ function install(opts) {
     mkdirp(tmp);
 
     con.info('Fetching ' + file);
-    srv.serverRaw({ path: '/extra/' + file}, function () {
+    srv.saveBin('/extra/' + file, local, function () {
         con.info('Unpacking ' + file);
         exec('cd ' + tmp + ' && tar zxf ' + local, function (err, stdout, stderr) {
             con.debug('Extracted in ' + tmp);
@@ -459,6 +461,6 @@ function install(opts) {
                 }
             });
         });
-    }, local).end();
+    }, local);
 };
 
