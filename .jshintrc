@@ -1,0 +1,16 @@
+{
+    "curly": true,
+    "eqeqeq": true,
+    "forin": true,
+    "immed": true,
+    "latedef": false,
+    "newcap": true,
+    "noarg": true,
+    "noempty": true,
+    "undef": true,
+    "trailing": true,
+    "node": true,
+    "nomen": false,
+    "plusplus": false,
+    "laxcomma": true
+}
