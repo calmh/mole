@@ -13,6 +13,7 @@ var pidof = require('pidof');
 var spawn = require('child_process').spawn;
 var temp = require('temp');
 var util = require('util');
+var version = require('version');
 var vpnc = require('vpnc');
 
 var existsSync = fs.existsSync; // Node 0.8
@@ -256,6 +257,18 @@ function pull(opts) {
                 process.nextTick(done);
             }
         });
+    });
+
+    // The user want's to be up to date, so inform them of any upgrades.
+    version.fetch('mole', function (err, ver) {
+        if (!err && ver) {
+            if (ver !== package.version) {
+                con.info('You are using mole v' + package.version + '; the latest version is v' + ver);
+                con.info('Use "sudo npm -g install mole" to upgrade');
+            } else {
+                con.ok('You are using the latest version of mole');
+            }
+        }
     });
 }
 
