@@ -435,7 +435,7 @@ function launchExpect(config, debug) {
             // FIXME: Unlink ssh keys
 
             if (config.vpnc) {
-                con.debug('Disconnecting VPN');
+                con.info('Disconnecting VPN; you might be asked for your local (sudo) password now');
                 vpnc.disconnect(function (err, status) {
                     if (err) {
                         con.fatal(err);
