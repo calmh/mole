@@ -20,6 +20,7 @@ if (!existsSync) {
     existsSync = path.existsSync; // Node 0.6 and prior
 }
 
+var package = require(path.join(__dirname, 'package.json'));
 var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
@@ -108,19 +109,23 @@ parser.nocommand().callback(function () {
     process.exit(0);
 })
 .help([
+      'Version:',
+      '  mole v' + package.version,
+      '  node ' + process.version,
+      '',
       'Examples:',
       '',
       'Register with server "mole.example.com" and a token:',
-      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2',
+      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
       '',
       'List available tunnels:',
-      '  mole list',
+      '  mole list'.bold,
       '',
       'Dig a tunnel to "operator3":',
-      '  mole dig operator3',
+      '  mole dig operator3'.bold,
       '',
       'Fetch new and updated tunnel specifications from the server:',
-      '  mole pull'
+      '  mole pull'.bold
 ].join('\n'));
 
 parser.parse();
