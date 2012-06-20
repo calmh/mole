@@ -43,55 +43,27 @@ to you.
 How
 ---
 
-    Usage: mole [options] [command]
+    Usage: mole [command] [options]
     
-    Commands:
-
-      dig <destination>
-      dig a tunnel to the destination
-      
-      list 
-      list available tunnel definitions
-      
-      pull 
-      get tunnel definitions from the server
-      
-      push <file>
-      send a tunnel definition to the server
-      
-      register [options] <server> <token>
-      register with a mole server
-      
-      gettoken 
-      generate a new registration token
-      
-      newuser [options] <username>
-      create a new user
-      
-      export <tunnel> <outfile>
-      export tunnel definition to a file
-      
-      view <tunnel>
-      show tunnel definition
+    command     one of: dig, list, pull, push, register, gettoken, export, newuser, deluser, install
     
     Options:
-    
-      -h, --help   output usage information
-      -d, --debug  display debug information
+       -d, --debug   Display debug output
+       -h, --help    Display command help
     
     Examples:
     
-      Register with server "mole.example.com" and a token:
-        mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2
+    Register with server "mole.example.com" and a token:
+      mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2
     
-      List available tunnels:
-        mole list
+    List available tunnels:
+      mole list
     
-      Dig a tunnel to "operator3":
-        mole dig operator3
+    Dig a tunnel to "operator3":
+      mole dig operator3
     
-      Fetch new and updated tunnel specifications from the server:
-        mole pull
+    Fetch new and updated tunnel specifications from the server:
+      mole pull
 
 License
 -------

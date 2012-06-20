@@ -96,6 +96,7 @@ parser.command('deluser')
 
 parser.command('install')
 .option('package', { position: 1, help: 'Package name', required: true })
+.help('Install an optional package, fetched from the server')
 .callback(install);
 
 parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
