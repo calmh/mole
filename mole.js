@@ -111,7 +111,7 @@ parser.nocommand().callback(function () {
 })
 .help([
       'Version:',
-      '  mole v' + package.version,
+      '  mole v' + package.version + '\t(https://github.com/calmh/mole)',
       '  node ' + process.version,
       '',
       'Examples:',
