@@ -3,6 +3,7 @@
 "use strict";
 
 var _ = require('underscore');
+var colors = require('colors');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var inireader = require('inireader');
@@ -18,6 +19,7 @@ var util = require('util');
 var version = require('version');
 var vpnc = require('vpnc');
 
+var isatty = process.stdout.isTTY;
 var existsSync = fs.existsSync; // Node 0.8
 if (!existsSync) {
     existsSync = path.existsSync; // Node 0.6 and prior
@@ -48,6 +50,26 @@ try {
     config.param('server.port', 9443);
     config.write();
 }
+
+var helptext = [
+      'Version:',
+      '  mole v' + pkg.version + '\t(https://github.com/calmh/mole)',
+      '  node ' + process.version,
+      '',
+      'Examples:',
+      '',
+      'Register with server "mole.example.com" and a token:',
+      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
+      '',
+      'List available tunnels:',
+      '  mole list'.bold,
+      '',
+      'Dig a tunnel to "operator3":',
+      '  mole dig operator3'.bold,
+      '',
+      'Fetch new and updated tunnel specifications from the server:',
+      '  mole pull'.bold
+].join('\n');
 
 parser.script('mole');
 
@@ -111,25 +133,7 @@ parser.nocommand().callback(function () {
     console.log(parser.getUsage());
     process.exit(0);
 })
-.help([
-      'Version:',
-      '  mole v' + pkg.version + '\t(https://github.com/calmh/mole)',
-      '  node ' + process.version,
-      '',
-      'Examples:',
-      '',
-      'Register with server "mole.example.com" and a token:',
-      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
-      '',
-      'List available tunnels:',
-      '  mole list'.bold,
-      '',
-      'Dig a tunnel to "operator3":',
-      '  mole dig operator3'.bold,
-      '',
-      'Fetch new and updated tunnel specifications from the server:',
-      '  mole pull'.bold
-].join('\n'));
+.help(isatty ? helptext : helptext.stripColors);
 
 parser.parse();
 
