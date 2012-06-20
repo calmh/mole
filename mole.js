@@ -440,7 +440,7 @@ function launchExpect(config, debug) {
                     if (err) {
                         con.fatal(err);
                     }
-                    con.info('VPN disconnected');
+                    con.ok('VPN disconnected');
                 });
             }
 
@@ -490,7 +490,7 @@ function install(opts) {
             var inst = spawn('sudo', [ path.join(tmp, 'install.sh'), tmp ], { customFds: [ 0, 1, 2 ] });
             inst.on('exit', function (code) {
                 if (code === 0) {
-                    con.info('Installation complete');
+                    con.ok('Installation complete');
                 } else {
                     con.info('Installation failed. Sorry.');
                 }
