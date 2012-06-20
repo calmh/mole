@@ -1,3 +1,7 @@
+"use strict";
+
+/*global it: false, describe: false */
+
 var should = require('should');
 var sshConfig = require('../lib/ssh-config');
 

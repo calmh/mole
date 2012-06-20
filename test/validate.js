@@ -1,3 +1,7 @@
+"use strict";
+
+/*global it: false, describe: false */
+
 var should = require('should');
 var validate = require('../lib/validate');
 
@@ -14,7 +18,7 @@ describe('validate', function () {
                     user: "test",
                     password: "test"
                 },
-                foo: {
+                bar: {
                     addr: "2.2.3.4",
                     user: "test",
                     key: "something"

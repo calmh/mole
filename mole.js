@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+"use strict";
+
 var _ = require('underscore');
 var exec = require('child_process').exec;
 var fs = require('fs');
@@ -36,7 +38,7 @@ var pkgDir = path.join(configDir, 'pkg');
 
 mkdirp.sync(tunnelDefDir);
 mkdirp.sync(pkgDir);
-fs.chmodSync(configDir, 0700);
+fs.chmodSync(configDir, 448 /* 0700 octal */);
 
 var config = new inireader.IniReader();
 try {

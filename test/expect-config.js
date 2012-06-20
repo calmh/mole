@@ -1,3 +1,7 @@
+"use strict";
+
+/*global it: false, describe: false */
+
 var should = require('should');
 var expectConfig = require('../lib/expect-config');
 
@@ -13,7 +17,7 @@ describe('expectConfig', function () {
                     user: 'testuser',
                     port: 1234,
                     password: 'something',
-                    via: 'another-host',
+                    via: 'another-host'
                 }
             }
         };
