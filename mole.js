@@ -21,13 +21,13 @@ if (!existsSync) {
     existsSync = path.existsSync; // Node 0.6 and prior
 }
 
-var package = require(path.join(__dirname, 'package.json'));
+var pkg = require(path.join(__dirname, 'package.json'));
 var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
 var srv = require('./lib/server');
 
-var configDir = path.join(process.env['HOME'], '.mole');
+var configDir = path.join(process.env.HOME, '.mole');
 var configFile = path.join(configDir, 'mole.ini');
 var certFile = path.join(configDir, 'mole.crt');
 var keyFile = path.join(configDir, 'mole.key');
@@ -97,7 +97,7 @@ parser.command('deluser')
 .callback(delUser);
 
 parser.command('install')
-.option('package', { position: 1, help: 'Package name', required: true })
+.option('pkg', { position: 1, help: 'Package name', required: true })
 .help('Install an optional package, fetched from the server')
 .callback(install);
 
@@ -111,7 +111,7 @@ parser.nocommand().callback(function () {
 })
 .help([
       'Version:',
-      '  mole v' + package.version + '\t(https://github.com/calmh/mole)',
+      '  mole v' + pkg.version + '\t(https://github.com/calmh/mole)',
       '  node ' + process.version,
       '',
       'Examples:',
@@ -157,7 +157,7 @@ function init(opts) {
     });
 
     readCert();
-};
+}
 
 function register(opts) {
     init(opts);
@@ -229,7 +229,7 @@ function pull(opts) {
                 con.ok(result.length + ' tunnel definitions in sync');
                 inProgress = -1;
             }
-        };
+        }
 
         _.sortBy(result, 'name').forEach(function (res) {
             var local = path.join(tunnelDefDir, res.name);
@@ -262,8 +262,8 @@ function pull(opts) {
     // The user want's to be up to date, so inform them of any upgrades.
     version.fetch('mole', function (err, ver) {
         if (!err && ver) {
-            if (ver !== package.version) {
-                con.info('You are using mole v' + package.version + '; the latest version is v' + ver);
+            if (ver !== pkg.version) {
+                con.info('You are using mole v' + pkg.version + '; the latest version is v' + ver);
                 con.info('Use "sudo npm -g install mole" to upgrade');
             } else {
                 con.ok('You are using the latest version of mole');
@@ -273,11 +273,13 @@ function pull(opts) {
 }
 
 function push(opts) {
+    var data;
+
     init(opts);
 
     con.debug('Reading ' + opts.file);
     try {
-        var data = fs.readFileSync(opts.file, 'utf-8');
+        data = fs.readFileSync(opts.file, 'utf-8');
         con.debug('Got ' + data.length + ' bytes');
     } catch (err) {
         con.fatal(err);
@@ -396,7 +398,7 @@ function digReal(tunnel, host, debug) {
     } else {
         launchExpect(config, debug);
     }
-};
+}
 
 function launchExpect(config, debug) {
     var setupLocalIPs = require('./lib/setup-local-ips');
@@ -467,12 +469,12 @@ function exportf(opts) {
     tun.save(config, opts.file);
 
     con.ok(opts.file);
-};
+}
 
 function install(opts) {
     init(opts);
 
-    var file = [ opts.package, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
+    var file = [ opts.pkg, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
     var local = path.join(pkgDir, file);
     var tmp = temp.path();
     mkdirp(tmp);
@@ -493,5 +495,5 @@ function install(opts) {
             });
         });
     }, local);
-};
+}
 
