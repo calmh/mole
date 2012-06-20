@@ -15,6 +15,11 @@ var temp = require('temp');
 var util = require('util');
 var vpnc = require('vpnc');
 
+var existsSync = fs.existsSync; // Node 0.8
+if (!existsSync) {
+    existsSync = path.existsSync; // Node 0.6 and prior
+}
+
 var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
@@ -224,7 +229,7 @@ function pull(opts) {
             inProgress += 1;
 
             var fetch = false;
-            if (!path.existsSync(local)) {
+            if (!existsSync(local)) {
                 fetch = true;
             } else {
                 var s = fs.statSync(local);
