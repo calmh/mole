@@ -18,6 +18,7 @@ var parser = require('nomnom');
 var path = require('path');
 var pidof = require('pidof');
 var spawn = require('child_process').spawn;
+var table = require('yatf');
 var temp = require('temp');
 var util = require('util');
 var version = require('version');
@@ -46,7 +47,6 @@ var pkg = require(path.join(__dirname, 'package.json'));
 
 // Load internal modules.
 
-var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
 var srv = require('./lib/server');
@@ -340,7 +340,7 @@ function list(opts) {
 
     // Format the table using the specified headers and the rows from above.
 
-    table([ 'TUNNEL', 'DESCRIPTION', 'MODIFIED', 'HOSTS' ], rows);
+    table([ 'TUNNEL', 'DESCRIPTION', 'MODIFIED', 'HOSTS' ], rows, { underlineHeaders: true });
 }
 
 function pull(opts) {
