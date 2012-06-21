@@ -340,7 +340,7 @@ function list(opts) {
 
     // Format the table using the specified headers and the rows from above.
 
-    table([ 'Tunnel', 'Description', 'Modified', 'Hosts' ], rows);
+    table([ 'TUNNEL', 'DESCRIPTION', 'MODIFIED', 'HOSTS' ], rows);
 }
 
 function pull(opts) {
