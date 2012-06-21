@@ -320,21 +320,27 @@ function list(opts) {
         var tname = tun.name(file);
         try {
             var r = tun.load(path.join(tunnelDefDir, file));
+
+            var opts = '';
+            if (r.vpnc) {
+                opts += ' (vpn)'.magenta;
+            }
+
             var descr = r.description;
             // FIXME: For lots of hosts, this isn't all that useful since it'll be truncated by the table formatter.
             var hosts = _.keys(r.hosts).sort().join(', ');
             var mtime = r.stat.mtime;
             var mdate = iso8601.fromDate(mtime).slice(0, 10)
-            rows.push([ tname, descr, hosts, mdate ]);
+            rows.push([ tname.blue.bold , descr + opts, mdate, hosts ]);
         } catch (err) {
             // If we couldn't load/parse the file for some reason, simply mark it as corrupt.
-            rows.push([ tname, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
+            rows.push([ tname.red.bold, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
         }
     });
 
     // Format the table using the specified headers and the rows from above.
 
-    table([ 'Tunnel', 'Description', 'Hosts', 'Modified' ], rows);
+    table([ 'Tunnel', 'Description', 'Modified', 'Hosts' ], rows);
 }
 
 function pull(opts) {
