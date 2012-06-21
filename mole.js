@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
+// We now use strict for everything since Node supports it.
+
 "use strict";
+
+// Require a whole bunch of external libraries.
 
 var _ = require('underscore');
 var colors = require('colors');
@@ -19,17 +23,36 @@ var util = require('util');
 var version = require('version');
 var vpnc = require('vpnc');
 
+// Figure out if we are running with a TTY on stdout or not.
+// If not, we'll avoid using ANSI colors later on.
+
 var isatty = process.stdout.isTTY;
+
+// The existsSync function moved between Node 0.6 and 0.8.  We just use it from
+// wherever we found it.
+//
+// You'll be seeing a lot of `*Sync` calls in here. If that disturbs you, keep
+// in mind that this is a CLI program that runs once and then exits, not some
+// sort of high performance IO-bound server code, mmkay?
+
 var existsSync = fs.existsSync; // Node 0.8
 if (!existsSync) {
     existsSync = path.existsSync; // Node 0.6 and prior
 }
 
+// We load our own package file to get at the version number.
+
 var pkg = require(path.join(__dirname, 'package.json'));
+
+// Load internal modules.
+
 var table = require('./lib/table');
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
 var srv = require('./lib/server');
+
+// Set up variables pointing to our config directory, certificate files and
+// subdirectories for tunnels and packages.
 
 var configDir = path.join(process.env.HOME, '.mole');
 var configFile = path.join(configDir, 'mole.ini');
@@ -38,9 +61,20 @@ var keyFile = path.join(configDir, 'mole.key');
 var tunnelDefDir = path.join(configDir, 'tunnels');
 var pkgDir = path.join(configDir, 'pkg');
 
+// Create the tunnel and package directories. Any needed components leading up
+// to these directories will be created as well as needed. No harm if they
+// already exist.
+
 mkdirp.sync(tunnelDefDir);
 mkdirp.sync(pkgDir);
+
+// Mark the entire config directory as private since we'll be storing keys and
+// passwords in plaintext in there.
+
 fs.chmodSync(configDir, 448 /* 0700 octal */);
+
+// Load the config file. If it doesn't exist, set defaults and write a new
+// config file.
 
 var config = new inireader.IniReader();
 try {
@@ -50,6 +84,9 @@ try {
     config.param('server.port', 9443);
     config.write();
 }
+
+// Set up the help text that will be appended after the commands and options
+// summary when the user makes an error or runs mole without parameters.
 
 var helptext = [
       'Version:',
@@ -71,7 +108,11 @@ var helptext = [
       '  mole pull'.bold
 ].join('\n');
 
+// Set the name of our 'script'.
+
 parser.script('mole');
+
+// `dig <destination> [host]`
 
 parser.command('dig')
 .help('Dig a tunnel to the destination')
@@ -79,18 +120,26 @@ parser.command('dig')
 .option('host', { position: 2, help: 'Host name within tunnel definition' })
 .callback(dig);
 
+// `list`
+
 parser.command('list')
 .help('List available tunnel definitions')
 .callback(list);
+
+// `pull`
 
 parser.command('pull')
 .help('Get tunnel definitions from the server')
 .callback(pull);
 
+// `push <file>`
+
 parser.command('push')
 .help('Send a tunnel definition to the server')
 .option('file', { position: 1, help: 'File name', required: true })
 .callback(push);
+
+// `register <host> <token>`
 
 parser.command('register')
 .help('Register with a mole server')
@@ -99,9 +148,13 @@ parser.command('register')
 .option('port', { abbr: 'p', metafile: 'PORT', help: 'Server port (default 9443)', default: 9443 })
 .callback(register);
 
+// `gettoken`
+
 parser.command('gettoken')
 .help('Generate a new registration token')
 .callback(token);
+
+// `export <tunnel> <file>`
 
 parser.command('export')
 .option('tunnel', { position: 1, help: 'Tunnel name', required: true })
@@ -109,33 +162,56 @@ parser.command('export')
 .help('Export tunnel definition to a file')
 .callback(exportf);
 
+// `newuser [-a] <name>`
+
 parser.command('newuser')
 .option('name', { position: 1, help: 'User name', required: true })
 .option('admin', { flag: true, abbr: 'a', help: 'Create an admin user' })
 .help('Create a new user (requires admin privileges)')
 .callback(newUser);
 
+// `deluser <name>`
+
 parser.command('deluser')
 .option('name', { position: 1, help: 'User name', required: true })
 .help('Delete a user (requires admin privileges)')
 .callback(delUser);
+
+// `install <pkg>`
 
 parser.command('install')
 .option('pkg', { position: 1, help: 'Package name', required: true })
 .help('Install an optional package, fetched from the server')
 .callback(install);
 
+// `-d` always turns on debug.
+
 parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
+
+// `-h` shows help. This is actually implemented totally by `nomnom`, but we
+// need to define the option so it shows up in the usage information.
 
 parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 
-parser.nocommand().callback(function () {
+// If no command was given, we print the usage information and exit. We also
+// tack on the `.help` call to set the global help text here.  I'd rather do
+// that in a separate call on `parser` instead of chaining after `.nocommand`
+// etc, but that doesn't actually work for reasons I don't understand.
+
+parser.nocommand()
+.callback(function () {
     console.log(parser.getUsage());
     process.exit(0);
 })
 .help(isatty ? helptext : helptext.stripColors);
 
+// Parse command line arguments. This will call the defined callbacks for matching commands.
+
 parser.parse();
+
+// Try to read our certificates and pass them to the `server` instance. Fail
+// silently if there are no certificates, since we might simply not be
+// registered yet.
 
 function readCert() {
     try {
@@ -147,20 +223,24 @@ function readCert() {
         srv.init({ key: key, cert: cert });
     } catch (err) {
         con.debug('No certificate loaded');
-        // We don't have a certificate yet.
     }
 }
+
+// Initialize stuff given the options from `nomnom`. This must be called early from every command callback.
 
 function init(opts) {
     if (opts.debug) {
         con.enableDebug();
     }
 
-    srv.init({
-        host: config.param('server.host'),
-        port: config.param('server.port') || 9443,
-        fingerprint: config.param('server.fingerprint')
-    });
+    // The server code will check the certificate fingerprint if we have one
+    // stored from before.  If not, we'll store the fingerprint on `register`,
+    // thus effectively locking the client to the server it registered with and
+    // preventing some tampering scenarios.
+ 
+    srv.init({ host: config.param('server.host'), port:
+             config.param('server.port') || 9443, fingerprint:
+             config.param('server.fingerprint') });
 
     readCert();
 }
@@ -169,16 +249,38 @@ function register(opts) {
     init(opts);
 
     con.debug('Requesting registration from server ' + opts.server + ':' + opts.port);
+
+    // Set the server and port we received from parameters in the config file,
+    // and tell the server code to use them.  We don't save the config just
+    // yet, though.
+
     config.param('server.host', opts.server);
     config.param('server.port', opts.port);
     srv.init({ host: opts.server, port: opts.port });
+
+    // Try to register with the server. If it fails, a fatal error will be
+    // printed by the server code and the callback will never be called.  If it
+    // succeeds, we'll get our certificates and the server fingerprint in the
+    // callback.
+
     srv.register(opts.token, function (result) {
         con.debug('Received certificate and key from server');
+
+        // Save the certificates and fingerprint for later.
+
         fs.writeFileSync(certFile, result.cert);
         fs.writeFileSync(keyFile, result.key);
         config.param('server.fingerprint', result.fingerprint);
+
+        // Save the config file since we've verified the server and port and
+        // got the fingerprint.
+
         config.write();
         con.ok('Registered');
+
+        // Read our newly minted certificates and do a `pull` to get tunnel
+        // definitions.
+
         readCert();
         pull(opts);
     });
@@ -190,6 +292,10 @@ function token(opts) {
     con.debug('Requesting new token from server');
     con.info('A token can be used only once');
     con.info('Only the most recently generated token is valid');
+
+    // Request a token from the server. On success, the callback will be called
+    // with the token and we simply print it out.
+
     srv.token(function (result) {
         con.ok(result.token);
     });
@@ -198,37 +304,55 @@ function token(opts) {
 function list(opts) {
     init(opts);
 
+    // Get a sorted list of all files in the tunnel directory.
+
     con.debug('listing files in ' + tunnelDefDir);
-    fs.readdir(tunnelDefDir, function (err, files) {
-        con.debug('Got ' + files.length + ' files');
+    var files = fs.readdirSync(tunnelDefDir);
+    files.sort();
+    con.debug('Got ' + files.length + ' files');
 
-        var rows = [];
-        files.sort().forEach(function (file) {
-            var tname = tun.name(file);
-            try {
-                var r = tun.load(path.join(tunnelDefDir, file));
-                var descr = r.description;
-                var hosts = _.keys(r.hosts).sort().join(', ');
-                var mtime = r.stat.mtime;
-                rows.push([ tname, descr, hosts, iso8601.fromDate(mtime).slice(0, 10) ]);
-            } catch (err) {
-                rows.push([ tname, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
-            }
-        });
+    // Build a table with information about the tunnel definitions. Basically,
+    // load each of them, create a row with information and push that row to
+    // the table.
 
-        table([ 'Tunnel', 'Description', 'Hosts', 'Modified' ], rows);
+    var rows = [];
+    files.forEach(function (file) {
+        var tname = tun.name(file);
+        try {
+            var r = tun.load(path.join(tunnelDefDir, file));
+            var descr = r.description;
+            // FIXME: For lots of hosts, this isn't all that useful since it'll be truncated by the table formatter.
+            var hosts = _.keys(r.hosts).sort().join(', ');
+            var mtime = r.stat.mtime;
+            var mdate = iso8601.fromDate(mtime).slice(0, 10)
+            rows.push([ tname, descr, hosts, mdate ]);
+        } catch (err) {
+            // If we couldn't load/parse the file for some reason, simply mark it as corrupt.
+            rows.push([ tname, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
+        }
     });
+
+    // Format the table using the specified headers and the rows from above.
+
+    table([ 'Tunnel', 'Description', 'Hosts', 'Modified' ], rows);
 }
 
 function pull(opts) {
     init(opts);
 
+    // Get the list of tunnel definitions from the server. The list includes
+    // (name, mtime) for each tunnel. We'll use the `mtime` to figure out if we
+    // need to download the definition or not.
+
     con.debug('Requesting tunnel list from server');
     srv.list(function (result) {
         con.debug('Got ' + result.length + ' entries');
         con.debug(util.inspect(result));
-        var inProgress = 0;
 
+        // We use this to keep track of the number of outstanding requests and
+        // to print a message when every request has finished.
+
+        var inProgress = 0;
         function done() {
             inProgress -= 1;
             if (inProgress === 0) {
@@ -237,9 +361,16 @@ function pull(opts) {
             }
         }
 
-        _.sortBy(result, 'name').forEach(function (res) {
-            var local = path.join(tunnelDefDir, res.name);
+        result.forEach(function (res) {
             inProgress += 1;
+
+            // Figure out the local filename that corresponds to this tunnel, if we have it.
+
+            var local = path.join(tunnelDefDir, res.name);
+
+            // We need to fetch the file only if we either don't already have
+            // it, or if the mtime as sent by the server differs from what we
+            // have locally.
 
             var fetch = false;
             if (!existsSync(local)) {
@@ -251,21 +382,44 @@ function pull(opts) {
                 }
             }
 
+            // If we need to fetch a tunnel definition, send a server request to do so.
+
             if (fetch) {
                 srv.fetch(res.name, function (result) {
-                    var mtime = Math.floor(res.mtime / 1000);
+
+                    // When the request completes, we save the file and set the
+                    // mtime to match that sent by the server. The server sends
+                    // it in milliseconds since that's what Javascript
+                    // timestamps usually are, but utimesSync expects seconds.
+
                     fs.writeFileSync(local, result);
+
+                    var mtime = Math.floor(res.mtime / 1000);
                     fs.utimesSync(local, mtime, mtime);
+
                     con.ok('Pulled ' + tun.name(res.name));
+
+                    // Mark this request as completed, print out status if it was the last one.
+
                     done();
                 });
             } else {
+
+                // Mark this request as completed. We don't do it immediately
+                // since that would result in the `inProgress` counter flapping
+                // between 1 and 0 when we didn't need to fetch anything.
+                // Instead, queue the call for the next tick, when `inProgress`
+                // has been incremented all the way.
+
                 process.nextTick(done);
             }
         });
     });
 
-    // The user want's to be up to date, so inform them of any upgrades.
+    // The user presumably want's to be up to date, so we fetch the latest
+    // version number for mole from the npm repository and print a 'time to
+    // upgrade'-message if there's a mismatch.
+   
     version.fetch('mole', function (err, ver) {
         if (!err && ver) {
             if (ver !== pkg.version) {
@@ -279,17 +433,10 @@ function pull(opts) {
 }
 
 function push(opts) {
-    var data;
-
     init(opts);
 
-    con.debug('Reading ' + opts.file);
-    try {
-        data = fs.readFileSync(opts.file, 'utf-8');
-        con.debug('Got ' + data.length + ' bytes');
-    } catch (err) {
-        con.fatal(err);
-    }
+    // We load the tunnel, which will cause some validation of it to happen. We
+    // don't want to push files that are completely broken.
 
     con.debug('Testing ' + opts.file);
     try {
@@ -299,6 +446,15 @@ function push(opts) {
         con.fatal(err);
     }
 
+    // We read the file to a buffer to send to the server. There should be no
+    // errors here since the tunne load and check above succeeded.
+
+    con.debug('Reading ' + opts.file);
+    var data = fs.readFileSync(opts.file, 'utf-8');
+
+    // Send the data to the server. We'll only get the callback if the upload
+    // succeeds.
+
     srv.send(path.basename(opts.file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
     });
@@ -306,6 +462,9 @@ function push(opts) {
 
 function newUser(opts) {
     init(opts);
+
+    // Create a new user on the server. If the call succeeds, we'll get the
+    // callback with the one-time token for the new user.
 
     con.debug('Requesting user ' + opts.name);
     srv.newUser(opts.name, function (result) {
@@ -316,6 +475,9 @@ function newUser(opts) {
 function delUser(opts) {
     init(opts);
 
+    // Delete a user from the server. As always, we only get the callback if
+    // everything went well.
+
     con.debug('Deleting user ' + opts.name);
     srv.delUser(opts.name, function (result) {
         con.ok('deleted');
@@ -324,6 +486,8 @@ function delUser(opts) {
 
 function dig(opts) {
     init(opts);
+
+    // Before we do any digging, we make sure that `expect` is available.
 
     exec('expect -v', function (error, stdout, stderr) {
         if (error) {
@@ -335,6 +499,8 @@ function dig(opts) {
         }
     });
 }
+
+// Here's the real meat of `mole`, the tunnel digging part.
 
 function digReal(tunnel, host, debug) {
     var config;
@@ -350,27 +516,35 @@ function digReal(tunnel, host, debug) {
     }
     config.sshConfig = temp.path({suffix: '.ssh.conf'});
 
-    // Set overridden host to be main
+    // If a specific host was requested, we modify the configuration to use
+    // that host as `main`.
 
     if (host) {
         con.debug('Using specified main host ' + host);
         config.main = host;
     }
 
-    // Create and save the ssh config
+    // Create and save the ssh config. We add some defaults to the top to avoid
+    // complaints about missing or mismatching host keys.
 
     con.debug('Creating ssh configuration');
     var defaults = [
         'Host *',
         '  UserKnownHostsFile /dev/null',
-        '  StrictHostKeyChecking no',
-        '  IdentitiesOnly yes'
+        '  StrictHostKeyChecking no'
     ].join('\n') + '\n';
     var conf = defaults + sshConfig(config);
     fs.writeFileSync(config.sshConfig, conf);
     con.debug(config.sshConfig);
 
+    // If the tunnel definition specifies a VPN connection, we need to get that
+    // up and running before we call expect.
+
     if (config.vpnc) {
+
+        // First we make sure that `vpnc` is actually installed, or exit with a
+        // helpful suggestion if it's not.
+
         vpnc.available(function (err, result) {
             if (err) {
                 con.error(err);
@@ -379,6 +553,10 @@ function digReal(tunnel, host, debug) {
             } else {
                 con.debug('Using ' +  result.version);
 
+                // If vpnc is already running, it's almost certainly going to
+                // fail to bring up one more VPN connection. So if that's the
+                // case, exit with an error.
+
                 pidof('vpnc', function (err, pid) {
                     if (err) {
                         con.error(err);
@@ -386,6 +564,10 @@ function digReal(tunnel, host, debug) {
                     } else if (pid) {
                         con.fatal('vpnc already running, will not start another instance');
                     }
+
+                    // Try to connect the VPN. If it fails, exit with an error,
+                    // otherwise proceed to start expect and to the real SSH
+                    // tunnelling.
 
                     con.info('Connecting VPN; you might be asked for your local (sudo) password now');
                     vpnc.connect(config.vpnc, config.vpnRoutes, function (err, code) {
@@ -402,6 +584,9 @@ function digReal(tunnel, host, debug) {
             }
         });
     } else {
+
+        // We don't need a VPN connection, so go directly to the expect step.
+
         launchExpect(config, debug);
     }
 }
@@ -409,6 +594,8 @@ function digReal(tunnel, host, debug) {
 function launchExpect(config, debug) {
     var setupLocalIPs = require('./lib/setup-local-ips');
     var expectConfig = require('./lib/expect-config');
+
+    // Create and save the expect script that's going to drive the session.
 
     con.debug('Creating expect script');
     try {
@@ -420,7 +607,9 @@ function launchExpect(config, debug) {
         con.fatal(err);
     }
 
-    // Set up local IP:s needed for forwarding and execute the expect scipt.
+    // Set up local IP:s needed for forwarding. If it fails, we remove the
+    // forwardings from the configuration and warn the user, but proceed
+    // anyway.
 
     con.debug('Setting up local IP:s for forwarding');
     setupLocalIPs(config, function (c) {
@@ -429,24 +618,40 @@ function launchExpect(config, debug) {
             delete config.forwards;
         }
 
-        // Create the expect script and save it to a temp file.
+        // Start the expect script and wait for it to exit. We use the
+        // deprecated `customFds` option to connect the script to the tty so
+        // the user can interact with it. When we migrate to Node 0.8, there's
+        // a supported `stdio: inherit` option we can use instead.
 
         con.info('Hang on, digging the tunnel');
         spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
         .on('exit', function (code) {
+
+            // The script has exited, so we try to clean up after us.
+
             fs.unlinkSync(expectFile);
             fs.unlinkSync(config.sshConfig);
             // FIXME: Unlink ssh keys
+
+            // If a VPN was connected, now is the time to disconnect it. We
+            // don't treat errors here as fatal since there could be more
+            // cleanup to do later on and we're anyway exiting soon.
 
             if (config.vpnc) {
                 con.info('Disconnecting VPN; you might be asked for your local (sudo) password now');
                 vpnc.disconnect(function (err, status) {
                     if (err) {
-                        con.fatal(err);
+                        con.error(err);
+                        con.ok('VPN disconnection failed');
+                    } else {
+                        con.ok('VPN disconnected');
                     }
-                    con.ok('VPN disconnected');
                 });
             }
+
+            // Print final status message. If things seems to have failed,
+            // suggest turning on debugging or talking to the author of the
+            // tunnel definition.
 
             if (code === 0) {
                 con.ok('Great success');
@@ -464,12 +669,16 @@ function exportf(opts) {
 
     init(opts);
 
+    // Load and verify the tunnel.
+
     try {
         con.debug('Loading tunnel');
         config = tun.load(opts.tunnel, tunnelDefDir);
     } catch (err) {
         con.fatal(err);
     }
+
+    // Save it out to the specified file.
 
     con.debug('Saving to INI format');
     tun.save(config, opts.file);
@@ -480,19 +689,41 @@ function exportf(opts) {
 function install(opts) {
     init(opts);
 
+    // We build the expected package name based on the name specified by the
+    // user, plus the platform, architecture and OS version.  FIXME: The OS
+    // version is way too specific.
+
     var file = [ opts.pkg, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
     var local = path.join(pkgDir, file);
-    var tmp = temp.path();
-    mkdirp(tmp);
+
+    // Get the package from the server and save it in our package directory.
+    // The callback will be called only if the fetch and save is successfull.
 
     con.info('Fetching ' + file);
     srv.saveBin('/extra/' + file, local, function () {
+
+        // Create a temporary path where we can extract the package.
+
+        var tmp = temp.path();
+        mkdirp(tmp);
+
+        // Change working directory to the temporary one we created and try to
+        // extract the downloaded package file.
+
         con.info('Unpacking ' + file);
         exec('cd ' + tmp + ' && tar zxf ' + local, function (err, stdout, stderr) {
             con.debug('Extracted in ' + tmp);
+
+            // The package should include a script `install.sh` that will do
+            // whatever's necessary to install the package. We run that with
+            // sudo.
+
             con.info('Running installation, you might now be asked for your local (sudo) password.');
             var inst = spawn('sudo', [ path.join(tmp, 'install.sh'), tmp ], { customFds: [ 0, 1, 2 ] });
             inst.on('exit', function (code) {
+
+                // We're done, one way or the other.
+
                 if (code === 0) {
                     con.ok('Installation complete');
                 } else {
@@ -500,6 +731,6 @@ function install(opts) {
                 }
             });
         });
-    }, local);
+    });
 }
 
