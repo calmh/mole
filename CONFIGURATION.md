@@ -1,6 +1,25 @@
 Configuration Reference
 =======================
 
+This document describes the file format used for tunnel definitions. It follows
+the common "INI" format with section headers in `[brackets]` followed by
+directives on the form `element="a value"`.
+
+The purpose of mole is to allow easy setup of SSH/VPN connections and related
+tunnels. All tunnel definition files must be entirely self contained, that is
+it must never be necessary for the user to interact during the login process to
+give a password or similar. Tunnel definitions should also be self documented,
+so make sure to use clear and descriptive names for hosts and forwards.
+
+A tunnel definition consists of:
+
+  - exactly one `general` section,
+  - one or more `host` sections,
+  - zero or more `forward` sections,
+  - an optional `vpnc` section,
+  - an optional `vpn routes` section which must only be present in combination
+    with a `vpnc section`.
+
 Section `general`
 ------------------
 
@@ -41,9 +60,6 @@ completed noninteratively. In case `key` is used, it must contain a valid SSH
 private key with newlines replaces by spaces. The key must not be locked by a
 password.
 
-There must be at least one `host` section, corresponding to the `main` element
-under `general`.
-
 ### Example
 
     [host op1jump]
@@ -72,8 +88,6 @@ Each element withing the `forward` section is a pair on the form
 `<local address> = <remote address>`. The local side can use addresses other than
 127.0.0.1 but still in the 127.0.0.0/8 block; these will be added to the local
 loopback interface if they don't already exist.
-
-There can be zero or more `forward` sections.
 
 ### Example
 
