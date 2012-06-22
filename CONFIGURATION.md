@@ -14,11 +14,18 @@ so make sure to use clear and descriptive names for hosts and forwards.
 A tunnel definition consists of:
 
   - exactly one `general` section,
-  - one or more `host` sections,
+  - zero or more `host` sections,
   - zero or more `forward` sections,
+  - zero or more `localforward` sections,
   - an optional `vpnc` section,
   - an optional `vpn routes` section which must only be present in combination
     with a `vpnc section`.
+
+You need to *either* have at least one `host` or at least one `localforward`.
+You can't have `forward` without having at least one `host` to do them through,
+but `localforward` doesn't need a host. You can't combine `host`/`forward` and
+`localforward` -- either you ssh somewhere and use port forwards through there
+or you do it locally.
 
 Section `general`
 ------------------
@@ -106,6 +113,26 @@ loopback interface if they don't already exist.
     127.0.0.4:22000=10.2.34.92:22000
     127.0.0.4:22001=10.2.34.92:22001
     127.0.0.4:22002=10.2.34.92:22002
+
+Section `localforward`
+----------------------
+
+The `localforward` section exactly follows the syntax of the `forward` section
+above. The difference is that while the `forward` acts on a `host`, the
+`localforward` simply uses the local machine instead. This is useful when you
+have a VPN connection (see `vpnc` below) and don't want to SSH anywhere but
+simply set up a bunch of forwards that are directly reachable from the local
+host.
+
+### Example
+
+    [localforward The Globe units]
+    127.0.0.1:22000=10.0.33.69.193:22000
+    127.0.0.1:22001=10.0.33.69.193:22001
+    127.0.0.1:22002=10.0.33.69.193:22002
+    127.0.0.2:22000=10.0.33.70.194:22000
+    127.0.0.2:22001=10.0.33.70.194:22001
+    127.0.0.2:22002=10.0.33.70.194:22002
 
 Section `vpnc`
 --------------
