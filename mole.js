@@ -615,18 +615,6 @@ function launchExpect(config, debug) {
     var setupLocalIPs = require('./lib/setup-local-ips');
     var expectConfig = require('./lib/expect-config');
 
-    // Create and save the expect script that's going to drive the session.
-
-    con.debug('Creating expect script');
-    try {
-        var expect = expectConfig(config, debug);
-        var expectFile = temp.path({suffix: '.expect'});
-        fs.writeFileSync(expectFile, expect);
-        con.debug(expectFile);
-    } catch (err) {
-        con.fatal(err);
-    }
-
     // Set up local IP:s needed for forwarding. If it fails, we remove the
     // forwardings from the configuration and warn the user, but proceed
     // anyway.
@@ -636,6 +624,18 @@ function launchExpect(config, debug) {
         if (!c) {
             con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding.');
             delete config.forwards;
+        }
+
+        // Create and save the expect script that's going to drive the session.
+
+        con.debug('Creating expect script');
+        try {
+            var expect = expectConfig(config, debug);
+            var expectFile = temp.path({suffix: '.expect'});
+            fs.writeFileSync(expectFile, expect);
+            con.debug(expectFile);
+        } catch (err) {
+            con.fatal(err);
         }
 
         // Start the expect script and wait for it to exit. We use the
