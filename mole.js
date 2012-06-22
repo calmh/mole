@@ -49,7 +49,14 @@ var pkg = require(path.join(__dirname, 'package.json'));
 
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
-var srv = require('./lib/server');
+var Server = require('./lib/server');
+var srv = new Server();
+
+// All server errors are fatal.
+
+srv.on('error', function (err) {
+    con.fatal(err);
+});
 
 // Set up variables pointing to our config directory, certificate files and
 // subdirectories for tunnels and packages.
