@@ -596,14 +596,14 @@ function digReal(tunnel, host, debug) {
                         if (err) {
                             con.fatal(err);
                         } else if (code !== 0) {
-                            con.fatal('vpnc returned an error - investigate and act on it, nothing more I can do :(');
-                                }
-                                con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                                con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
+                            con.fatal("vpnc returned an error - investigate and act on it, nothing more I can do :(");
+                        }
+                        con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
+                        con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
 
-                                setupIPs(config, debug);
-                                });
-                            });
+                        setupIPs(config, debug);
+                    });
+                });
             }
         });
     } else {
@@ -701,51 +701,50 @@ function launchExpect(config, debug) {
     // a supported `stdio: inherit` option we can use instead.
 
     con.info('Hang on, digging the tunnel');
-    spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
-        .on('exit', function (code) {
+    spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] }).on('exit', function (code) {
 
-            // The script has exited, so we try to clean up after us.
+        // The script has exited, so we try to clean up after us.
 
-            fs.unlinkSync(expectFile);
-            fs.unlinkSync(config.sshConfig);
-            // FIXME: Unlink ssh keys
+        fs.unlinkSync(expectFile);
+        fs.unlinkSync(config.sshConfig);
+        // FIXME: Unlink ssh keys
 
-            stopVPN(config, function () {
+        stopVPN(config, function () {
 
-                // Print final status message. If things seems to have failed,
-                // suggest turning on debugging or talking to the author of the
-                // tunnel definition.
+            // Print final status message. If things seems to have failed,
+            // suggest turning on debugging or talking to the author of the
+            // tunnel definition.
 
-                if (code === 0) {
-                    con.ok('Great success');
-                } else {
-                    con.error('Unsuccessful');
-                    con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
-                    con.info(config.author);
-                }
-            });
+            if (code === 0) {
+                con.ok('Great success');
+            } else {
+                con.error('Unsuccessful');
+                con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
+                con.info(config.author);
+            }
         });
+    });
 }
 
 function stopVPN(config, callback) {
-            // If a VPN was connected, now is the time to disconnect it. We
-            // don't treat errors here as fatal since there could be more
-            // cleanup to do later on and we're anyway exiting soon.
+    // If a VPN was connected, now is the time to disconnect it. We
+    // don't treat errors here as fatal since there could be more
+    // cleanup to do later on and we're anyway exiting soon.
 
-            if (config.vpnc) {
-                con.info('Disconnecting VPN; you might be asked for your local (sudo) password now');
-                vpnc.disconnect(function (err, status) {
-                    if (err) {
-                        con.error(err);
-                        con.ok('VPN disconnection failed');
-                    } else {
-                        con.ok('VPN disconnected');
-                    }
-                    if (callback && typeof callback === 'function') {
-                        callback();
-                    }
-                });
+    if (config.vpnc) {
+        con.info('Disconnecting VPN; you might be asked for your local (sudo) password now');
+        vpnc.disconnect(function (err, status) {
+            if (err) {
+                con.error(err);
+                con.ok('VPN disconnection failed');
+            } else {
+                con.ok('VPN disconnected');
             }
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+        });
+    }
 }
 
 function exportf(opts) {
