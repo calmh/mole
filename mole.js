@@ -347,6 +347,9 @@ function list(opts) {
             // all that useful since it'll be truncated by the table formatter.
 
             var hosts = _.keys(r.hosts).sort().join(', ');
+            if (hosts === '' && _.size(r.localForwards) > 0) {
+                hosts = '(local forward)'.grey;
+            }
 
             rows.push([ tname.blue.bold , r.description + opts, mdate, hosts ]);
         } catch (err) {
