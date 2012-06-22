@@ -96,23 +96,23 @@ try {
 // summary when the user makes an error or runs mole without parameters.
 
 var helptext = [
-      'Version:',
-      '  mole v' + pkg.version + '\t(https://github.com/calmh/mole)',
-      '  node ' + process.version,
-      '',
-      'Examples:',
-      '',
-      'Register with server "mole.example.com" and a token:',
-      '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
-      '',
-      'List available tunnels:',
-      '  mole list'.bold,
-      '',
-      'Dig a tunnel to "operator3":',
-      '  mole dig operator3'.bold,
-      '',
-      'Fetch new and updated tunnel specifications from the server:',
-      '  mole pull'.bold
+    'Version:',
+    '  mole v' + pkg.version + '\t(https://github.com/calmh/mole)',
+    '  node ' + process.version,
+    '',
+    'Examples:',
+    '',
+    'Register with server "mole.example.com" and a token:',
+    '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
+    '',
+    'List available tunnels:',
+    '  mole list'.bold,
+    '',
+    'Dig a tunnel to "operator3":',
+    '  mole dig operator3'.bold,
+    '',
+    'Fetch new and updated tunnel specifications from the server:',
+    '  mole pull'.bold
 ].join('\n');
 
 // Set the name of our 'script'.
@@ -205,7 +205,8 @@ parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 // that in a separate call on `parser` instead of chaining after `.nocommand`
 // etc, but that doesn't actually work for reasons I don't understand.
 
-parser.nocommand()
+parser
+.nocommand()
 .callback(function () {
     console.log(parser.getUsage());
     process.exit(0);
@@ -244,10 +245,12 @@ function init(opts) {
     // stored from before.  If not, we'll store the fingerprint on `register`,
     // thus effectively locking the client to the server it registered with and
     // preventing some tampering scenarios.
- 
-    srv.init({ host: config.param('server.host'), port:
-             config.param('server.port') || 9443, fingerprint:
-             config.param('server.fingerprint') });
+
+    srv.init({
+        host: config.param('server.host'), port:
+        config.param('server.port') || 9443, fingerprint:
+        config.param('server.fingerprint')
+    });
 
     readCert();
 }
@@ -439,7 +442,7 @@ function pull(opts) {
     // The user presumably want's to be up to date, so we fetch the latest
     // version number for mole from the npm repository and print a 'time to
     // upgrade'-message if there's a mismatch.
-   
+
     version.fetch('mole', function (err, ver) {
         if (!err && ver) {
             if (ver !== pkg.version) {
@@ -586,8 +589,7 @@ function digReal(tunnel, host, debug) {
                     }
 
                     // Try to connect the VPN. If it fails, exit with an error,
-                    // otherwise proceed to start expect and to the real SSH
-                    // tunnelling.
+                    // otherwise proceed to start expect and to the real tunnelling.
 
                     con.info('Connecting VPN; you might be asked for your local (sudo) password now');
                     vpnc.connect(config.vpnc, config.vpnRoutes, function (err, code) {
@@ -595,25 +597,25 @@ function digReal(tunnel, host, debug) {
                             con.fatal(err);
                         } else if (code !== 0) {
                             con.fatal('vpnc returned an error - investigate and act on it, nothing more I can do :(');
-                        }
-                        con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
-                        launchExpect(config, debug);
-                    });
-                });
+                                }
+                                con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
+                                con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
+
+                                setupIPs(config, debug);
+                                });
+                            });
             }
         });
     } else {
 
-        // We don't need a VPN connection, so go directly to the expect step.
+        // We don't need a VPN connection, so go directly to the next step.
 
-        launchExpect(config, debug);
+        setupIPs(config, debug);
     }
 }
 
-function launchExpect(config, debug) {
+function setupIPs(config, debug) {
     var setupLocalIPs = require('./lib/setup-local-ips');
-    var expectConfig = require('./lib/expect-config');
 
     // Set up local IP:s needed for forwarding. If it fails, we remove the
     // forwardings from the configuration and warn the user, but proceed
@@ -626,25 +628,80 @@ function launchExpect(config, debug) {
             delete config.forwards;
         }
 
-        // Create and save the expect script that's going to drive the session.
-
-        con.debug('Creating expect script');
-        try {
-            var expect = expectConfig(config, debug);
-            var expectFile = temp.path({suffix: '.expect'});
-            fs.writeFileSync(expectFile, expect);
-            con.debug(expectFile);
-        } catch (err) {
-            con.fatal(err);
+        if (config.main) {
+            con.debug('There is a main host, going to expect');
+            launchExpect(config, debug);
+        } else if (_.size(config.localForwards) > 0) {
+            setupLocalForwards(config);
+        } else {
+            con.fatal('Got this far, but now what?');
         }
+    });
+}
 
-        // Start the expect script and wait for it to exit. We use the
-        // deprecated `customFds` option to connect the script to the tty so
-        // the user can interact with it. When we migrate to Node 0.8, there's
-        // a supported `stdio: inherit` option we can use instead.
+function setupLocalForwards(config) {
+    var forwards = [];
+    var Proxy = require('./lib/trivial-proxy');
+    var readline = require('readline');
+    var rl = readline.createInterface(process.stdin, process.stdout);
 
-        con.info('Hang on, digging the tunnel');
-        spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
+    console.log('\nThe following forwards are available to you:\n');
+    _.each(config.localForwards, function (fs, descr) {
+        console.log(descr);
+        fs.forEach(function (f) {
+            var from = f.from.split(':');
+            var to = f.to.split(':');
+            forwards.push(new Proxy(from[0], parseInt(from[1], 10), to[0], parseInt(to[1], 10)));
+            console.log('   ' + f.from + ' -> ' + f.to);
+        });
+        console.log();
+    });
+
+    // Start a very simple command loop to wait for when the user is done.
+
+    con.ok('Go forth and connect. Type "quit" when you\'re done.');
+    rl.setPrompt('mole> ');
+    rl.prompt();
+    rl.on('line', function (cmd) {
+        if (cmd === 'quit') {
+            forwards.forEach(function (f) {
+                f.end();
+            });
+            con.ok('All done, shutting down.');
+            stopVPN(config, process.exit);
+
+            // FIXME: Why to we need to call process.exit anyway? Shouldn't it
+            // be enough that we have no listening sockets any more?
+
+        } else {
+            con.error('Invalid command "' + cmd + '"');
+            rl.prompt();
+        }
+    });
+}
+
+function launchExpect(config, debug) {
+    var expectConfig = require('./lib/expect-config');
+    var expectFile = temp.path({suffix: '.expect'});
+
+    // Create and save the expect script that's going to drive the session.
+
+    con.debug('Creating expect script');
+    try {
+        var expect = expectConfig(config, debug);
+        fs.writeFileSync(expectFile, expect);
+        con.debug(expectFile);
+    } catch (err) {
+        con.fatal(err);
+    }
+
+    // Start the expect script and wait for it to exit. We use the
+    // deprecated `customFds` option to connect the script to the tty so
+    // the user can interact with it. When we migrate to Node 0.8, there's
+    // a supported `stdio: inherit` option we can use instead.
+
+    con.info('Hang on, digging the tunnel');
+    spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] })
         .on('exit', function (code) {
 
             // The script has exited, so we try to clean up after us.
@@ -653,6 +710,24 @@ function launchExpect(config, debug) {
             fs.unlinkSync(config.sshConfig);
             // FIXME: Unlink ssh keys
 
+            stopVPN(config, function () {
+
+                // Print final status message. If things seems to have failed,
+                // suggest turning on debugging or talking to the author of the
+                // tunnel definition.
+
+                if (code === 0) {
+                    con.ok('Great success');
+                } else {
+                    con.error('Unsuccessful');
+                    con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
+                    con.info(config.author);
+                }
+            });
+        });
+}
+
+function stopVPN(config, callback) {
             // If a VPN was connected, now is the time to disconnect it. We
             // don't treat errors here as fatal since there could be more
             // cleanup to do later on and we're anyway exiting soon.
@@ -666,22 +741,11 @@ function launchExpect(config, debug) {
                     } else {
                         con.ok('VPN disconnected');
                     }
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
                 });
             }
-
-            // Print final status message. If things seems to have failed,
-            // suggest turning on debugging or talking to the author of the
-            // tunnel definition.
-
-            if (code === 0) {
-                con.ok('Great success');
-            } else {
-                con.error('Unsuccessful');
-                con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
-                con.info(config.author);
-            }
-        });
-    });
 }
 
 function exportf(opts) {
