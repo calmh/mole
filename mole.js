@@ -328,17 +328,24 @@ function list(opts) {
         try {
             var r = tun.load(path.join(tunnelDefDir, file));
 
+            // Add a flag to indicate that a tunnel definitions requires VPN
+            // (i.e. vpnc must be installed).
+
             var opts = '';
             if (r.vpnc) {
                 opts += ' (vpn)'.magenta;
             }
 
-            var descr = r.description;
-            // FIXME: For lots of hosts, this isn't all that useful since it'll be truncated by the table formatter.
+            // Format the modification date.
+
+            var mdate = iso8601.fromDate(r.stat.mtime).slice(0, 10);
+
+            // Generate a lists of hosts. FIXME: For lots of hosts, this isn't
+            // all that useful since it'll be truncated by the table formatter.
+
             var hosts = _.keys(r.hosts).sort().join(', ');
-            var mtime = r.stat.mtime;
-            var mdate = iso8601.fromDate(mtime).slice(0, 10)
-            rows.push([ tname.blue.bold , descr + opts, mdate, hosts ]);
+
+            rows.push([ tname.blue.bold , r.description + opts, mdate, hosts ]);
         } catch (err) {
             // If we couldn't load/parse the file for some reason, simply mark it as corrupt.
             rows.push([ tname.red.bold, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
