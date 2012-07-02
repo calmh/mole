@@ -112,4 +112,20 @@ describe('validate', function () {
             validate(invalid);
         }).should.throw();
     });
+
+    it('should deny malformed forward from', function () {
+        var invalid = valid;
+        invalid.forwards.invalid = { from: '127.0.0.1.99:44', to: '1.2.3.4:55' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should deny malformed forward to', function () {
+        var invalid = valid;
+        invalid.forwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
 });
