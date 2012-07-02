@@ -366,6 +366,18 @@ function list(opts) {
 function pull(opts) {
     init(opts);
 
+    // Update the local file repository with newer data from the server.
+
+    updateFromServer();
+
+    // The user presumably want's to be up to date so check that we're running
+    // the latest version.
+
+    checkVersion();
+}
+
+function updateFromServer() {
+
     // Get the list of tunnel definitions from the server. The list includes
     // (name, mtime) for each tunnel. We'll use the `mtime` to figure out if we
     // need to download the definition or not.
@@ -411,19 +423,17 @@ function pull(opts) {
             // If we need to fetch a tunnel definition, send a server request to do so.
 
             if (fetch) {
-                srv.fetch(res.name, function (result) {
+                srv.saveBin(res.name, local, function () {
 
-                    // When the request completes, we save the file and set the
-                    // mtime to match that sent by the server. The server sends
-                    // it in milliseconds since that's what Javascript
-                    // timestamps usually are, but utimesSync expects seconds.
-
-                    fs.writeFileSync(local, result);
+                    // When the request completes, we set the mtime to match
+                    // that sent by the server. The server sends it in
+                    // milliseconds since that's what Javascript timestamps
+                    // usually are, but utimesSync expects seconds.
 
                     var mtime = Math.floor(res.mtime / 1000);
                     fs.utimesSync(local, mtime, mtime);
 
-                    con.ok('Pulled ' + tun.name(res.name));
+                    con.info('Pulled ' + tun.name(res.name));
 
                     // Mark this request as completed, print out status if it was the last one.
 
@@ -441,11 +451,12 @@ function pull(opts) {
             }
         });
     });
+}
 
-    // The user presumably want's to be up to date, so we fetch the latest
-    // version number for mole from the npm repository and print a 'time to
-    // upgrade'-message if there's a mismatch.
+// Fetch the latest version number for mole from the npm repository and print a
+// 'time to upgrade'-message if there's a mismatch.
 
+function checkVersion() {
     version.fetch('mole', function (err, ver) {
         if (!err && ver) {
             if (ver !== pkg.version) {
