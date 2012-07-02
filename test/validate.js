@@ -128,4 +128,22 @@ describe('validate', function () {
             validate(invalid);
         }).should.throw();
     });
+
+    it('should deny malformed localForward from', function () {
+        var invalid = valid;
+        invalid.localForwards = {};
+        invalid.localForwards.invalid = { from: '127.0.0.1.99:44', to: '1.2.3.4:55' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should deny malformed localForward to', function () {
+        var invalid = valid;
+        invalid.localForwards = {};
+        invalid.localForwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
 });
