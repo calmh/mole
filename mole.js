@@ -17,7 +17,6 @@ var os = require('os');
 var parser = require('nomnom');
 var path = require('path');
 var pidof = require('pidof');
-var spawn = require('child_process').spawn;
 var table = require('yatf');
 var temp = require('temp');
 var util = require('util');
@@ -49,6 +48,7 @@ var pkg = require(path.join(__dirname, 'package.json'));
 
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
+var pspawn = require('./lib/pspawn');
 var Server = require('./lib/server');
 var srv = new Server();
 
@@ -715,7 +715,7 @@ function launchExpect(config, debug) {
     // a supported `stdio: inherit` option we can use instead.
 
     con.info('Hang on, digging the tunnel');
-    spawn('expect', [ expectFile ], { customFds: [ 0, 1, 2 ] }).on('exit', function (code) {
+    pspawn('expect', [ expectFile ]).on('exit', function (code) {
 
         // The script has exited, so we try to clean up after us.
 
@@ -816,7 +816,7 @@ function install(opts) {
             // sudo.
 
             con.info('Running installation, you might now be asked for your local (sudo) password.');
-            var inst = spawn('sudo', [ path.join(tmp, 'install.sh'), tmp ], { customFds: [ 0, 1, 2 ] });
+            var inst = pspawn('sudo', [ path.join(tmp, 'install.sh'), tmp ]);
             inst.on('exit', function (code) {
 
                 // We're done, one way or the other.
