@@ -790,7 +790,7 @@ function install(opts) {
     // user, plus the platform, architecture and OS version.  FIXME: The OS
     // version is way too specific.
 
-    var file = [ opts.pkg, os.platform(), os.arch(), os.release() ].join('-') + '.tar.gz';
+    var file = [ opts.pkg, os.platform(), os.arch() ].join('-') + '.tar.gz';
     var local = path.join(pkgDir, file);
 
     // Get the package from the server and save it in our package directory.
