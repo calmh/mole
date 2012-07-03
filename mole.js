@@ -247,9 +247,9 @@ function init(opts) {
     // preventing some tampering scenarios.
 
     srv.init({
-        host: config.param('server.host'), port:
-        config.param('server.port') || 9443, fingerprint:
-        config.param('server.fingerprint')
+        host: config.param('server.host'),
+        port: config.param('server.port'),
+        fingerprint: config.param('server.fingerprint')
     });
 
     readCert();
