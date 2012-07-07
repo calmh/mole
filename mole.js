@@ -28,16 +28,15 @@ var vpnc = require('vpnc');
 
 var isatty = process.stdout.isTTY;
 
-// The existsSync function moved between Node 0.6 and 0.8.  We just use it from
-// wherever we found it.
+// The existsSync function moved between Node 0.6 and 0.8. We monkeypatch fs if
+// it's not already there.
 //
 // You'll be seeing a lot of `*Sync` calls in here. If that disturbs you, keep
 // in mind that this is a CLI program that runs once and then exits, not some
 // sort of high performance IO-bound server code, mmkay?
 
-var existsSync = fs.existsSync; // Node 0.8
-if (!existsSync) {
-    existsSync = path.existsSync; // Node 0.6 and prior
+if (!fs.existsSync) {
+    fs.existsSync = path.existsSync;
 }
 
 // We load our own package file to get at the version number.
@@ -411,7 +410,7 @@ function updateFromServer() {
             // have locally.
 
             var fetch = false;
-            if (!existsSync(local)) {
+            if (!fs.existsSync(local)) {
                 fetch = true;
             } else {
                 var s = fs.statSync(local);
