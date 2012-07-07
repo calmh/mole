@@ -49,12 +49,12 @@ var pkg = require(path.join(__dirname, 'package.json'));
 var con = require('./lib/console');
 var tun = require('./lib/tunnel');
 var pspawn = require('./lib/pspawn');
-var Server = require('./lib/server');
-var srv = new Server();
+var Client = require('./lib/client');
+var client = new Client();
 
 // All server errors are fatal.
 
-srv.on('error', function (err) {
+client.on('error', function (err) {
     con.fatal(err);
 });
 
@@ -228,7 +228,7 @@ function readCert() {
         key = fs.readFileSync(keyFile, 'utf-8');
         con.debug('Trying to load ' + certFile);
         cert = fs.readFileSync(certFile, 'utf-8');
-        srv.init({ key: key, cert: cert });
+        client.init({ key: key, cert: cert });
     } catch (err) {
         con.debug('No certificate loaded');
     }
@@ -246,7 +246,7 @@ function init(opts) {
     // thus effectively locking the client to the server it registered with and
     // preventing some tampering scenarios.
 
-    srv.init({
+    client.init({
         host: config.param('server.host'),
         port: config.param('server.port'),
         fingerprint: config.param('server.fingerprint')
@@ -266,14 +266,14 @@ function register(opts) {
 
     config.param('server.host', opts.server);
     config.param('server.port', opts.port);
-    srv.init({ host: opts.server, port: opts.port });
+    client.init({ host: opts.server, port: opts.port });
 
     // Try to register with the server. If it fails, a fatal error will be
     // printed by the server code and the callback will never be called.  If it
     // succeeds, we'll get our certificates and the server fingerprint in the
     // callback.
 
-    srv.register(opts.token, function (result) {
+    client.register(opts.token, function (result) {
         con.debug('Received certificate and key from server');
 
         // Save the certificates and fingerprint for later.
@@ -306,7 +306,7 @@ function token(opts) {
     // Request a token from the server. On success, the callback will be called
     // with the token and we simply print it out.
 
-    srv.token(function (result) {
+    client.token(function (result) {
         con.ok(result.token);
     });
 }
@@ -383,7 +383,7 @@ function updateFromServer() {
     // need to download the definition or not.
 
     con.debug('Requesting tunnel list from server');
-    srv.list(function (result) {
+    client.list(function (result) {
         con.debug('Got ' + result.length + ' entries');
         con.debug(util.inspect(result));
 
@@ -423,7 +423,7 @@ function updateFromServer() {
             // If we need to fetch a tunnel definition, send a server request to do so.
 
             if (fetch) {
-                srv.saveBin(res.name, local, function () {
+                client.saveBin(res.name, local, function () {
 
                     // When the request completes, we set the mtime to match
                     // that sent by the server. The server sends it in
@@ -492,7 +492,7 @@ function push(opts) {
     // Send the data to the server. We'll only get the callback if the upload
     // succeeds.
 
-    srv.send(path.basename(opts.file), data, function (result) {
+    client.send(path.basename(opts.file), data, function (result) {
         con.ok('Sent ' + data.length + ' bytes');
     });
 }
@@ -504,7 +504,7 @@ function newUser(opts) {
     // callback with the one-time token for the new user.
 
     con.debug('Requesting user ' + opts.name);
-    srv.newUser(opts.name, function (result) {
+    client.newUser(opts.name, function (result) {
         con.ok(result.token);
     });
 }
@@ -516,7 +516,7 @@ function delUser(opts) {
     // everything went well.
 
     con.debug('Deleting user ' + opts.name);
-    srv.delUser(opts.name, function (result) {
+    client.delUser(opts.name, function (result) {
         con.ok('deleted');
     });
 }
@@ -797,7 +797,7 @@ function install(opts) {
     // The callback will be called only if the fetch and save is successfull.
 
     con.info('Fetching ' + file);
-    srv.saveBin('/extra/' + file, local, function () {
+    client.saveBin('/extra/' + file, local, function () {
 
         // Create a temporary path where we can extract the package.
 
