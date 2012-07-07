@@ -598,7 +598,9 @@ function digReal(tunnel, host, debug) {
                         con.error(err);
                         con.fatal('could not check if vpnc was running');
                     } else if (pid) {
-                        con.fatal('vpnc already running, will not start another instance');
+                        con.warning('vpnc already running; consider disconnecting the VPN manually by running:');
+                        con.warning('sudo ' + result.vpncDisconnect);
+                        con.fatal('Not continuing');
                     }
 
                     // Try to connect the VPN. If it fails, exit with an error,
@@ -612,7 +614,8 @@ function digReal(tunnel, host, debug) {
                             con.fatal("vpnc returned an error - investigate and act on it, nothing more I can do :(");
                         }
                         con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running "sudo ' + result.vpncDisconnect + '"');
+                        con.info('manually by running:')
+                        con.info('sudo ' + result.vpncDisconnect);
 
                         setupIPs(config, debug);
                     });
@@ -757,6 +760,8 @@ function stopVPN(config, callback) {
             if (err) {
                 con.error(err);
                 con.warning('VPN disconnection failed');
+            } else if (status !== 0) {
+                con.warning('VPN disconnection failed (vpnc/sudo exit code ' + status + ')');
             } else {
                 con.ok('VPN disconnected');
             }
