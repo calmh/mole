@@ -37,7 +37,7 @@ var isatty = process.stdout.isTTY;
 
 var existsSync = fs.existsSync; // Node 0.8
 if (!existsSync) {
-    existsSync = path.existsSync; // Node 0.6 and prior
+    existsSync = fs.existsSync; // Node 0.6 and prior
 }
 
 // We load our own package file to get at the version number.
