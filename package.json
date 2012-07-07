@@ -14,10 +14,13 @@
     "mole": "./mole.js"
   },
   "dependencies": {
+    "async": "0.1.x",
     "colors": "0.6.x",
+    "express": "2.5.x",
     "inireader": "0.2.x",
     "iso8601": "1.1.x",
     "mkdirp": "0.3.x",
+    "node-uuid": "1.3.x",
     "nomnom": ">= 1.5.2",
     "pidof": "1.0.x",
     "temp": "0.4.x",
