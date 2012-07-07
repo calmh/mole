@@ -1,0 +1,24 @@
+#!/usr/bin/env expect
+
+log_user 0
+
+set domain [lindex $argv 0]
+if { $domain == "" } { set domain "mole" }
+
+spawn openssl genrsa -out ca-key.pem 2048 
+expect eof
+
+spawn openssl req -new -x509 -days 1825 -key ca-key.pem -out ca-cert.pem
+expect {
+	"Country Name" { send "EU\r"; exp_continue; }
+	"Province Name" { send "N/A\r"; exp_continue; }
+	"Locality" { send "\r"; exp_continue; }
+	"Organization Name" { send "Mole Systems Incorporated\r"; exp_continue; }
+	"Organizational Unit" { send "\r"; exp_continue; }
+	"Common Name" { send "$domain\r"; exp_continue; }
+	"Email Address" { send "mole@$domain\r"; exp_continue; }
+	"challenge password" { send "\r"; exp_continue; }
+	"company name" { send "\r"; exp_continue; }
+	eof
+}
+
