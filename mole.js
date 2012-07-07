@@ -677,15 +677,22 @@ function setupLocalForwards(config) {
     rl.prompt();
     rl.on('line', function (cmd) {
         if (cmd === 'quit') {
+            con.ok('All done, shutting down.');
+
+            // Shut down each port forward.
+
             forwards.forEach(function (f) {
                 f.end();
             });
-            con.ok('All done, shutting down.');
+
+            // Shut down the CLI.
+
+            rl.close();
+
+            // Stop the VPN.
+            // FIXME: Why is process.exit still necessary after rl.close?
+
             stopVPN(config, process.exit);
-
-            // FIXME: Why to we need to call process.exit anyway? Shouldn't it
-            // be enough that we have no listening sockets any more?
-
         } else {
             con.error('Invalid command "' + cmd + '"');
             rl.prompt();
@@ -722,7 +729,7 @@ function launchExpect(config, debug) {
         fs.unlinkSync(config.sshConfig);
         // FIXME: Unlink ssh keys
 
-        stopVPN(config, function () {
+        stopVPN(config, function (code) {
 
             // Print final status message. If things seems to have failed,
             // suggest turning on debugging or talking to the author of the
@@ -749,12 +756,13 @@ function stopVPN(config, callback) {
         vpnc.disconnect(function (err, status) {
             if (err) {
                 con.error(err);
-                con.ok('VPN disconnection failed');
+                con.warning('VPN disconnection failed');
             } else {
                 con.ok('VPN disconnected');
             }
+
             if (callback && typeof callback === 'function') {
-                callback();
+                callback(status === 0);
             }
         });
     }
