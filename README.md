@@ -11,18 +11,28 @@ mole
 
 [![build status](https://secure.travis-ci.org/calmh/mole.png)](http://travis-ci.org/calmh/mole)
 
+Elevator Pitch
+--------------
+
+Like 1Password for ssh tunnels and VPN connections, plus sharing within a team.
+
 What
 ----
 
-Mole is an `ssh` and Cisco VPN tunnel manager with sweet collaboration features
-for teams and a thick layer of pure awesome.
+Mole lets you seamlessly share ssh and Cisco VPN configurations so that all you
+need to know is the name you want to connect to. Mole will sort out any needed
+passwords, keys and tunnelings and set up a bunch of forwardings for you.
+
+It'll tell you what forwardings are available and what they point to, so you
+can get on with real work and not have to dig around for inrastructure
+information.
 
 It's based around *tunnel definitions* which are self contained recipes that
 describe how to connect to a customer or site.  A tunnel definition contains:
 
   - Possibly, a Cisco VPN configuration.
 
-  - One or more host definitions (name, address, username).
+  - Probably, one or more host definitions (name, address, username).
 
   - A password or SSH key for the host. This is not optional, tunnel
     definitions should be able to connect without user interaction.
@@ -33,10 +43,7 @@ describe how to connect to a customer or site.  A tunnel definition contains:
   - A set of port forwarding descriptions to set up once the destination is
     reached, with commentary on what they're for.
 
-The tunnel definitions live server side with a local cache and are pushed and
-pulled similarly to how a DVCS works. If you don't know about that you don't
-need to care, just know that `mole pull` will grab any new tunnel definitions
-from the server and store them in the local cache.
+The tunnel definitions live server side with a local cache.
 
 All server communication is certificate authenticated and secured by TLS.
 
