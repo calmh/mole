@@ -2,7 +2,7 @@
   "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
   "name": "mole",
   "description": "An ssh tunnel manager with sweet features for teams and a thick layer of pure awesome",
-  "version": "2.1.5",
+  "version": "2.2.0-beta",
   "homepage": "https://github.com/calmh/mole",
   "repository": {
     "url": "https://github.com/calmh/mole.git"
@@ -14,10 +14,14 @@
     "mole": "./mole.js"
   },
   "dependencies": {
+    "async": "0.1.x",
     "colors": "0.6.x",
+    "express": "2.5.x",
     "inireader": "0.2.x",
+    "inpath": "1.0.x",
     "iso8601": "1.1.x",
     "mkdirp": "0.3.x",
+    "node-uuid": "1.3.x",
     "nomnom": ">= 1.5.2",
     "pidof": "1.0.x",
     "temp": "0.4.x",

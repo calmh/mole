@@ -1,0 +1,41 @@
+#!/usr/bin/env expect
+
+log_user 0
+
+set domain "mole"
+set user [lindex $argv 0]
+
+spawn openssl genrsa -out crt/$user-key.pem 1024 
+expect eof
+
+spawn openssl req -new -key crt/$user-key.pem -out crt/$user-csr.pem
+expect {
+	"Country Name" { send "SE\r"; exp_continue; }
+	"Province Name" { send "n/a\r"; exp_continue; }
+	"Locality" { send "Malmoe\r"; exp_continue; }
+	"Organization Name" { send "Mole Systems Incorporated\r"; exp_continue; }
+	"Organizational Unit" { send "n/a\r"; exp_continue; }
+	"Common Name" { send "$user\r"; exp_continue; }
+	"Email Address" { send "$user@$domain\r"; exp_continue; }
+	"challenge password" { send "\r"; exp_continue; }
+	"company name" { send "\r"; exp_continue; }
+	eof
+}
+
+spawn openssl x509 -req -in crt/$user-csr.pem -out crt/$user-cert.pem -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -days 1825
+expect eof
+
+spawn sh -c "cat crt/$user-cert.pem crt/$user-key.pem > crt/$user.pem"
+expect eof
+
+spawn rm crt/$user-csr.pem
+expect eof
+
+spawn openssl x509 -in crt/$user-cert.pem -fingerprint
+expect {
+	-re "Fingerprint=(\[0-9A-F:\]+)" {
+		send_user $expect_out(1,string);
+		send_user "\n";
+	}
+	eof
+}

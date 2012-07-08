@@ -49,6 +49,8 @@ var con = require('./lib/console');
 var tun = require('./lib/tunnel');
 var pspawn = require('./lib/pspawn');
 var Client = require('./lib/client');
+var server = require('./lib/server');
+
 var client = new Client();
 
 // All server errors are fatal.
@@ -189,6 +191,12 @@ parser.command('install')
 .option('pkg', { position: 1, help: 'Package name', required: true })
 .help('Install an optional package, fetched from the server')
 .callback(install);
+
+parser.command('server')
+.option('port', { abbr: 'p', help: 'Set listen port [9443]', default: '9443' })
+.option('store', { abbr: 's', help: 'Set store directory [~/mole-store]', default: path.join(process.env['HOME'], 'mole-store') })
+.help('Start a mole server instance')
+.callback(server);
 
 // `-d` always turns on debug.
 
