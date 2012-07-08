@@ -14,17 +14,22 @@ mole
 What
 ----
 
-Mole is an `ssh` tunnel manager with sweet features for teams and a thick layer
-of pure awesome.
+Mole is an `ssh` and Cisco VPN tunnel manager with sweet collaboration features
+for teams and a thick layer of pure awesome.
 
 It's based around *tunnel definitions* which are self contained recipes that
 describe how to connect to a customer or site.  A tunnel definition contains:
 
+  - Possibly, a Cisco VPN configuration.
+
   - One or more host definitions (name, address, username).
+
   - A password or SSH key for the host. This is not optional, tunnel
     definitions should be able to connect without user interaction.
+
   - A description of how to chain the hosts together to reach the final
     destination, i.e. jump via host A to B, from B to C and from there to D.
+
   - A set of port forwarding descriptions to set up once the destination is
     reached, with commentary on what they're for.
 
@@ -40,33 +45,73 @@ someone has written a tunnel definition, you can just `mole dig foobar` to
 connect all the way and get a nice list of available port forwardings presented
 to you.
 
-How
----
+Quick start
+-----------
 
-    Usage: mole [command] [options]
-    
-    command     one of: dig, list, pull, push, register, gettoken, export, newuser, deluser, install
-    
-    Options:
-       -d, --debug   Display debug output
-       -h, --help    Display command help
-    
-    Examples:
-    
-    Register with server "mole.example.com" and a token:
-      mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2
-    
-    List available tunnels:
-      mole list
-    
-    Dig a tunnel to "operator3":
-      mole dig operator3
-    
-    Fetch new and updated tunnel specifications from the server:
-      mole pull
+Your admin or colleague gave you a hostname and a token? Do this:
+
+ 1. If you don't have it, get [Node.js](http://www.nodejs.org/#download).
+
+ 2. Install mole:
+
+    $ sudo npm -g install mole
+
+ 3. Register using the credentials you got:
+
+    $ mole register <hostname> <token>
+
+ 4. Check what tunnel definitions are available:
+
+    $ mole list
+
+ 5. Connect to a tunnel:
+
+    $ mole dig <tunnelname>
+
+Write a new tunnel definition
+-----------------------------
+
+ 1. Read through the [Configuration Reference](https://github.com/calmh/mole/blob/master/CONFIGURATION.md).
+
+ 2. Create a tunnel definition file with an `.ini` extension in your home directory.
+
+ 3. Test the tunnel definition:
+
+    $ mole dig whateverfile.ini
+
+ 4. When you're happy, push it to the server:
+
+    $ mole push whateverfile.ini
+
+ 5. Pull it yourself so it gets cached in ~/.mole/tunnels:
+
+    $ mole pull
+
+Set up a new server
+-------------------
+
+ 1. Create and start a server:
+
+    $ mole server
+
+ 2. Create an admin user. This works without authentication because the user
+    database is currently empty and the default host for an unregistered mole
+    is localhost. Mole will spit out a one-use token that can be used to bind a
+    computer to the admin account.
+
+    $ mole newuser admin
+
+ 3. Register the current computer to the admin account:
+
+    $ mole register localhost <token-from-above>
+
+ 4. Use the admin user to create further users. Give the produced token to each
+    user so they can register.
+
+    $ mole newuser foo
 
 License
 -------
 
-2-Clause BSD
+Simplified BSD
 
