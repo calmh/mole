@@ -54,19 +54,19 @@ Your admin or colleague gave you a hostname and a token? Do this:
 
  2. Install mole:
 
-    $ sudo npm -g install mole
+        $ sudo npm -g install mole
 
  3. Register using the credentials you got:
 
-    $ mole register <hostname> <token>
+        $ mole register <hostname> <token>
 
  4. Check what tunnel definitions are available:
 
-    $ mole list
+        $ mole list
 
  5. Connect to a tunnel:
 
-    $ mole dig <tunnelname>
+        $ mole dig <tunnelname>
 
 Write a new tunnel definition
 -----------------------------
@@ -77,38 +77,38 @@ Write a new tunnel definition
 
  3. Test the tunnel definition:
 
-    $ mole dig whateverfile.ini
+        $ mole dig whateverfile.ini
 
  4. When you're happy, push it to the server:
 
-    $ mole push whateverfile.ini
+        $ mole push whateverfile.ini
 
  5. Pull it yourself so it gets cached in ~/.mole/tunnels:
 
-    $ mole pull
+        $ mole pull
 
 Set up a new server
 -------------------
 
  1. Create and start a server:
 
-    $ mole server
+        $ mole server
 
  2. Create an admin user. This works without authentication because the user
     database is currently empty and the default host for an unregistered mole
     is localhost. Mole will spit out a one-use token that can be used to bind a
     computer to the admin account.
 
-    $ mole newuser admin
+        $ mole newuser admin
 
  3. Register the current computer to the admin account:
 
-    $ mole register localhost <token-from-above>
+        $ mole register localhost <token-from-above>
 
  4. Use the admin user to create further users. Give the produced token to each
     user so they can register.
 
-    $ mole newuser foo
+        $ mole newuser foo
 
 License
 -------
