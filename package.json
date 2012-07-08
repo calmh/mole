@@ -2,7 +2,7 @@
   "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
   "name": "mole",
   "description": "An ssh tunnel manager with sweet features for teams and a thick layer of pure awesome",
-  "version": "2.2.0-beta",
+  "version": "2.2.0",
   "homepage": "https://github.com/calmh/mole",
   "repository": {
     "url": "https://github.com/calmh/mole.git"
