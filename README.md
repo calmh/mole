@@ -84,7 +84,7 @@ Write a new tunnel definition
 
  3. Test the tunnel definition:
 
-        $ mole dig whateverfile.ini
+        $ mole dig -l whateverfile.ini
 
  4. When you're happy, push it to the server:
 
