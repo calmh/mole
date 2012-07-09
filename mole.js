@@ -714,7 +714,9 @@ function setupLocalForwards(config) {
 
             stopVPN(config, process.exit);
         } else {
-            con.error('Invalid command "' + cmd + '"');
+            if (cmd !== '') {
+                con.error('Invalid command "' + cmd + '"');
+            }
             rl.prompt();
         }
     });
