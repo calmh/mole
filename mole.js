@@ -124,6 +124,7 @@ parser.script('mole');
 
 parser.command('dig')
 .help('Dig a tunnel to the destination')
+.option('local', { abbr: 'l', help: 'Tunnel name is a local file', flag: true })
 .option('tunnel', { position: 1, help: 'Tunnel name or file name', required: true })
 .option('host', { position: 2, help: 'Host name within tunnel definition' })
 .callback(dig);
@@ -336,7 +337,7 @@ function list(opts) {
     files.forEach(function (file) {
         var tname = tun.name(file);
         try {
-            var r = tun.load(path.join(tunnelDefDir, file));
+            var r = tun.loadFile(path.join(tunnelDefDir, file));
 
             // Add a flag to indicate that a tunnel definitions requires VPN
             // (i.e. vpnc must be installed).
@@ -484,7 +485,7 @@ function push(opts) {
 
     con.debug('Testing ' + opts.file);
     try {
-        tun.load(opts.file);
+        tun.loadFile(opts.file);
         con.debug('It passed validation');
     } catch (err) {
         con.fatal(err);
@@ -539,14 +540,18 @@ function dig(opts) {
             con.error('Verify that "expect" is installed and available in the path.');
         } else {
             con.debug(stdout.trim());
-            digReal(opts.tunnel, opts.host, opts.debug);
+            digReal(opts);
         }
     });
 }
 
 // Here's the real meat of `mole`, the tunnel digging part.
 
-function digReal(tunnel, host, debug) {
+function digReal(opts) {
+    var tunnel = opts.tunnel;
+    var host = opts.host;
+    var debug = opts.debug;
+    var local = opts.local;
     var config;
     var sshConfig = require('./lib/ssh-config');
 
@@ -554,7 +559,11 @@ function digReal(tunnel, host, debug) {
 
     con.debug('Loading tunnel');
     try {
-        config = tun.load(tunnel, tunnelDefDir);
+        if (local) {
+            config = tun.loadFile(tunnel);
+        } else {
+            config = tun.loadByName(tunnel, tunnelDefDir);
+        }
     } catch (err) {
         con.fatal(err);
     }
@@ -790,7 +799,7 @@ function exportf(opts) {
 
     try {
         con.debug('Loading tunnel');
-        config = tun.load(opts.tunnel, tunnelDefDir);
+        config = tun.loadByName(opts.tunnel, tunnelDefDir);
     } catch (err) {
         con.fatal(err);
     }
