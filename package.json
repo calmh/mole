@@ -1,7 +1,7 @@
 {
   "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
   "name": "mole",
-  "description": "An ssh tunnel manager with sweet features for teams and a thick layer of pure awesome",
+  "description": "Like 1Password for ssh tunnels and VPN connections, plus sharing within a team.",
   "version": "2.2.1",
   "homepage": "https://github.com/calmh/mole",
   "repository": {
