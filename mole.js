@@ -195,7 +195,7 @@ parser.command('install')
 
 parser.command('server')
 .option('port', { abbr: 'p', help: 'Set listen port [9443]', default: '9443' })
-.option('store', { abbr: 's', help: 'Set store directory [~/mole-store]', default: path.join(process.env['HOME'], 'mole-store') })
+.option('store', { abbr: 's', help: 'Set store directory [~/mole-store]', default: path.join(process.env.HOME, 'mole-store') })
 .help('Start a mole server instance')
 .callback(server);
 
@@ -631,7 +631,7 @@ function digReal(opts) {
                             con.fatal("vpnc returned an error - investigate and act on it, nothing more I can do :(");
                         }
                         con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running:')
+                        con.info('manually by running:');
                         con.info('sudo ' + result.vpncDisconnect);
 
                         setupIPs(config, debug);
