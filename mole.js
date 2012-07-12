@@ -111,23 +111,23 @@ var helptext = [
 
 parser.script('mole');
 
-// Load all command modules
+// Load all command modules. Add them into an array with prio and name as the
+// first elements to allow easy sorting. Sort by prio, name.
 
 var cmds = fs.readdirSync(path.join(__dirname, 'cmd'))
 .map(function (module) {
     var cmd = require('./cmd/' + module);
-    cmd.command = path.basename(module, '.js');
-    return cmd;
-});
+    var name = path.basename(module, '.js');
+    return [ cmd.prio || 5, name, cmd ];
+})
+.sort();
 
-// Sort them by priority and name
+// Add them to the command line parser.
 
-cmds = _.sortBy(cmds, function (c) { return '' + (c.prio || 5) + c.command; });
-
-// Add them to the command line parser
-
-cmds.forEach(function (module) {
-    var cmdp = parser.command(module.command);
+cmds.forEach(function (arr) {
+    var name = arr[1];
+    var module = arr[2];
+    var cmdp = parser.command(name);
 
     cmdp.help(module.help);
 
