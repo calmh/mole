@@ -190,14 +190,17 @@ function setupLocalForwards(config) {
                 f.end();
             });
 
+            // When the CLI has shut down, stop the VPN.
+
+            rl.on('close', function () {
+                // FIXME: Why is process.exit still necessary after rl.close?
+
+                stopVPN(config, process.exit);
+            });
+
             // Shut down the CLI.
 
             rl.close();
-
-            // Stop the VPN.
-            // FIXME: Why is process.exit still necessary after rl.close?
-
-            stopVPN(config, process.exit);
         } else {
             if (cmd !== '') {
                 con.error('Invalid command "' + cmd + '"');
