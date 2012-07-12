@@ -14,6 +14,7 @@ install.help = 'Install an optional package, fetched from the server';
 install.options = {
     pkg: { position: 1, help: 'Package name', required: true }
 }
+install.prio = 5;
 
 function install(opts, state) {
     // We build the expected package name based on the name specified by the

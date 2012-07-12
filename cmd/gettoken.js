@@ -4,6 +4,7 @@ var con = require('../lib/console');
 
 module.exports = token;
 token.help = 'Generate a new registration token';
+token.prio = 5;
 
 function token(opts, state) {
     con.debug('Requesting new token from server');

@@ -8,6 +8,7 @@ newuser.options = {
     'name': { position: 1, help: 'User name', required: true },
     'admin': { flag: true, abbr: 'a', help: 'Create an admin user' },
 };
+newuser.prio = 8;
 
 function newuser(opts, state) {
     // Create a new user on the server. If the call succeeds, we'll get the

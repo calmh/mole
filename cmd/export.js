@@ -9,6 +9,7 @@ exportf.options = {
     tunnel: { position: 1, help: 'Tunnel name', required: true },
     file: { position: 2, help: 'File name to write tunnel definition to', required: true },
 };
+exportf.prio = 5;
 
 function exportf(opts, state) {
     var config;

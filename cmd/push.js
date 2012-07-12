@@ -11,6 +11,7 @@ push.help = 'Send a tunnel definition to the server';
 push.options = {
     'file': { position: 1, help: 'File name', required: true }
 };
+push.prio = 1;
 
 function push(opts, state) {
     // We load the tunnel, which will cause some validation of it to happen. We

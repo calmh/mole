@@ -11,6 +11,7 @@ var tun = require('../lib/tunnel');
 
 module.exports = list;
 list.help = 'List available tunnel definitions';
+list.prio = 1;
 
 function list(opts, state) {
     // Get a sorted list of all files in the tunnel directory.

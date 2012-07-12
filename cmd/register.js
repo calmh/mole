@@ -13,6 +13,7 @@ register.options = {
     token: { position: 2, help: 'One time registration token', required: true },
     port: { abbr: 'p', metafile: 'PORT', help: 'Set server port [9443]', default: 9443 },
 };
+register.prio = 5;
 
 function register(opts, state) {
     con.debug('Requesting registration from server ' + opts.server + ':' + opts.port);

@@ -111,22 +111,33 @@ var helptext = [
 
 parser.script('mole');
 
-var cmdModules = fs.readdirSync(path.join(__dirname, 'cmd')).sort();
-cmdModules.forEach(function (module) {
-    if (!module.match(/\.js$/)) { return; }
+// Load all command modules
 
+var cmds = fs.readdirSync(path.join(__dirname, 'cmd'))
+.map(function (module) {
     var cmd = require('./cmd/' + module);
-    if (!cmd.help) { return; }
+    cmd.command = path.basename(module, '.js');
+    return cmd;
+});
 
-    var name = path.basename(module, '.js');
-    var cmdp = parser.command(name);
-    cmdp.help(cmd.help);
-    _.each(cmd.options, function (v, k) {
+// Sort them by priority and name
+
+cmds = _.sortBy(cmds, function (c) { return '' + (c.prio || 5) + c.command; });
+
+// Add them to the command line parser
+
+cmds.forEach(function (module) {
+    var cmdp = parser.command(module.command);
+
+    cmdp.help(module.help);
+
+    _.each(module.options, function (v, k) {
         cmdp.option(k, v);
     });
+
     cmdp.callback(function (opts) {
         init(opts, state);
-        cmd(opts, state);
+        module(opts, state);
     });
 });
 

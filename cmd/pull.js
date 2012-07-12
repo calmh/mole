@@ -9,6 +9,7 @@ var tun = require('../lib/tunnel');
 
 module.exports = pull;
 pull.help = 'Get tunnel definitions from the server';
+pull.prio = 1;
 
 function pull(opts, state) {
     // Update the local file repository with newer data from the server.

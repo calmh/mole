@@ -16,7 +16,6 @@ var setupLocalIPs = require('../lib/setup-local-ips');
 var sshConfig = require('../lib/ssh-config');
 var tun = require('../lib/tunnel');
 
-
 module.exports = dig;
 dig.help = 'Dig a tunnel to the destination';
 dig.options = {
@@ -24,6 +23,7 @@ dig.options = {
     tunnel: { position: 1, help: 'Tunnel name or file name', required: true },
     host: { position: 2, help: 'Host name within tunnel definition' },
 };
+dig.prio = 1;
 
 function dig(opts, state) {
     // Before we do any digging, we make sure that `expect` is available.
