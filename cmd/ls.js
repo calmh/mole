@@ -1,1 +1,1 @@
-list.js
+module.exports = require('./list.js');
