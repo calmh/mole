@@ -116,6 +116,8 @@ parser.script('mole');
 
 var cmds = fs.readdirSync(path.join(__dirname, 'cmd'))
 .map(function (module) {
+    if (!module.match(/^[a-z0-9]+\.js$/)) { return null; }
+
     var cmd = require('./cmd/' + module);
     var name = path.basename(module, '.js');
     return [ cmd.prio || 5, name, cmd ];
@@ -125,6 +127,8 @@ var cmds = fs.readdirSync(path.join(__dirname, 'cmd'))
 // Add them to the command line parser.
 
 cmds.forEach(function (arr) {
+    if (!arr) { return; }
+
     var name = arr[1];
     var module = arr[2];
     var cmdp = parser.command(name);
