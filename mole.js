@@ -208,18 +208,9 @@ parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
 
 parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 
-// If no command was given, we print the usage information and exit. We also
-// tack on the `.help` call to set the global help text here.  I'd rather do
-// that in a separate call on `parser` instead of chaining after `.nocommand`
-// etc, but that doesn't actually work for reasons I don't understand.
+// Add the help text, with or without colors depending on the TTY status.
 
-parser
-.nocommand()
-.callback(function () {
-    console.log(parser.getUsage());
-    process.exit(0);
-})
-.help(isatty ? helptext : helptext.stripColors);
+parser.help(isatty ? helptext : helptext.stripColors);
 
 // Parse command line arguments. This will call the defined callbacks for matching commands.
 
