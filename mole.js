@@ -50,10 +50,16 @@ state.client.on('error', function (err) {
     con.fatal(err);
 });
 
+// Make a best guess of the user's home directory, with fallback to
+// /tmp/<username>.
+
+var homeDir = path.resolve(process.env.HOME || process.env.USERPROFILE ||
+                           path.join('/tmp', process.env.USER || process.env.LOGNAME));
+
 // Set up variables pointing to our config directory, certificate files and
 // subdirectories for tunnels and packages.
 
-state.path = { configDir: path.join(process.env.HOME, '.mole') };
+state.path = { configDir: path.join(homeDir, '.mole') };
 state.path.certFile = path.join(state.path.configDir, 'mole.crt');
 state.path.configFile = path.join(state.path.configDir, 'mole.ini');
 state.path.keyFile = path.join(state.path.configDir, 'mole.key');
