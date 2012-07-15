@@ -42,6 +42,11 @@ var con = require('./lib/console');
 var init = require('./lib/init');
 var Client = require('./lib/client');
 
+// Prevent running as root.
+if (process.getuid && process.getuid() === 0) {
+    con.fatal('Do not run mole as root');
+}
+
 state.client = new Client();
 
 // All server errors are fatal.
