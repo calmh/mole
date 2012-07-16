@@ -95,29 +95,6 @@ try {
     state.config.write();
 }
 
-// Set up the help text that will be appended after the commands and options
-// summary when the user makes an error or runs mole without parameters.
-
-var helptext = [
-    'Version:',
-    '  mole v' + state.pkg.version + '\t(https://github.com/calmh/mole)',
-    '  node ' + process.version,
-    '',
-    'Examples:',
-    '',
-    'Register with server "mole.example.com" and a token:',
-    '  mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
-    '',
-    'List available tunnels:',
-    '  mole list'.bold,
-    '',
-    'Dig a tunnel to "operator3":',
-    '  mole dig operator3'.bold,
-    '',
-    'Fetch new and updated tunnel specifications from the server:',
-    '  mole pull'.bold
-].join('\n');
-
 // Set the name of our 'script'.
 
 parser.script('mole');
@@ -165,11 +142,57 @@ parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
 
 parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 
-// Add the help text, with or without colors depending on the TTY status.
+// Generate the help text.
 
-parser.help(isatty ? helptext : helptext.stripColors);
+function usage(cmds) {
+    var sprint = require('sprint');
 
-// Parse command line arguments. This will call the defined callbacks for matching commands.
+    var str = '';
+    str += '\nUsage: mole <command> [options]\n';
+    str += '\nCommands:\n';
+    cmds.forEach(function (c) {
+        str += sprint('   %-12s', c[1]).bold + ' ' + c[2].help + '\n';
+    });
 
-parser.parse();
+    str += '\nOptions:\n';
+    [
+        [ '-d, --debug', 'Display debug output' ],
+        [ '-h, --help', 'Display command help' ]
+    ].forEach(function (o) {
+        str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
+    });
+    str += '\n',
+
+    str += [
+        'Version:',
+        '   mole v' + state.pkg.version + '\t(https://github.com/calmh/mole)',
+        '   node ' + process.version,
+        '',
+        'Examples:',
+        '',
+        '   Register with server "mole.example.com" and a token:',
+        '   mole register mole.example.com 80721953-b4f2-450e-aaf4-a1c0c7599ec2'.bold,
+        '',
+        '   List available tunnels:',
+        '   mole list'.bold,
+        '',
+        '   Dig a tunnel to "operator3":',
+        '   mole dig operator3'.bold,
+        '',
+        '   Fetch new and updated tunnel specifications from the server:',
+        '   mole pull'.bold
+    ].join('\n');
+
+    str += '\n';
+    return str;
+}
+
+var args = process.argv.slice(2);
+if (args.length === 0 || args.length === 1 && (args[0] === '-h' || args[0] === '--help')) {
+    // Print usage
+    console.log(usage(cmds));
+} else {
+    // Parse command line arguments. This will call the defined callbacks for matching commands.
+    parser.parse();
+}
 
