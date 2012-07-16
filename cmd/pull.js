@@ -2,7 +2,6 @@
 
 var fs = require('fs');
 var path = require('path');
-var version = require('version');
 
 var con = require('../lib/console');
 var tun = require('../lib/tunnel');
@@ -12,17 +11,6 @@ pull.help = 'Get tunnel definitions from the server';
 pull.prio = 1;
 
 function pull(opts, state) {
-    // Update the local file repository with newer data from the server.
-
-    updateFromServer(opts, state);
-
-    // The user presumably want's to be up to date so check that we're running
-    // the latest version.
-
-    checkVersion(opts, state);
-}
-
-function updateFromServer(opts, state) {
 
     // Get the list of tunnel definitions from the server. The list includes
     // (name, mtime) for each tunnel. We'll use the `mtime` to figure out if we
@@ -95,21 +83,5 @@ function updateFromServer(opts, state) {
                 process.nextTick(done);
             }
         });
-    });
-}
-
-// Fetch the latest version number for mole from the npm repository and print a
-// 'time to upgrade'-message if there's a mismatch.
-
-function checkVersion(opts, state) {
-    version.fetch('mole', function (err, ver) {
-        if (!err && ver) {
-            if (ver !== state.pkg.version) {
-                con.info('You are using mole v' + state.pkg.version + '; the latest version is v' + ver);
-                con.info('Use "sudo npm -g update mole" to upgrade');
-            } else {
-                con.ok('You are using the latest version of mole');
-            }
-        }
     });
 }
