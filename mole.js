@@ -200,7 +200,7 @@ function usage(cmds) {
 }
 
 var args = process.argv.slice(2);
-if (args.length === 0 || args.length === 1 && (args[0] === '-h' || args[0] === '--help')) {
+if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
     // Print usage
     console.log(usage(cmds));
 } else {

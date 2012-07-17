@@ -22,7 +22,7 @@
     "iso8601": "~1.1.0",
     "mkdirp": "~0.3.3",
     "node-uuid": "~1.3.3",
-    "nomnom": "https://github.com/calmh/nomnom/tarball/master",
+    "nomnom": "~1.5.2",
     "pidof": "~1.0.1",
     "temp": "~0.4.0",
     "underscore": "~1.3.3",
