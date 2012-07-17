@@ -119,17 +119,24 @@ cmds.forEach(function (arr) {
 
     var name = arr[1];
     var module = arr[2];
-    var cmdp = parser.command(name);
+    var names = [ name ];
+    if (module.aliases) {
+        names = names.concat(module.aliases);
+    }
 
-    cmdp.help(module.help);
+    names.forEach(function (name) {
+        var cmdp = parser.command(name);
 
-    _.each(module.options, function (v, k) {
-        cmdp.option(k, v);
-    });
+        cmdp.help(module.help);
 
-    cmdp.callback(function (opts) {
-        init(opts, state);
-        module(opts, state);
+        _.each(module.options, function (v, k) {
+            cmdp.option(k, v);
+        });
+
+        cmdp.callback(function (opts) {
+            init(opts, state);
+            module(opts, state);
+        });
     });
 });
 
@@ -149,9 +156,14 @@ function usage(cmds) {
 
     var str = '';
     str += '\nUsage: mole <command> [options]\n';
+
     str += '\nCommands:\n';
     cmds.forEach(function (c) {
-        str += sprint('   %-12s', c[1]).bold + ' ' + c[2].help + '\n';
+        str += sprint('   %-12s', c[1]).bold + ' ' + c[2].help;
+        if (c[2].aliases) {
+            str += ' (alias: ' + c[2].aliases.join(', ').bold + ')';
+        }
+        str += '\n';
     });
 
     str += '\nOptions:\n';

@@ -24,6 +24,7 @@ dig.options = {
     host: { position: 2, help: 'Host name within tunnel definition' },
 };
 dig.prio = 1;
+dig.aliases = [ 'conn', 'connect' ];
 
 function dig(opts, state) {
     // Before we do any digging, we make sure that `expect` is available.
