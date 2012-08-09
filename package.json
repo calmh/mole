@@ -11,7 +11,8 @@
     "test": "./node_modules/.bin/mocha -R spec"
   },
   "bin": {
-    "mole": "./mole.js"
+    "mole.real": "./mole.js",
+    "mole": "./mole.sh"
   },
   "dependencies": {
     "async": "~0.1.22",
