@@ -178,29 +178,14 @@ function setupLocalForwards(config) {
 
     // Start a very simple command loop to wait for when the user is done.
 
-    con.ok('Go forth and connect. Type "quit" when you\'re done.');
+    con.ok('Go forth and connect. Type "quit" or ^D when you\'re done.');
     rl.setPrompt('mole> ');
     rl.prompt();
+
+    // Read commands.
     rl.on('line', function (cmd) {
         if (cmd === 'quit') {
-            con.ok('All done, shutting down.');
-
-            // Shut down each port forward.
-
-            forwards.forEach(function (f) {
-                f.end();
-            });
-
-            // When the CLI has shut down, stop the VPN.
-
-            rl.on('close', function () {
-                // FIXME: Why is process.exit still necessary after rl.close?
-
-                stopVPN(config, process.exit);
-            });
-
             // Shut down the CLI.
-
             rl.close();
         } else {
             if (cmd !== '') {
@@ -209,6 +194,26 @@ function setupLocalForwards(config) {
             rl.prompt();
         }
     });
+
+    // When the CLI has shut down, stop the VPN.
+    rl.on('close', function () {
+        con.ok('All done, shutting down.');
+
+        // Shut down each port forward.
+
+        forwards.forEach(function (f) {
+            f.end();
+        });
+
+        // 'close' is emitted before the close is completed.  Schedule
+        // the stop on the next tick, to allow readline to clean up the
+        // console etc.
+
+        process.nextTick(function () {
+            stopVPN(config);
+        });
+    });
+
 }
 
 function launchExpect(config, debug) {
