@@ -120,5 +120,5 @@ Set up a new server
 License
 -------
 
-Simplified BSD
+MIT
 
