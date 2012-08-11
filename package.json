@@ -31,7 +31,8 @@
     "version": "~0.1.0",
     "vpnc": "~1.4.0",
     "yatf": "~1.0.2",
-    "sprint": "~0.3.0"
+    "sprint": "~0.3.0",
+    "winston": "~0.6.2"
   },
   "devDependencies": {
     "should": "~0.6.3",
