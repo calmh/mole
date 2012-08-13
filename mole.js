@@ -4,8 +4,6 @@
 
 "use strict";
 
-// Require a whole bunch of external libraries.
-
 var _ = require('underscore');
 var colors = require('colors');
 var fs = require('fs');
@@ -35,8 +33,6 @@ var state = {};
 // We load our own package file to get at the version number.
 
 state.pkg = require(path.join(__dirname, 'package.json'));
-
-// Load internal modules.
 
 var con = require('./lib/console');
 var init = require('./lib/init');
