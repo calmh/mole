@@ -6,7 +6,10 @@ var fs = require('fs');
 var pidof = require('pidof');
 var readline = require('readline');
 var temp = require('temp');
-var vpnc = require('vpnc');
+
+var vpnProviders = {};
+vpnProviders.vpnc = require('vpnc');
+vpnProviders.openconnect = require('openconnect');
 
 var con = require('../lib/console');
 var expectConfig = require('../lib/expect-config');
@@ -42,6 +45,7 @@ function dig(opts, state) {
 
 // Here's the real meat of `mole`, the tunnel digging part.
 
+var connectedVpn;
 function digReal(opts, state) {
     var config;
 
@@ -83,56 +87,58 @@ function digReal(opts, state) {
     // If the tunnel definition specifies a VPN connection, we need to get that
     // up and running before we call expect.
 
-    if (config.vpnc) {
+    var handled = false;
+    _.each(vpnProviders, function (provider, name) {
+        if (config[name]) {
+            handled = true;
 
-        // First we make sure that `vpnc` is actually installed, or exit with a
-        // helpful suggestion if it's not.
+            // First we make sure that `vpnc` is actually installed, or exit with a
+            // helpful suggestion if it's not.
 
-        vpnc.available(function (err, result) {
-            if (err) {
-                con.error(err);
-                con.error('vpnc unavailable; try "mole install vpnc"');
-                con.fatal('Not continuing without vpnc');
-            } else {
-                con.debug('Using ' +  result.version);
+            provider.available(function (err, result) {
+                if (err) {
+                    con.error(err);
+                    con.error(name + ' unavailable; try "mole install ' + name + '"');
+                    con.fatal('Not continuing without ' + name);
+                } else {
+                    con.debug('Using ' +  result.version);
 
-                // If vpnc is already running, it's almost certainly going to
-                // fail to bring up one more VPN connection. So if that's the
-                // case, exit with an error.
+                    // If vpnc is already running, it's almost certainly going to
+                    // fail to bring up one more VPN connection. So if that's the
+                    // case, exit with an error.
 
-                pidof('vpnc', function (err, pid) {
-                    if (err) {
-                        con.error(err);
-                        con.fatal('could not check if vpnc was running');
-                    } else if (pid) {
-                        con.warning('vpnc already running; consider disconnecting the VPN manually by running:');
-                        con.warning('sudo ' + result.vpncDisconnect);
-                        con.fatal('Not continuing');
-                    }
-
-                    // Try to connect the VPN. If it fails, exit with an error,
-                    // otherwise proceed to start expect and to the real tunnelling.
-
-                    con.info('Connecting VPN; you might be asked for your local (sudo) password now');
-                    vpnc.connect(config.vpnc, config.vpnRoutes, function (err, code) {
+                    pidof(name, function (err, pid) {
                         if (err) {
-                            con.fatal(err);
-                        } else if (code !== 0) {
-                            con.fatal("vpnc returned an error - investigate and act on it, nothing more I can do :(");
+                            con.error(err);
+                            con.fatal('could not check if ' + name + ' was running');
+                        } else if (pid) {
+                            con.warning(name + ' already running; consider disconnecting the VPN manually');
+                            con.fatal('Not continuing');
                         }
-                        con.info('VPN connected. Should the login sequence fail, you can disconnect the VPN');
-                        con.info('manually by running:');
-                        con.info('sudo ' + result.vpncDisconnect);
 
-                        setupIPs(config, opts.debug);
+                        // Try to connect the VPN. If it fails, exit with an error,
+                        // otherwise proceed to start expect and to the real tunnelling.
+
+                        con.info('Connecting VPN; you might be asked for your local (sudo) password now');
+                        provider.connect(config[name], config.vpnRoutes, function (err, code) {
+                            if (err) {
+                                con.fatal(err);
+                            } else if (code !== 0) {
+                                con.fatal(name + ' returned an error - investigate and act on it, nothing more I can do :(');
+                            }
+                            con.info('VPN connected.');
+
+                            connectedVpn = provider;
+                            setupIPs(config, opts.debug);
+                        });
                     });
-                });
-            }
-        });
-    } else {
+                }
+            });
+        }
+    });
 
+    if (!handled) {
         // We don't need a VPN connection, so go directly to the next step.
-
         setupIPs(config, opts.debug);
     }
 }
@@ -266,14 +272,14 @@ function stopVPN(config, callback) {
     // don't treat errors here as fatal since there could be more
     // cleanup to do later on and we're anyway exiting soon.
 
-    if (config.vpnc) {
+    if (connectedVpn) {
         con.info('Disconnecting VPN; you might be asked for your local (sudo) password now');
-        vpnc.disconnect(function (err, status) {
+        connectedVpn.disconnect(function (err, status) {
             if (err) {
                 con.error(err);
                 con.warning('VPN disconnection failed');
             } else if (status !== 0) {
-                con.warning('VPN disconnection failed (vpnc/sudo exit code ' + status + ')');
+                con.warning('VPN disconnection failed (exit code ' + status + ')');
             } else {
                 con.ok('VPN disconnected');
             }
