@@ -39,8 +39,9 @@ function push(opts, state) {
             var local = path.join(state.path.tunnels, base);
             if (fs.existsSync(local)) {
                 var s = fs.statSync(local);
-                if (s.mtime.getTime() !== serverside[0].mtime) {
-                    con.warning('The local repository version of ' + base + ' is different from the server. Never edit');
+                var diff = s.mtime.getTime() - serverside[0].mtime;
+                if (diff) {
+                    con.warning('The local repository version of ' + base + ' is ' + (diff > 0 ? 'newer' : 'older') + ' than the server version. Never edit');
                     con.warning('the files directly in ~/.mole/tunnels and always pull to make sure you have the latest');
                     con.warning('version before you edit and push. To correct the situation, pull and compare your edits');
                     con.warning('with the version in ~/.mole/tunnels before pushing again.');
