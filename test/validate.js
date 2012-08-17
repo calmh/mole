@@ -53,6 +53,7 @@ describe('validate', function () {
     it('should deny missing main', function () {
         var invalid = valid;
         delete invalid.main;
+        invalid.forwards = {};
         (function () {
             validate(invalid);
         }).should.throw();
@@ -60,7 +61,8 @@ describe('validate', function () {
 
     it('should deny missing hosts', function () {
         var invalid = valid;
-        delete invalid.main;
+        invalid.hosts = {};
+        invalid.forwards = {};
         (function () {
             validate(invalid);
         }).should.throw();
@@ -124,24 +126,6 @@ describe('validate', function () {
     it('should deny malformed forward to', function () {
         var invalid = valid;
         invalid.forwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
-        (function () {
-            validate(invalid);
-        }).should.throw();
-    });
-
-    it('should deny malformed localForward from', function () {
-        var invalid = valid;
-        invalid.localForwards = {};
-        invalid.localForwards.invalid = { from: '127.0.0.1.99:44', to: '1.2.3.4:55' };
-        (function () {
-            validate(invalid);
-        }).should.throw();
-    });
-
-    it('should deny malformed localForward to', function () {
-        var invalid = valid;
-        invalid.localForwards = {};
-        invalid.localForwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
         (function () {
             validate(invalid);
         }).should.throw();

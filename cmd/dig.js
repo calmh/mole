@@ -158,7 +158,7 @@ function setupIPs(config, debug) {
         if (config.main) {
             con.debug('There is a main host, going to expect');
             launchExpect(config, debug);
-        } else if (_.size(config.localForwards) > 0) {
+        } else if (_.size(config.forwards) > 0) {
             setupLocalForwards(config);
         } else {
             con.fatal('Got this far, but now what?');
@@ -171,7 +171,7 @@ function setupLocalForwards(config) {
     var rl = readline.createInterface(process.stdin, process.stdout);
 
     console.log('\nThe following forwards are available to you:\n');
-    _.each(config.localForwards, function (fs, descr) {
+    _.each(config.forwards, function (fs, descr) {
         console.log(descr);
         fs.forEach(function (f) {
             var from = f.from.split(':');
