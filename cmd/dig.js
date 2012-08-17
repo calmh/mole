@@ -15,7 +15,7 @@ var con = require('../lib/console');
 var expectConfig = require('../lib/expect-config');
 var Proxy = require('../lib/trivial-proxy');
 var pspawn = require('../lib/pspawn');
-var setupLocalIPs = require('../lib/setup-local-ips');
+var localIPs = require('../lib/setup-local-ips');
 var sshConfig = require('../lib/ssh-config');
 var tun = require('../lib/tunnel');
 
@@ -149,8 +149,8 @@ function setupIPs(config, debug) {
     // anyway.
 
     con.debug('Setting up local IP:s for forwarding');
-    setupLocalIPs(config, function (c) {
-        if (!c) {
+    localIPs.add(config, function (err) {
+        if (err) {
             con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding.');
             delete config.forwards;
         }
@@ -162,6 +162,15 @@ function setupIPs(config, debug) {
             setupLocalForwards(config);
         } else {
             con.fatal('Got this far, but now what?');
+        }
+    });
+}
+
+function removeIPs(config, debug) {
+    con.debug('Removing extra local IP:s');
+    localIPs.remove(config, function (err) {
+        if (err) {
+            con.warning('Failed to remove IP:s.');
         }
     });
 }
@@ -216,6 +225,7 @@ function setupLocalForwards(config) {
         // console etc.
 
         process.nextTick(function () {
+            removeIPs(config);
             stopVPN(config);
         });
     });
@@ -250,6 +260,7 @@ function launchExpect(config, debug) {
         fs.unlinkSync(config.sshConfig);
         // FIXME: Unlink ssh keys
 
+        removeIPs(config, debug);
         stopVPN(config, function (code) {
 
             // Print final status message. If things seems to have failed,
