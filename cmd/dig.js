@@ -226,7 +226,7 @@ function setupLocalForwards(config) {
 
         process.nextTick(function () {
             removeIPs(config);
-            stopVPN(config);
+            stopVPN(config, finalExit);
         });
     });
 
@@ -261,21 +261,23 @@ function launchExpect(config, debug) {
         // FIXME: Unlink ssh keys
 
         removeIPs(config, debug);
-        stopVPN(config, function (code) {
-
-            // Print final status message. If things seems to have failed,
-            // suggest turning on debugging or talking to the author of the
-            // tunnel definition.
-
-            if (code === 0) {
-                con.ok('Great success');
-            } else {
-                con.error('Unsuccessful');
-                con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
-                con.info(config.author);
-            }
-        });
+        stopVPN(config, finalExit);
     });
+}
+
+function finalExit(code) {
+
+    // Print final status message. If things seems to have failed,
+    // suggest turning on debugging or talking to the author of the
+    // tunnel definition.
+
+    if (code === 0) {
+        con.ok('Great success');
+    } else {
+        con.error('Unsuccessful');
+        con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
+        con.info(config.author);
+    }
 }
 
 function stopVPN(config, callback) {
@@ -296,8 +298,10 @@ function stopVPN(config, callback) {
             }
 
             if (callback && typeof callback === 'function') {
-                callback(status === 0);
+                callback(status);
             }
         });
+    } else {
+        callback(0);
     }
 }
