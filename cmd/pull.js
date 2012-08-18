@@ -5,6 +5,7 @@ var path = require('path');
 
 var con = require('../lib/console');
 var tun = require('../lib/tunnel');
+var hashSync = require('../lib/hash').sync;
 
 module.exports = pull;
 pull.help = 'Get tunnel definitions from the server';
@@ -40,22 +41,24 @@ function pull(opts, state) {
             var local = path.join(state.path.tunnels, res.name);
 
             // We need to fetch the file only if we either don't already have
-            // it, or if the mtime as sent by the server differs from what we
-            // have locally.
+            // it, or if the hash or mtime as sent by the server differs from
+            // what we have locally.
 
             var fetch = false;
             if (!fs.existsSync(local)) {
-                fetch = true;
+                fetch = 'new';
+            } else if (res.sha1) {
+                var sha1 = hashSync(local)
+                fetch = (sha1 !== res.sha1) ? 'hash' : false;
             } else {
                 var s = fs.statSync(local);
-                if (s.mtime.getTime() !== parseInt(res.mtime, 10)) {
-                    fetch = true;
-                }
+                fetch = (s.mtime.getTime() !== parseInt(res.mtime, 10)) ? 'mtime' : false;
             }
 
             // If we need to fetch a tunnel definition, send a server request to do so.
 
             if (fetch) {
+                con.debug('Fetch ' + res.name + ' (' + fetch + ')');
                 state.client.saveBin(res.name, local, function () {
 
                     // When the request completes, we set the mtime to match

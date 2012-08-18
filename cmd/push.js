@@ -5,6 +5,7 @@ var path = require('path');
 
 var con = require('../lib/console');
 var tun = require('../lib/tunnel');
+var hashSync = require('../lib/hash').sync;
 
 module.exports = push;
 push.help = 'Send a tunnel definition to the server';
@@ -36,15 +37,23 @@ function push(opts, state) {
         var base = path.basename(opts.file);
         var serverside = result.filter(function (i) { return i.name === base; });
         if (serverside.length === 1) {
+            var remote = serverside[0];
             var local = path.join(state.path.tunnels, base);
             if (fs.existsSync(local)) {
-                var s = fs.statSync(local);
-                var diff = s.mtime.getTime() - serverside[0].mtime;
+                var diff = false;
+                if (remote.sha1) {
+                    var sha1 = hashSync(local);
+                    diff = (sha1 !== remote.sha1) ? 'hash' : false;
+                } else {
+                    var s = fs.statSync(local);
+                    diff = (s.mtime.getTime() !== serverside[0].mtime) ? 'mtime' : false;
+                }
                 if (diff) {
-                    con.warning('The local repository version of ' + base + ' is ' + (diff > 0 ? 'newer' : 'older') + ' than the server version. Never edit');
-                    con.warning('the files directly in ~/.mole/tunnels and always pull to make sure you have the latest');
-                    con.warning('version before you edit and push. To correct the situation, pull and compare your edits');
-                    con.warning('with the version in ~/.mole/tunnels before pushing again.');
+                    con.warning('The local repository version of ' + base + ' differs from the server');
+                    con.warning('version (' + diff + '). Never edit the files directly in ~/.mole/tunnels');
+                    con.warning('and always pull to make sure you have the latest version before');
+                    con.warning('you edit and push. To correct the situation, pull and compare your');
+                    con.warning('edits with the version in ~/.mole/tunnels before pushing again.');
                     con.fatal('Cowardly refusing to continue.');
                 }
             }
