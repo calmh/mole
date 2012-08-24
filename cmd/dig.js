@@ -226,7 +226,9 @@ function setupLocalForwards(config) {
 
         process.nextTick(function () {
             removeIPs(config);
-            stopVPN(config, finalExit);
+            stopVPN(config, function (code) {
+                finalExit(code, config);
+            });
         });
     });
 
@@ -261,11 +263,13 @@ function launchExpect(config, debug) {
         // FIXME: Unlink ssh keys
 
         removeIPs(config, debug);
-        stopVPN(config, finalExit);
+        stopVPN(config, function (code) {
+            finalExit(code, config);
+        });
     });
 }
 
-function finalExit(code) {
+function finalExit(code, config) {
 
     // Print final status message. If things seems to have failed,
     // suggest turning on debugging or talking to the author of the
