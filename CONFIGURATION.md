@@ -59,6 +59,10 @@ contain spaces. The following elements can be set for each host:
   - `via` - Name of another host to bounce via in order to reach this host.
     Must be the name of host defined elsewhere in the same tunnel definition
     file.
+  - `prompt` - Override the regular expression that recognizes the destination
+    host prompt. The default is usually fine, but if there's some unusual stuff
+    on the other side an override might be necessary. This is only relevant for
+    the `main` host.
 
 Of these, `addr` and `user` are mandatory. `port` is optional and defaults to
 `22`. Either `password` or `key` must be specified so the login can be
@@ -73,6 +77,7 @@ password.
     user=admin
     password=3x4mpl3
     port=2222
+    prompt="~>"
     
     [host op1prod]
     addr=10.0.33.66
