@@ -77,6 +77,9 @@
     "pidof": {
       "version": "1.0.2"
     },
+    "sprint": {
+      "version": "0.3.0"
+    },
     "temp": {
       "version": "0.4.0"
     },
@@ -109,12 +112,6 @@
         }
       }
     },
-    "yatf": {
-      "version": "1.0.3"
-    },
-    "sprint": {
-      "version": "0.3.0"
-    },
     "winston": {
       "version": "0.6.2",
       "dependencies": {
@@ -134,6 +131,9 @@
           "version": "0.0.6"
         }
       }
+    },
+    "yatf": {
+      "version": "1.0.3"
     }
   }
 }
