@@ -92,6 +92,11 @@ function digReal(opts, state) {
         if (config[name]) {
             handled = true;
 
+            if (opts.debug && provider.setDebug) {
+                con.debug('Enabling debug for ' + name);
+                provider.setDebug();
+            }
+
             // First we make sure that `vpnc` is actually installed, or exit with a
             // helpful suggestion if it's not.
 
@@ -124,7 +129,7 @@ function digReal(opts, state) {
                             if (err) {
                                 con.fatal(err);
                             } else if (code !== 0) {
-                                con.fatal(name + ' returned an error - investigate and act on it, nothing more I can do :(');
+                                con.fatal(name + ' returned an error (code ' + code + ') - investigate and act on it, nothing more I can do :(');
                             }
                             con.info('VPN connected.');
 
