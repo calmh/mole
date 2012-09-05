@@ -5,9 +5,9 @@ var mkdirp = require('mkdirp');
 var os = require('os');
 var path = require('path');
 var temp = require('temp');
+var sudo = require('sudo');
 
 var con = require('../lib/console');
-var pspawn = require('../lib/pspawn');
 
 module.exports = install;
 install.help = 'Install an optional package, fetched from the server';
@@ -47,7 +47,7 @@ function install(opts, state) {
             // sudo.
 
             con.info('Running installation, you might now be asked for your local (sudo) password.');
-            var inst = pspawn('sudo', [ path.join(tmp, 'install.sh'), tmp ]);
+            var inst = sudo([path.join(tmp, 'install.sh'), tmp]);
             inst.on('exit', function (code) {
 
                 // We're done, one way or the other.
