@@ -2,7 +2,7 @@
   "author": "Jakob Borg <jakob@nym.se> (http://nym.se/)",
   "name": "mole",
   "description": "Like 1Password for ssh tunnels and VPN connections, plus sharing within a team.",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "homepage": "https://github.com/calmh/mole",
   "repository": {
     "url": "https://github.com/calmh/mole.git"
