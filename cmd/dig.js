@@ -5,6 +5,7 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var pidof = require('pidof');
 var readline = require('readline');
+var spawn = require('child_process').spawn;
 var temp = require('temp');
 
 var vpnProviders = {};
@@ -14,7 +15,6 @@ vpnProviders.openconnect = require('openconnect');
 var con = require('../lib/console');
 var expectConfig = require('../lib/expect-config');
 var Proxy = require('../lib/trivial-proxy');
-var pspawn = require('../lib/pspawn');
 var localIPs = require('../lib/setup-local-ips');
 var sshConfig = require('../lib/ssh-config');
 var tun = require('../lib/tunnel');
@@ -265,7 +265,7 @@ function launchExpect(config, debug) {
     // a supported `stdio: inherit` option we can use instead.
 
     con.info('Hang on, digging the tunnel');
-    pspawn('expect', [ expectFile ]).on('exit', function (code) {
+    spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (code) {
 
         // The script has exited, so we try to clean up after us.
 
