@@ -89,57 +89,63 @@ function digReal(opts, state) {
 
     var handled = false;
     _.each(vpnProviders, function (provider, name) {
-        if (config[name]) {
-            handled = true;
-
-            if (opts.debug && provider.setDebug) {
-                con.debug('Enabling debug for ' + name);
-                provider.setDebug();
-            }
-
-            // First we make sure that `vpnc` is actually installed, or exit with a
-            // helpful suggestion if it's not.
-
-            provider.available(function (err, result) {
-                if (err) {
-                    con.error(err);
-                    con.error(name + ' unavailable; try "mole install ' + name + '"');
-                    con.fatal('Not continuing without ' + name);
-                } else {
-                    con.debug('Using ' +  result.version);
-
-                    // If vpnc is already running, it's almost certainly going to
-                    // fail to bring up one more VPN connection. So if that's the
-                    // case, exit with an error.
-
-                    pidof(name, function (err, pid) {
-                        if (err) {
-                            con.error(err);
-                            con.fatal('could not check if ' + name + ' was running');
-                        } else if (pid) {
-                            con.warning(name + ' already running; consider disconnecting the VPN manually');
-                            con.fatal('Not continuing');
-                        }
-
-                        // Try to connect the VPN. If it fails, exit with an error,
-                        // otherwise proceed to start expect and to the real tunnelling.
-
-                        con.info('Connecting VPN; you might be asked for your local (sudo) password now');
-                        provider.connect(config[name], config.vpnRoutes, function (err, code) {
-                            if (err) {
-                                con.fatal(err);
-                            } else if (code !== 0) {
-                                con.fatal(name + ' returned an error (code ' + code + ') - investigate and act on it, nothing more I can do :(');
-                            }
-                            con.info('VPN connected.');
-
-                            connectedVpn = provider;
-                            setupIPs(config, opts.debug);
-                        });
-                    });
-                }
-            });
+        if (!config[name]) {
+            return;
         }
+
+        handled = true;
+
+        if (opts.debug && provider.setDebug) {
+            con.debug('Enabling debug for ' + name);
+            provider.setDebug();
+        }
+
+        // First we make sure that the required VPN provider is actually
+        // installed, or exit with a helpful suggestion if it's not.
+
+        provider.available(function (err, result) {
+            if (err) {
+                con.error(err);
+                con.error(name + ' unavailable; try "mole install ' + name + '"');
+                con.fatal('Not continuing without ' + name);
+            } else {
+                con.debug('Using ' +  result.version);
+
+                // If the VPN provider is already running, it's almost
+                // certainly going to fail to bring up one more VPN connection.
+                // So if that's the case, exit with an error.
+
+                pidof(name, function (err, pid) {
+                    if (err) {
+                        con.error(err);
+                        con.fatal('Could not check if ' + name + ' was running');
+                    } else if (pid) {
+                        con.fatal(name + ' already running; disconnect the VPN manually');
+                    }
+
+                    // Try to connect the VPN. If it fails, exit with an error,
+                    // otherwise proceed to start expect and to the real tunnelling.
+
+                    con.info('Connecting VPN; you might be asked for your local (sudo) password now');
+                    provider.connect(config[name], config.vpnRoutes, function (err, code) {
+                        if (err) {
+                            con.fatal(err);
+                        } else if (code !== 0) {
+                            con.error(name + ' returned an error (code ' + code + ')');
+                            if (opts.debug) {
+                                con.fatal('Inspect any output above for clues...');
+                            } else {
+                                con.fatal('Retry with `mole dig -d <destination>` for more information.');
+                            }
+                        }
+                        con.info('VPN connected.');
+
+                        connectedVpn = provider;
+                        setupIPs(config, opts.debug);
+                    });
+                });
+            }
+        });
     });
 
     if (!handled) {
