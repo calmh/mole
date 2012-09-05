@@ -265,7 +265,7 @@ function launchExpect(config, debug) {
     // a supported `stdio: inherit` option we can use instead.
 
     con.info('Hang on, digging the tunnel');
-    spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (code) {
+    spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (expCode) {
 
         // The script has exited, so we try to clean up after us.
 
@@ -275,7 +275,7 @@ function launchExpect(config, debug) {
 
         removeIPs(config, debug);
         stopVPN(config, function (code) {
-            finalExit(code, config);
+            finalExit(code + expCode, config);
         });
     });
 }
