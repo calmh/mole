@@ -123,6 +123,14 @@ describe('validate', function () {
         }).should.throw();
     });
 
+    it('should deny unknown stuff', function () {
+        var invalid = valid;
+        invalid.whatever = { 'hash': 'value' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
     it('should deny malformed forward to', function () {
         var invalid = valid;
         invalid.forwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
