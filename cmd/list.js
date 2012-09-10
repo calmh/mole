@@ -1,6 +1,7 @@
 "use strict";
 
 var _ = require('underscore');
+var debuggable = require('debuggable');
 var fs = require('fs');
 var iso8601 = require('iso8601');
 var path = require('path');
@@ -13,14 +14,15 @@ module.exports = list;
 list.help = 'List available tunnel definitions';
 list.prio = 1;
 list.aliases = [ 'ls' ];
+debuggable(list)
 
 function list(opts, state) {
     // Get a sorted list of all files in the tunnel directory.
 
-    con.debug('listing files in ' + state.path.tunnels);
+    list.dlog('listing files in ' + state.path.tunnels);
     var files = fs.readdirSync(state.path.tunnels);
     files.sort();
-    con.debug('Got ' + files.length + ' files');
+    list.dlog('Got ' + files.length + ' files');
 
     // Build a table with information about the tunnel definitions. Basically,
     // load each of them, create a row with information and push that row to

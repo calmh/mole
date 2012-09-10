@@ -1,5 +1,6 @@
 "use strict";
 
+var debuggable = require('debuggable');
 var con = require('../lib/console');
 var tun = require('../lib/tunnel');
 
@@ -10,6 +11,7 @@ exportf.options = {
     file: { position: 2, help: 'File name to write tunnel definition to', required: true },
 };
 exportf.prio = 5;
+debuggable(exportf);
 
 function exportf(opts, state) {
     var config;
@@ -17,7 +19,7 @@ function exportf(opts, state) {
     // Load and verify the tunnel.
 
     try {
-        con.debug('Loading tunnel');
+        exportf.dlog('Loading tunnel');
         config = tun.loadByName(opts.tunnel, state.path.tunnels);
     } catch (err) {
         con.fatal(err);
@@ -25,7 +27,7 @@ function exportf(opts, state) {
 
     // Save it out to the specified file.
 
-    con.debug('Saving to INI format');
+    exportf.dlog('Saving to INI format');
     tun.save(config, opts.file);
 
     con.ok(opts.file);

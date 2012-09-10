@@ -1,5 +1,6 @@
 "use strict";
 
+var debuggable = require('debuggable');
 var fs = require('fs');
 var path = require('path');
 
@@ -10,6 +11,7 @@ var hashSync = require('../lib/hash').sync;
 module.exports = pull;
 pull.help = 'Get tunnel definitions from the server';
 pull.prio = 1;
+debuggable(pull);
 
 function pull(opts, state) {
 
@@ -17,9 +19,9 @@ function pull(opts, state) {
     // (name, mtime) for each tunnel. We'll use the `mtime` to figure out if we
     // need to download the definition or not.
 
-    con.debug('Requesting tunnel list from server');
+    pull.dlog('Requesting tunnel list from server');
     state.client.list(function (result) {
-        con.debug('Got ' + result.length + ' entries');
+        pull.dlog('Got ' + result.length + ' entries');
 
         // We use this to keep track of the number of outstanding requests and
         // to print a message when every request has finished.
@@ -58,7 +60,7 @@ function pull(opts, state) {
             // If we need to fetch a tunnel definition, send a server request to do so.
 
             if (fetch) {
-                con.debug('Fetch ' + res.name + ' (' + fetch + ')');
+                pull.dlog('Fetch ' + res.name + ' (' + fetch + ')');
                 state.client.saveBin(res.name, local, function () {
 
                     // When the request completes, we set the mtime to match

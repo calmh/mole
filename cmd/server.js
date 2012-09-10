@@ -1,5 +1,6 @@
 "use strict";
 
+var debuggable = require('debuggable');
 var path = require('path');
 var server = require('../lib/server');
 
@@ -10,6 +11,9 @@ startServer.options = {
     store: { abbr: 's', help: 'Set store directory [~/mole-store]', default: path.join(process.env.HOME, 'mole-store') },
 }
 startServer.prio = 9;
+
+debuggable(startServer);
+startServer.dforward(server);
 
 function startServer(opts, state) {
     server(opts, state);

@@ -6,6 +6,7 @@
 
 var _ = require('underscore');
 var colors = require('colors');
+var debuggable = require('debuggable');
 var fs = require('fs');
 var inireader = require('inireader');
 var mkdirp = require('mkdirp');
@@ -29,6 +30,7 @@ if (!fs.existsSync) {
 }
 
 var state = {};
+debuggable(state);
 
 // We load our own package file to get at the version number.
 
@@ -131,6 +133,7 @@ cmds.forEach(function (arr) {
 
         cmdp.callback(function (opts) {
             init(opts, state);
+            state.dforward(module);
             module(opts, state);
         });
     });

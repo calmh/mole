@@ -1,5 +1,6 @@
 "use strict";
 
+var debuggable = require('debuggable');
 var fs = require('fs');
 var path = require('path');
 
@@ -13,15 +14,16 @@ push.options = {
     'file': { position: 1, help: 'File name', required: true }
 };
 push.prio = 1;
+debuggable(push);
 
 function push(opts, state) {
     // We load the tunnel, which will cause some validation of it to happen. We
     // don't want to push files that are completely broken.
 
-    con.debug('Testing ' + opts.file);
+    push.dlog('Testing ' + opts.file);
     try {
         tun.loadFile(opts.file);
-        con.debug('It passed validation');
+        push.dlog('It passed validation');
     } catch (err) {
         con.fatal(err);
     }
@@ -32,7 +34,7 @@ function push(opts, state) {
     // directly in the local repo (don't!) or that they didn't pull before
     // editing/pushing. So a very primitive from of conflict prevention.
 
-    con.debug('Requesting tunnel list from server');
+    push.dlog('Requesting tunnel list from server');
     state.client.list(function (result) {
         var base = path.basename(opts.file);
         var serverside = result.filter(function (i) { return i.name === base; });
@@ -62,7 +64,7 @@ function push(opts, state) {
         // We read the file to a buffer to send to the server. There should be no
         // errors here since the tunne load and check above succeeded.
 
-        con.debug('Reading ' + opts.file);
+        push.dlog('Reading ' + opts.file);
         var data = fs.readFileSync(opts.file, 'utf-8');
 
         // Send the data to the server. We'll only get the callback if the upload

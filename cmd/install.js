@@ -1,11 +1,12 @@
 "use strict";
 
+var debuggable = require('debuggable');
 var exec = require('child_process').exec;
 var mkdirp = require('mkdirp');
 var os = require('os');
 var path = require('path');
-var temp = require('temp');
 var sudo = require('sudo');
+var temp = require('temp');
 
 var con = require('../lib/console');
 
@@ -15,6 +16,7 @@ install.options = {
     pkg: { position: 1, help: 'Package name', required: true }
 }
 install.prio = 5;
+debuggable(install);
 
 function install(opts, state) {
     // We build the expected package name based on the name specified by the
@@ -40,7 +42,7 @@ function install(opts, state) {
 
         con.info('Unpacking ' + file);
         exec('cd ' + tmp + ' && tar zxf ' + local, function (err, stdout, stderr) {
-            con.debug('Extracted in ' + tmp);
+            install.dlog('Extracted in ' + tmp);
 
             // The package should include a script `install.sh` that will do
             // whatever's necessary to install the package. We run that with
