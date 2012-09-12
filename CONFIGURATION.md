@@ -63,6 +63,9 @@ contain spaces. The following elements can be set for each host:
     host prompt. The default is usually fine, but if there's some unusual stuff
     on the other side an override might be necessary. This is only relevant for
     the `main` host.
+  - `keepalive` - SSH keep alive interval (seconds). If the server is
+    unresponsive for longer than this time, the connection will be terminated.
+    Default is 180, minimum 15.
 
 Of these, `addr` and `user` are mandatory. `port` is optional and defaults to
 `22`. Either `password` or `key` must be specified so the login can be
