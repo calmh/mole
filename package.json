@@ -8,11 +8,12 @@
     "url": "https://github.com/calmh/mole.git"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha -R spec"
+    "test": "mocha -R spec"
   },
   "bin": {
     "mole.real": "./mole.js",
-    "mole": "./mole.sh"
+    "mole": "./mole.sh",
+    "mole-zsh-completion": "./mole-zsh-completion.sh"
   },
   "dependencies": {
     "async": "~0.1.22",
