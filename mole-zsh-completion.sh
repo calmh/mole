@@ -3,7 +3,7 @@
 # Find the completion file.
 
 NPMPREF=$(npm config get prefix)
-COMP=$NPMPREF/lib/node_modules/mole/mole.zsh-completion
+COMP=$NPMPREF/lib/node_modules/mole/mole.plugin.zsh
 if [ ! -f $COMP ] ; then
         echo $COMP is missing.
         echo I\'m not sure why, but it\'s a bad sign. Is mole installed globally\?
@@ -23,35 +23,20 @@ case "$SHELL" in
         ;;
 esac
 
-# It might seem like we'd want local/share before share, but that's not the case.
+# Verify that we're not root
 
-for DIR in /usr/share/zsh/site-functions /usr/local/share/zsh/site-functions ; do
-        if [ -d $DIR ] ; then
-                DEST=$DIR/_mole
+if [ $(id -u) == "0" ] ; then
+        echo This script want\'s to modify your \~/.zshrc. So don\'t run it as root.
+        exit -1
+fi
 
-                # We're going to need to be root
+# Check for existing installation
 
-                if [ $(id -u) != "0" ] ; then
-                        echo This script is going to create the file $DEST.
-                        echo To do that, we need to be root. Please run this script as:
-                        echo
-                        echo '   ' sudo mole-zsh-completion
-                        echo
-                        exit -1
-                fi
-
-                SCR=$(mktemp /tmp/_mole.XXXXXX)
-                echo source $COMP > $SCR
-
-                cp $SCR $DEST
-                chmod 755 $DEST
-
-                echo Installed. Please make sure you have the following somewhere in your \~/.zshrc:
-                echo
-                echo '   ' autoload -U compinit
-                echo '   ' compinit
-                echo
-                echo Then, restart zsh and enjoy the tabbing.
-                exit 0
-        fi
-done
+if ( grep -q $COMP ~/.zshrc ) ; then
+        echo It seems it\'s already installed.
+        exit 0
+else
+        echo "# Automatically added by mole-zsh-completion:" >> ~/.zshrc
+        echo "source $COMP" >> ~/.zshrc
+        echo Installed. Double check your \~/.zshrc if you like, and restart your shell.
+fi
