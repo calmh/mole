@@ -39,7 +39,9 @@ function list(opts, state) {
 
             var opts = '';
             if (r.vpnc) {
-                opts += ' (vpn)'.magenta;
+                opts += ' (vpnc)'.magenta;
+            } else if (r.openconnect) {
+                opts += ' (opnc)'.green;
             }
 
             // Format the modification date.
