@@ -4,6 +4,7 @@ var _ = require('underscore');
 var debuggable = require('debuggable');
 var exec = require('child_process').exec;
 var fs = require('fs');
+var hostsfile = require('hostsfile');
 var pidof = require('pidof');
 var readline = require('readline');
 var spawn = require('child_process').spawn;
@@ -87,6 +88,8 @@ function digReal(opts, state) {
     var conf = defaults + sshConfig(config, opts.debug);
     fs.writeFileSync(config.sshConfig, conf);
     dig.dlog(config.sshConfig);
+
+    setupHosts(config);
 
     // If the tunnel definition specifies a VPN connection, we need to get that
     // up and running before we call expect.
@@ -241,6 +244,7 @@ function setupLocalForwards(config) {
 
         process.nextTick(function () {
             removeIPs(config);
+            removeHosts();
             stopVPN(config, function (code) {
                 finalExit(code, config);
             });
@@ -279,6 +283,7 @@ function launchExpect(config, debug) {
         // FIXME: Unlink ssh keys
 
         removeIPs(config, debug);
+        removeHosts();
         stopVPN(config, function (code) {
             finalExit(code + expCode, config);
         });
@@ -324,4 +329,36 @@ function stopVPN(config, callback) {
     } else {
         callback(0);
     }
+}
+
+function setupHosts(config, callback) {
+    var tag = 'mole';
+    var hosts = [];
+    _.each(config.forwards, function (fs, descr) {
+        var m = descr.match(/^[a-z][a-z0-9_.-]+/i);
+        if (!m)
+            return;
+        var name = m[0].toLowerCase();
+        var ip = fs[0].from.split(':')[0];
+        hosts.push({ip: ip, names: [name]});
+    });
+
+    hostsfile.readHostsFile(function (err, origData) {
+        var data = hostsfile.addHosts(hostsfile.removeTagged(origData, tag), hosts, tag);
+        hostsfile.replaceHostsFile(data, function (err) {
+            if (callback && typeof callback == 'function')
+                callback(err);
+        });
+    });
+}
+
+function removeHosts(callback) {
+    var tag = 'mole';
+    hostsfile.readHostsFile(function (err, origData) {
+        var data = hostsfile.removeTagged(origData, tag);
+        hostsfile.replaceHostsFile(data, function (err) {
+            if (callback && typeof callback == 'function')
+                callback(err);
+        });
+    });
 }
