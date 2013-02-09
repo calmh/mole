@@ -138,4 +138,18 @@ describe('validate', function () {
             validate(invalid);
         }).should.throw();
     });
+
+    it('should accept socks', function () {
+        valid.hosts.foo.socks = '1.2.3.4:1080';
+        validate(valid).should.equal(true);
+    });
+
+    it('should deny socks + via', function () {
+        var invalid = valid;
+        invalid.hosts.foo.via = 'bar';
+        invalid.hosts.foo.socks = '1.2.3.4:1080';
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
 });

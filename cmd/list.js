@@ -42,6 +42,8 @@ function list(opts, state) {
                 opts += ' (vpnc)'.magenta;
             } else if (r.openconnect) {
                 opts += ' (opnc)'.green;
+            } else if (r.main && r.hosts[r.main].socks) {
+                opts += ' (socks)'.yellow;
             }
 
             // Format the modification date.

@@ -66,6 +66,9 @@ contain spaces. The following elements can be set for each host:
   - `keepalive` - SSH keep alive interval (seconds). If the server is
     unresponsive for longer than this time, the connection will be terminated.
     Default is 180, minimum 15.
+  - `socks` - Address and port of a SOCKS proxy to connect to this host
+    via. Cannot be used together with `via` (although another host can
+    of course connect via this one).
 
 Of these, `addr` and `user` are mandatory. `port` is optional and defaults to
 `22`. Either `password` or `key` must be specified so the login can be
@@ -81,6 +84,7 @@ password.
     password=3x4mpl3
     port=2222
     prompt="~>"
+    socks=192.168.56.101:1080
     
     [host op1prod]
     addr=10.0.33.66
