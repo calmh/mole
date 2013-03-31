@@ -42,7 +42,7 @@ function list(opts, state) {
                 opts += ' (vpnc)'.magenta;
             } else if (r.openconnect) {
                 opts += ' (opnc)'.green;
-            } else if (r.main && r.hosts[r.main].socks) {
+            } else if (r.general.main && r.hosts[r.general.main].socks) {
                 opts += ' (socks)'.yellow;
             }
 
@@ -58,9 +58,10 @@ function list(opts, state) {
                 hosts = '(local forward)'.grey;
             }
 
-            rows.push([ tname.blue.bold , r.description + opts, mdate, hosts ]);
+            rows.push([ tname.blue.bold , r.general.description + opts, mdate, hosts ]);
         } catch (err) {
             // If we couldn't load/parse the file for some reason, simply mark it as corrupt.
+            con.debug(err);
             rows.push([ tname.red.bold, '--Corrupt--', '--Corrupt--', '--Corrupt--' ]);
         }
     });

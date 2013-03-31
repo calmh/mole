@@ -2,6 +2,7 @@
 
 var debuggable = require('debuggable');
 var fs = require('fs');
+var ini = require('ini')
 
 var con = require('../lib/console');
 var init = require('../lib/init');
@@ -24,8 +25,8 @@ function register(opts, state) {
     // and tell the server code to use them.  We don't save the config just
     // yet, though.
 
-    state.config.param('server.host', opts.server);
-    state.config.param('server.port', opts.port);
+    state.config.server.host = opts.server;
+    state.config.server.port = opts.port;
     state.client.init({ host: opts.server, port: opts.port });
 
     // Try to register with the server. If it fails, a fatal error will be
@@ -40,12 +41,12 @@ function register(opts, state) {
 
         fs.writeFileSync(state.path.certFile, result.cert);
         fs.writeFileSync(state.path.keyFile, result.key);
-        state.config.param('server.fingerprint', result.fingerprint);
+        state.config.server.fingerprint = result.fingerprint;
 
         // Save the config file since we've verified the server and port and
         // got the fingerprint.
 
-        state.config.write();
+        fs.writeFileSync(state.path.configFile, ini.stringify(state.config));
         con.ok('Registered');
 
         // Read our newly minted certificates and do a `pull` to get tunnel

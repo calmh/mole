@@ -8,7 +8,7 @@ var _ = require('underscore');
 var colors = require('colors');
 var debuggable = require('debuggable');
 var fs = require('fs');
-var inireader = require('inireader');
+var ini = require('ini');
 var mkdirp = require('mkdirp');
 var parser = require('nomnom');
 var path = require('path');
@@ -79,13 +79,16 @@ fs.chmodSync(state.path.configDir, 448 /* 0700 octal */);
 // Load the config file. If it doesn't exist, set defaults and write a new
 // config file.
 
-state.config = new inireader.IniReader();
 try {
-    state.config.load(state.path.configFile);
+    state.config = ini.parse(fs.readFileSync(state.path.configFile, 'utf-8'));
 } catch (err) {
     con.info('No config, using defaults.');
-    state.config.param('server.port', 9443);
-    state.config.write();
+    state.config = {
+        server: {
+            port: 9443
+        }
+    }
+    fs.writeFileSync(state.path.configFile, ini.stringify(state.config));
 }
 
 // Set the name of our 'script'.

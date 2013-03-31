@@ -8,6 +8,7 @@ var sshConfig = require('../lib/ssh-config');
 describe('sshConfig', function () {
     it('should return a simple host config', function () {
         var config = {
+            general: { },
             sshConfig: '/tmp/sshconf',
             hosts: {
                 test: {
@@ -37,6 +38,7 @@ describe('sshConfig', function () {
 
     it('should return a host config with key', function () {
         var config = {
+            general: { },
             sshConfig: '/tmp/sshconf',
             hosts: {
                 test: {
@@ -65,6 +67,7 @@ describe('sshConfig', function () {
 
     it('should return multiple hosts', function () {
         var config = {
+            general: { },
             sshConfig: '/tmp/sshconf',
             hosts: {
                 'another-host': {
@@ -100,15 +103,15 @@ describe('sshConfig', function () {
 
     it('should return a config with forwards', function () {
         var config = {
-            main: 'test',
+            general: {
+                main: 'test',
+            },
             forwards: {
-                'Foo': [
-                    { from: '127.0.0.1:3994', to: '127.0.0.1:3994' },
-                ],
-                'Bar': [
-                    { from: '127.0.0.1:42000', to: '10.0.0.5:42000' },
-                    { from: '127.0.0.1:42002', to: '10.0.0.5:42002' },
-                ]
+                'Foo': { '127.0.0.1:3994': '127.0.0.1:3994' },
+                'Bar': {
+                    '127.0.0.1:42000': '10.0.0.5:42000',
+                    '127.0.0.1:42002': '10.0.0.5:42002'
+                },
             },
             hosts: {
                 test: {

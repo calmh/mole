@@ -73,7 +73,7 @@ function digReal(opts, state) {
 
     if (opts.host) {
         dig.dlog('Using specified main host ' + opts.host);
-        config.main = opts.host;
+        config.general.main = opts.host;
     }
 
     // Create and save the ssh config. We add some defaults to the top to avoid
@@ -134,7 +134,7 @@ function digReal(opts, state) {
                         // otherwise proceed to start expect and to the real tunnelling.
 
                         con.info('Connecting VPN; you might be asked for your local (sudo) password now');
-                        provider.connect(config[name], config.vpnRoutes, function (err, code) {
+                        provider.connect(config[name], config['vpn routes'], function (err, code) {
                             if (err) {
                                 con.fatal(err);
                             } else if (code !== 0) {
@@ -174,7 +174,7 @@ function setupIPs(config, debug) {
             delete config.forwards;
         }
 
-        if (config.main) {
+        if (config.general.main) {
             dig.dlog('There is a main host, going to expect');
             launchExpect(config, debug);
         } else if (_.size(config.forwards) > 0) {
@@ -201,11 +201,11 @@ function setupLocalForwards(config) {
     console.log('\nThe following forwards are available to you:\n');
     _.each(config.forwards, function (fs, descr) {
         console.log(descr);
-        fs.forEach(function (f) {
-            var from = f.from.split(':');
-            var to = f.to.split(':');
-            forwards.push(new Proxy(from[0], parseInt(from[1], 10), to[0], parseInt(to[1], 10)));
-            console.log('   ' + f.from + ' -> ' + f.to);
+        _.each(fs, function (to, from) {
+            var sfrom = from.split(':');
+            var sto = to.split(':');
+            forwards.push(new Proxy(sfrom[0], parseInt(sfrom[1], 10), sto[0], parseInt(sto[1], 10)));
+            console.log('   ' + from + ' -> ' + to);
         });
         console.log();
     });
@@ -304,7 +304,7 @@ function finalExit(code, config) {
     } else {
         con.error('Unsuccessful');
         con.info('Debug tunnel definition by "mole dig -d <tunnel>" or talk to the author:');
-        con.info(config.author);
+        con.info(config.general.author);
     }
 }
 
@@ -342,7 +342,7 @@ function setupHosts(config, callback) {
         if (!m)
             return;
         var name = m[0].toLowerCase();
-        var ip = fs[0].from.split(':')[0];
+        var ip = _.keys(fs)[0].split(':')[0];
         hosts.push({ip: ip, names: [name]});
     });
 

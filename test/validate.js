@@ -9,9 +9,11 @@ describe('validate', function () {
     var valid;
     beforeEach(function () {
         valid = {
-            description: "An object",
-            author: "Someone <foo@example.com>",
-            main: "foo",
+            general: {
+                description: "An object",
+                author: "Someone <foo@example.com>",
+                main: "foo",
+            },
             hosts: {
                 foo: {
                     addr: "1.2.3.4",
@@ -25,7 +27,9 @@ describe('validate', function () {
                 }
             },
             forwards: {
-                'A description': [ { from: '127.0.0.1:9999', to: '10.0.0.1:9999' } ]
+                'A description': {
+                    '127.0.0.1:9999': '10.0.0.1:9999'
+                }
             },
         };
     });
@@ -36,7 +40,7 @@ describe('validate', function () {
 
     it('should deny missing author', function () {
         var invalid = valid;
-        delete invalid.author;
+        delete invalid.general.author;
         (function () {
             validate(invalid);
         }).should.throw();
@@ -44,7 +48,7 @@ describe('validate', function () {
 
     it('should deny missing description', function () {
         var invalid = valid;
-        delete invalid.description;
+        delete invalid.general.description;
         (function () {
             validate(invalid);
         }).should.throw();
@@ -52,7 +56,7 @@ describe('validate', function () {
 
     it('should deny missing main', function () {
         var invalid = valid;
-        delete invalid.main;
+        delete invalid.general.main;
         invalid.forwards = {};
         (function () {
             validate(invalid);
@@ -81,7 +85,7 @@ describe('validate', function () {
         }).should.throw();
     });
 
-    it('should deny hosts without users', function () {
+    it('should deny hosts without user', function () {
         var invalid = valid;
         invalid.hosts = {
             foo: {
@@ -109,7 +113,7 @@ describe('validate', function () {
 
     it('should deny missing main host', function () {
         var invalid = valid;
-        invalid.main = 'other';
+        invalid.general.main = 'other';
         (function () {
             validate(invalid);
         }).should.throw();
@@ -117,7 +121,7 @@ describe('validate', function () {
 
     it('should deny malformed forward from', function () {
         var invalid = valid;
-        invalid.forwards.invalid = { from: '127.0.0.1.99:44', to: '1.2.3.4:55' };
+        invalid.forwards.invalid = { '127.0.0.1.99:44': '1.2.3.4:55' };
         (function () {
             validate(invalid);
         }).should.throw();
@@ -133,7 +137,7 @@ describe('validate', function () {
 
     it('should deny malformed forward to', function () {
         var invalid = valid;
-        invalid.forwards.invalid = { from: '127.0.0.1:44', to: '1.2.3.4.55' };
+        invalid.forwards.invalid = { '127.0.0.1:44': '1.2.3.4.55' };
         (function () {
             validate(invalid);
         }).should.throw();
