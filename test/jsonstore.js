@@ -1,7 +1,7 @@
 var should = require('should');
 var fs = require('fs');
 
-var users = require('../lib/users');
+var users = require('../lib/jsonstore');
 var testFile;
 var cnt = 0;
 
