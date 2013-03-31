@@ -14,7 +14,7 @@ module.exports = install;
 install.help = 'Install an optional package, fetched from the server';
 install.options = {
     pkg: { position: 1, help: 'Package name', required: true }
-}
+};
 install.prio = 5;
 debuggable(install);
 

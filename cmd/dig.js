@@ -349,7 +349,7 @@ function setupHosts(config, callback) {
     hostsfile.readHostsFile(function (err, origData) {
         var data = hostsfile.addHosts(hostsfile.removeTagged(origData, tag), hosts, tag);
         hostsfile.replaceHostsFile(data, function (err) {
-            if (callback && typeof callback == 'function')
+            if (callback && typeof callback === 'function')
                 callback(err);
         });
     });
@@ -360,7 +360,7 @@ function removeHosts(callback) {
     hostsfile.readHostsFile(function (err, origData) {
         var data = hostsfile.removeTagged(origData, tag);
         hostsfile.replaceHostsFile(data, function (err) {
-            if (callback && typeof callback == 'function')
+            if (callback && typeof callback === 'function')
                 callback(err);
         });
     });

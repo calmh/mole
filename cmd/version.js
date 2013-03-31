@@ -1,7 +1,7 @@
 "use strict";
 
 var debuggable = require('debuggable');
-var https = require('https')
+var https = require('https');
 
 var con = require('../lib/console');
 

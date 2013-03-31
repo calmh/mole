@@ -50,7 +50,7 @@ function pull(opts, state) {
             if (!fs.existsSync(local)) {
                 fetch = 'new';
             } else if (res.sha1) {
-                var sha1 = hashSync(local)
+                var sha1 = hashSync(local);
                 fetch = (sha1 !== res.sha1) ? 'hash' : false;
             } else {
                 var s = fs.statSync(local);

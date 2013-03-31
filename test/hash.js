@@ -19,7 +19,7 @@ describe('validate', function () {
         var data = 'abc123\n';
         var correct = '61ee8b5601a84d5154387578466c8998848ba089';
         fs.writeFileSync('/tmp/hashtest', data, 'utf8');
-        var result = hash('/tmp/hashtest', function (err, result) {
+        hash('/tmp/hashtest', function (err, result) {
             result.should.equal(correct);
             done();
         });

@@ -14,7 +14,7 @@ module.exports = list;
 list.help = 'List available tunnel definitions';
 list.prio = 1;
 list.aliases = [ 'ls' ];
-debuggable(list)
+debuggable(list);
 
 function list(opts, state) {
     // Get a sorted list of all files in the tunnel directory.

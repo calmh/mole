@@ -13,11 +13,6 @@ var mkdirp = require('mkdirp');
 var parser = require('nomnom');
 var path = require('path');
 
-// Figure out if we are running with a TTY on stdout or not.
-// If not, we'll avoid using ANSI colors later on.
-
-var isatty = process.stdout.isTTY;
-
 // The existsSync function moved between Node 0.6 and 0.8. We monkeypatch fs if
 // it's not already there.
 //
@@ -172,7 +167,7 @@ function usage(cmds) {
     ].forEach(function (o) {
         str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
     });
-    str += '\n',
+    str += '\n';
 
     str += [
         'Version:',
