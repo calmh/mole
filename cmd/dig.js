@@ -67,7 +67,6 @@ function digReal(opts, state) {
     } catch (err) {
         con.fatal(err);
     }
-    config.sshConfig = temp.path({suffix: '.ssh.conf'});
 
     // Get any obscured keys resolved to their cleartext variants and keep
     // working with that config.
@@ -81,19 +80,6 @@ function digReal(opts, state) {
             dig.dlog('Using specified main host ' + opts.host);
             config.general.main = opts.host;
         }
-
-        // Create and save the ssh config. We add some defaults to the top to avoid
-        // complaints about missing or mismatching host keys.
-
-        dig.dlog('Creating ssh configuration');
-        var defaults = [
-            'Host *',
-            '  UserKnownHostsFile /dev/null',
-            '  StrictHostKeyChecking no'
-        ].join('\n') + '\n';
-        var conf = defaults + sshConfig(config, opts.debug);
-        fs.writeFileSync(config.sshConfig, conf);
-        dig.dlog(config.sshConfig);
 
         setupHosts(config, function () {
 
@@ -122,7 +108,7 @@ function digReal(opts, state) {
                         con.error(name + ' unavailable; try "mole install ' + name + '"');
                         con.fatal('Not continuing without ' + name);
                     } else {
-                        dig.dlog('Using ' +  result.version);
+                        dig.dlog('Using ' + result.version);
 
                         // If the VPN provider is already running, it's almost
                         // certainly going to fail to bring up one more VPN connection.
@@ -263,11 +249,25 @@ function setupLocalForwards(config) {
 }
 
 function launchExpect(config, debug) {
-    var expectFile = temp.path({suffix: '.expect'});
+
+    // Create and save the ssh config. We add some defaults to the top to avoid
+    // complaints about missing or mismatching host keys.
+
+    dig.dlog('Creating ssh configuration');
+    var defaults = [
+        'Host *',
+        '  UserKnownHostsFile /dev/null',
+        '  StrictHostKeyChecking no'
+    ].join('\n') + '\n';
+    config.sshConfig = temp.path({suffix: '.ssh.conf'});
+    var conf = defaults + sshConfig(config, debug);
+    fs.writeFileSync(config.sshConfig, conf);
+    dig.dlog(config.sshConfig);
 
     // Create and save the expect script that's going to drive the session.
 
     dig.dlog('Creating expect script');
+    var expectFile = temp.path({suffix: '.expect'});
     try {
         var expect = expectConfig(config, debug);
         fs.writeFileSync(expectFile, expect);
@@ -276,20 +276,13 @@ function launchExpect(config, debug) {
         con.fatal(err);
     }
 
-    // Start the expect script and wait for it to exit. We use the
-    // deprecated `customFds` option to connect the script to the tty so
-    // the user can interact with it. When we migrate to Node 0.8, there's
-    // a supported `stdio: inherit` option we can use instead.
+    // Start the expect script and wait for it to exit.
 
     con.info('Hang on, digging the tunnel');
     spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (expCode) {
         dig.dlog('expect complete', {exit: expCode});
 
         // The script has exited, so we try to clean up after us.
-
-        fs.unlinkSync(expectFile);
-        fs.unlinkSync(config.sshConfig);
-        // FIXME: Unlink ssh keys
 
         removeIPs(config, debug);
         removeHosts(function () {
@@ -298,6 +291,15 @@ function launchExpect(config, debug) {
             });
         });
     });
+
+    setTimeout(function () {
+        // Clean up files early on, in case we exit prematurely.
+
+        fs.unlinkSync(expectFile);
+        fs.unlinkSync(config.sshConfig);
+        if (config.sshKeyFiles)
+            config.sshKeyFiles.forEach(fs.unlinkSync);
+    }, 1000);
 }
 
 function finalExit(code, config) {
