@@ -127,6 +127,14 @@ describe('validate', function () {
         }).should.throw();
     });
 
+    it('should deny duplicate forward', function () {
+        var invalid = valid;
+        invalid.forwards.invalid = { '127.0.0.1.99:44': '1.2.3.4:55' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
     it('should deny unknown stuff', function () {
         var invalid = valid;
         invalid.whatever = { 'hash': 'value' };
@@ -137,7 +145,7 @@ describe('validate', function () {
 
     it('should deny malformed forward to', function () {
         var invalid = valid;
-        invalid.forwards.invalid = { '127.0.0.1:44': '1.2.3.4.55' };
+        invalid.forwards.invalid = { '127.0.0.1:9999': '10.0.0.1:9999' };
         (function () {
             validate(invalid);
         }).should.throw();
