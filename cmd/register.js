@@ -6,7 +6,6 @@ var ini = require('ini')
 
 var con = require('../lib/console');
 var init = require('../lib/init');
-var pull = require('./pull');
 
 module.exports = register;
 register.help = 'Register with a mole server';
@@ -48,11 +47,5 @@ function register(opts, state) {
 
         fs.writeFileSync(state.path.configFile, ini.stringify(state.config));
         con.ok('Registered');
-
-        // Read our newly minted certificates and do a `pull` to get tunnel
-        // definitions.
-
-        init(opts, state);
-        pull(opts, state);
     });
 }

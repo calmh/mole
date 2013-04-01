@@ -10,6 +10,7 @@ var debuggable = require('debuggable');
 var fs = require('fs');
 var ini = require('ini');
 var mkdirp = require('mkdirp');
+var rimraf = require('rimraf');
 var parser = require('nomnom');
 var path = require('path');
 
@@ -64,12 +65,16 @@ state.path.keyFile = path.join(state.path.configDir, 'mole.key');
 state.path.pkgDir = path.join(state.path.configDir, 'pkg');
 state.path.tunnels = path.join(state.path.configDir, 'tunnels');
 
-// Create the tunnel and package directories. Any needed components leading up
+// Create the package directory. Any needed components leading up
 // to these directories will be created as well as needed. No harm if they
 // already exist.
 
-mkdirp.sync(state.path.tunnels);
 mkdirp.sync(state.path.pkgDir);
+
+// The tunnel directory is deprected in mole v3. Remove it and any files inside it.
+
+rimraf.sync(state.path.tunnels);
+
 
 // Mark the entire config directory as private since we'll be storing keys and
 // passwords in plaintext in there.
@@ -186,10 +191,7 @@ function usage(cmds) {
         '   mole list'.bold,
         '',
         '   Dig a tunnel to "operator3":',
-        '   mole dig operator3'.bold,
-        '',
-        '   Fetch new and updated tunnel specifications from the server:',
-        '   mole pull'.bold
+        '   mole dig operator3'.bold
     ].join('\n');
 
     str += '\n';
