@@ -49,26 +49,31 @@ function dig(opts, state) {
     });
 }
 
-// Here's the real meat of `mole`, the tunnel digging part.
-
-var connectedVpn;
 function digReal(opts, state) {
     var config;
 
-    // Load a configuration, generate a temporary filename for ssh config.
+    // Load the configuration.
 
     dig.dlog('Loading tunnel');
     try {
         if (opts.local) {
             config = tun.loadFile(opts.tunnel);
+            digWithTunnel(config, state, opts);
         } else {
-            config = tun.loadByName(opts.tunnel, state.path.tunnels);
+            var req = state.client.bufferedRequest({path: '/store/' + opts.tunnel + '.ini'}, function (result) {
+                config = tun.parse(result.buffer);
+                digWithTunnel(config, state, opts);
+            });
+            req.end();
         }
     } catch (err) {
         con.fatal(err);
     }
+}
 
-    // Get any obscured keys resolved to their cleartext variants and keep
+var connectedVpn;
+function digWithTunnel(config, state, opts) {
+// Get any obscured keys resolved to their cleartext variants and keep
     // working with that config.
 
     obfuscate.unveil(config, state.client, function (config) {
