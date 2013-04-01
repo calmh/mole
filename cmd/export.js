@@ -14,21 +14,7 @@ exportf.prio = 5;
 debuggable(exportf);
 
 function exportf(opts, state) {
-    var config;
-
-    // Load and verify the tunnel.
-
-    try {
-        exportf.dlog('Loading tunnel');
-        config = tun.loadByName(opts.tunnel, state.path.tunnels);
-    } catch (err) {
-        con.fatal(err);
-    }
-
-    // Save it out to the specified file.
-
-    exportf.dlog('Saving to INI format');
-    tun.save(config, opts.file);
-
-    con.ok(opts.file);
+    state.client.saveBin('/store/' + opts.tunnel + '.ini', opts.file, function () {
+        con.ok(opts.file);
+    });
 }
