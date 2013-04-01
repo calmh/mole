@@ -13,7 +13,8 @@
   "bin": {
     "mole.real": "./mole.js",
     "mole": "./mole.sh",
-    "mole-zsh-completion": "./mole-zsh-completion.sh"
+    "mole-zsh-completion": "./mole-zsh-completion.sh",
+    "mole-bash-completion": "./mole-bash-completion.sh"
   },
   "dependencies": {
     "async": "~0.1.22",

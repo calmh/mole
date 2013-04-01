@@ -10,19 +10,6 @@ if [ ! -f $COMP ] ; then
         exit -1
 fi
 
-# Check that we're running zsh.
-
-case "$SHELL" in
-*zsh)
-        # It's all good
-        ;;
-*)
-        echo You seem to be running $SHELL, not zsh.
-        echo That\'s a valid choice, but the completion functions for mole won\'t work.
-        exit -1
-        ;;
-esac
-
 # Verify that we're not root
 
 if [ $(id -u) == "0" ] ; then
