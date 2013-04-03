@@ -61,6 +61,9 @@ function digReal(opts, state) {
             digWithTunnel(config, state, opts);
         } else {
             var req = state.client.bufferedRequest({path: '/store/' + opts.tunnel + '.ini'}, function (result) {
+                var user = result.headers['x-mole-authenticated'];
+                if (user)
+                    con.ok(user);
                 config = tun.parse(result.buffer);
                 digWithTunnel(config, state, opts);
             });
