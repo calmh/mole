@@ -56,9 +56,11 @@ function printV3List(tunnels) {
 }
 
 function printList(tunnels) {
-    tunnels.forEach(function (t) {
-        var name = t.name.replace(/\.ini$/, '');
-        console.log(name.blue.bold);
+    con.warning('Talking to a v2 server, limited list functionality. Please upgrade server to v3.');
+    var names = tunnels.map(function (t) { return t.name.replace(/\.ini$/, ''); });
+    names.sort();
+    names.forEach(function (n) {
+        console.log(n.blue.bold);
     });
 }
 
