@@ -90,9 +90,22 @@ Write a new tunnel definition
 
         $ mole push whateverfile.ini
 
- 5. Pull it yourself so it gets cached in ~/.mole/tunnels:
+Edit an existing tunnel definition
+----------------------------------
 
-        $ mole pull
+ 1. Export the existing tunnel config to a local file:
+
+        $ mole export whatever whatever.ini
+
+ 2. Edit the file `whatever.ini` to taste.
+
+ 3. Test the tunnel definition:
+
+        $ mole dig -l whateverfile.ini
+
+ 4. When you're happy, push it to the server:
+
+        $ mole push whateverfile.ini
 
 Set up a new server
 -------------------
