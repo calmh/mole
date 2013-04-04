@@ -3,8 +3,8 @@ Changes from 2.3 to 3.0
 
  - The client no longer keeps tunnel definitions in ~/.mole/tunnels on
    the client. Tunnel definitions are loaded on demand from the server.
-   To access a tunnel definition for editing etc, use the "mole export"
-   command. The "mole pull" command is deprecated.
+   To access a tunnel definition for editing etc use the `export`
+   command. The `pull` command is deprecated.
 
  - Tunnel definitions no longer contain credentials in cleartext.
    Cleartext credentials are converted to token equivalents when a
@@ -32,3 +32,9 @@ Changes from 2.3 to 3.0
 
  - Error checking of tunnel definitions is improved, catching duplicate
    forward definitions that would previously fail silently.
+
+ - The v3 client is compatible with the v2 server but the `list` or `ls`
+   commands are limited to displaying tunnel names only.
+
+ - The v3 server requires a v3 client.
+
