@@ -27,7 +27,7 @@ Changes from 2.3 to 3.0
      `forwards`.
 
    * The section headers use dots to separate keywords from names, i.e.
-     `[hosts.foo]` instead of '[host foo]'. Any other dots need to be
+     `[hosts.foo]` instead of `[host foo]`. Any other dots need to be
      escaped: `[host.example\.com]`.
 
    The older configuration format is still understood by the client, but
