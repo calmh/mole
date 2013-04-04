@@ -3,7 +3,7 @@
 var con = require('../lib/console');
 
 module.exports = pull;
-pull.help = 'Create a new user (requires admin privileges)';
+pull.help = '<deprecated>';
 pull.options = { };
 pull.prio = 1;
 
