@@ -15,7 +15,7 @@ Changes from 2.3 to 3.0
    the local side. Example: `127.0.0.1:42000-42009 = 10.1.2.3`
 
  - vpnc and openconnect tunnels are now compatible with and can run
-   alongside Tunnelblick VPN sessions.
+   alongside Tunnelblick and Viscosity VPN sessions.
 
  - The configuration format has changed slightly to enable the use of a
    much improved `.ini` file parser. Specifically:
