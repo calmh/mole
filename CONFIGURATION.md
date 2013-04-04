@@ -14,36 +14,34 @@ so make sure to use clear and descriptive names for hosts and forwards.
 A tunnel definition consists of:
 
   - exactly one `general` section,
-  - zero or more `host` sections,
-  - zero or more `forward` sections,
+  - zero or more `hosts` sections,
+  - zero or more `forwards` sections,
   - an optional `vpnc` section,
   - an optional `vpn routes` section which must only be present in combination
     with a `vpnc section`.
 
-You need to *either* have at least one `host` or at least one `localforward`.
-You can't have `forward` without having at least one `host` to do them through,
-but `localforward` doesn't need a host. You can't combine `host`/`forward` and
-`localforward` -- either you ssh somewhere and use port forwards through there
-or you do it locally.
+You need to *either* have at least one host or at least one forward.
 
 Section `general`
 ------------------
 
-The `general` section contains three mandatory elements;
+The `general` section contains four mandatory elements;
 
   - `description` - A free text description of this configuration that is
     displayed by `mole list`.
   - `author` - Name and email of the configuration file author.
   - `main` - Name of the host to connect to when the tunnel definition is
     invoked.
+  - `version` - Configuration format version. Must be set to `3` currently.
 
 ### Example
 
-    description="OperatorOne (UK, production network)"
-    author="Jakob Borg <jakob@example.com>"
-    main=op1prod
+    description = OperatorOne (UK, production network)
+    author = Jakob Borg <jakob@example.com>
+    main = op1prod
+    version = 3
 
-Section `host`
+Section `hosts`
 ---------------
 
 There can be any number of host sections. Each describes a host that is
@@ -70,65 +68,63 @@ contain spaces. The following elements can be set for each host:
     via. Cannot be used together with `via` (although another host can
     of course connect via this one).
 
-Of these, `addr` and `user` are mandatory. `port` is optional and defaults to
-`22`. Either `password` or `key` must be specified so the login can be
-completed noninteratively. In case `key` is used, it must contain a valid SSH
-private key with newlines replaces by spaces. The key must not be locked by a
-password.
+Of these, `addr` and `user` are mandatory. `port` is optional and
+defaults to `22`. Either `password` or `key` must be specified so the
+login can be completed noninteratively. In case `key` is used, it be a
+quoted string containing a valid SSH private key with newlines replaces
+by `\n`. The key must not be protected by a password.
 
 ### Example
 
-    [host op1jump]
-    addr=192.168.10.10
-    user=admin
-    password=3x4mpl3
-    port=2222
-    prompt="~>"
-    socks=192.168.56.101:1080
+    [hosts.op1jump]
+    addr = 192.168.10.10
+    user = admin
+    password = 3x4mpl3
+    port = 2222
+    prompt = "~>"
+    socks = 192.168.56.101:1080
     
-    [host op1prod]
-    addr=10.0.33.66
-    user=admin
-    key="-----BEGIN RSA PRIVATE KEY----- MIIEogIBAAKCAQEAxymzAVzTX6oJTlZ5uCkqjdrDb/ovLZ6VktH+i5h2wdJpyT3f s2Q23e ...etc"
-    via=op1jump
+    [hosts.op1prod]
+    addr = 10.0.33.66
+    user = admin
+    key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAxymzAVzTX6oJTlZ5uCkqjdrDb/ovLZ6VktH+i5h2wdJpyT3f\ns2Q23e ...etc"
+    via = op1jump
 
-Section `forward`
+Section `forwards`
 -----------------
 
-The `forward` sections describes SSH port forwardings that will be set up when
-the destination is reached. The description of the forward is set in the
-section header after the `forward` keyword and may contains spaces and special
-characters within reason. It's encourages to be as descriptive as possible so
-that the tunnel definition is self documented and will be presented to the user
-after connecting.
+The forward sections describes SSH port forwardings that will be set up
+when the destination is reached. The name of the forward is set in the
+section header after the `forwards` keyword and may contains spaces and
+special characters within reason. The first part (i.e. up to any
+whitespace) will be used as host name and inserted into the local hosts
+file upon tunnel establishment. Any dots will need to be escaped, i.e.
+`[hosts.example\.com]` to name the forward `example.com`.
 
-Each element withing the `forward` section is a pair on the form
-`<local address> = <remote address>`. The local side can use addresses other than
-127.0.0.1 but still in the 127.0.0.0/8 block; these will be added to the local
-loopback interface if they don't already exist.
+Each element withing the forward section is a pair on the form
+`<local address>:<port> = <remote address>:<port>`. The local side can use
+addresses other than 127.0.0.1 but still in the 127.0.0.0/8 block; these
+will be added to the local loopback interface if they don't already
+exist.
 
-If there is no SSH configuration, but there is a VPN configuration, then the
-forwards will be done from the local computer.  This can be used to provide the
-user with the same usage pattern as in the SSH forward case and also keep the
-tunnel definition self documenting.
+The remote port can be left out if it is the same as the local port. If
+the remote port is left out, the local port can be a dash separate
+range. Local ports need to be higher than 1024.
+
+If there is no SSH configuration, but there is a VPN configuration, then
+the forwards will be done from the local computer.  This can be used to
+provide the user with the same usage pattern as in the SSH forward case
+and also keep the tunnel definition self documenting.
 
 ### Example
 
-    [forward The Globe units]
-    127.0.0.1:22000=10.0.33.69.193:22000
-    127.0.0.1:22001=10.0.33.69.193:22001
-    127.0.0.1:22002=10.0.33.69.193:22002
-    127.0.0.2:22000=10.0.33.70.194:22000
-    127.0.0.2:22001=10.0.33.70.194:22001
-    127.0.0.2:22002=10.0.33.70.194:22002
+    [forwards.hostA]
+    127.0.0.1:8443        = 10.0.33.69.193:443
+    127.0.0.1:22001-22005 = 10.0.33.69.193
 
-    [forward Albert Hall units]
-    127.0.0.3:22000=10.2.34.91:22000
-    127.0.0.3:22001=10.2.34.91:22001
-    127.0.0.3:22002=10.2.34.91:22002
-    127.0.0.4:22000=10.2.34.92:22000
-    127.0.0.4:22001=10.2.34.92:22001
-    127.0.0.4:22002=10.2.34.92:22002
+    [forwards.hostB]
+    127.0.0.2:22001-22005 = 10.0.33.70.194
+
 
 Section `vpnc`
 --------------
@@ -143,7 +139,7 @@ configuration a line like
 
 can be represented in the tunnel definition as
 
-    DPD_idle_timeout="(our side) 0"
+    DPD_idle_timeout = "(our side) 0"
 
 The configuration must contain Xauth username and password since it must be
 able to connect noninteractively.
@@ -155,16 +151,16 @@ to hosts defined as above.
 ### Example
 
     [vpnc]
-    IPSec_gateway=213.154.23.72
-    IPSec_ID=IPSECGROUP
-    IPSec_secret=abrakadabra
-    Xauth_username=extuser
-    Xauth_password=K0ssanmu7
-    IKE_Authmode=psk
-    DPD_idle_timeout="(our side) 0"
-    NAT_Traversal_Mode=force-natt
-    Local_Port=0
-    Cisco_UDP_Encapsulation_Port=0
+    IPSec_gateway = 213.154.23.72
+    IPSec_ID = IPSECGROUP
+    IPSec_secret = abrakadabra
+    Xauth_username = extuser
+    Xauth_password = K0ssanmu7
+    IKE_Authmode = psk
+    DPD_idle_timeout = "(our side) 0"
+    NAT_Traversal_Mode = force-natt
+    Local_Port = 0
+    Cisco_UDP_Encapsulation_Port = 0
 
 Section `vpn routes`
 --------------------
@@ -182,6 +178,6 @@ topology.
 ### Example
 
     [vpn routes]
-    10.200.0.0=16
-    192.168.10.0=24
-    192.168.20.0=24
+    10.200.0.0 = 16
+    192.168.10.0 = 24
+    192.168.20.0 = 24
