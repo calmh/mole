@@ -56,7 +56,7 @@ function printV3List(tunnels) {
 }
 
 function printList(tunnels) {
-    con.warning('Talking to a v2 server, limited list functionality. Please upgrade server to v3.');
+    con.warning('Talking to a v2 server, limited list functionality.');
     var names = tunnels.map(function (t) { return t.name.replace(/\.ini$/, ''); });
     names.sort();
     names.forEach(function (n) {
