@@ -284,11 +284,28 @@ function launchExpect(config, debug) {
         con.fatal(err);
     }
 
+    var cleaned = false;
+    function cleanFiles() {
+        if (!cleaned) {
+            con.debug('Removing temporary files');
+            fs.unlinkSync(expectFile);
+            fs.unlinkSync(config.sshConfig);
+            if (config.sshKeyFiles)
+                config.sshKeyFiles.forEach(fs.unlinkSync);
+            cleaned = true;
+        }
+    }
+
+    // Clean up files early on, in case we exit prematurely.
+    var cleanTimeout = setTimeout(cleanFiles, 10000);
+
     // Start the expect script and wait for it to exit.
 
     con.info('Hang on, digging the tunnel');
     spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (expCode) {
         dig.dlog('expect complete', {exit: expCode});
+        cleanFiles();
+        clearTimeout(cleanTimeout);
 
         // The script has exited, so we try to clean up after us.
 
@@ -299,15 +316,6 @@ function launchExpect(config, debug) {
             });
         });
     });
-
-    setTimeout(function () {
-        // Clean up files early on, in case we exit prematurely.
-
-        fs.unlinkSync(expectFile);
-        fs.unlinkSync(config.sshConfig);
-        if (config.sshKeyFiles)
-            config.sshKeyFiles.forEach(fs.unlinkSync);
-    }, 1000);
 }
 
 function finalExit(code, config) {
