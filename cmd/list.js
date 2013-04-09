@@ -19,6 +19,13 @@ function printV3List(tunnels) {
     // the table.
 
     var rows = [];
+    tunnels.sort(function (a, b) {
+        if (a.name < b.name)
+            return -1;
+        else if (a.name > b.name)
+            return 1;
+        return 0;
+    });
     tunnels.forEach(function (tunnel) {
         if (!tunnel.error) {
 
