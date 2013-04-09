@@ -1,6 +1,6 @@
 "use strict";
 
-var con = require('../lib/console');
+var con = require('yacon');
 
 module.exports = pull;
 pull.help = '<deprecated>';

@@ -1,8 +1,6 @@
 "use strict";
 
-var debuggable = require('debuggable');
-
-var con = require('../lib/console');
+var con = require('yacon');
 
 module.exports = newuser;
 newuser.help = 'Create a new user (requires admin privileges)';
@@ -11,13 +9,12 @@ newuser.options = {
     'admin': { flag: true, abbr: 'a', help: 'Create an admin user' },
 };
 newuser.prio = 8;
-debuggable(newuser);
 
 function newuser(opts, state) {
     // Create a new user on the server. If the call succeeds, we'll get the
     // callback with the one-time token for the new user.
 
-    newuser.dlog('Requesting user ' + opts.name);
+    con.debug('Requesting user ' + opts.name);
     state.client.newUser(opts.name, function (result) {
         con.ok(result.token);
     });

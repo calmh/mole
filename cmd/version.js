@@ -1,14 +1,12 @@
 "use strict";
 
-var debuggable = require('debuggable');
+var con = require('yacon');
 var https = require('https');
 
-var con = require('../lib/console');
 
 module.exports = version ;
 version.help = 'Check repository for updates';
 version.prio = 8;
-debuggable(version);
 
 // Fetch the latest version number for mole from the npm repository and print a
 // 'time to upgrade'-message if there's a mismatch.

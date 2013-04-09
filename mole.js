@@ -6,7 +6,7 @@
 
 var _ = require('underscore');
 var colors = require('colors');
-var debuggable = require('debuggable');
+var con = require('yacon');
 var fs = require('fs');
 var ini = require('ini');
 var mkdirp = require('mkdirp');
@@ -26,13 +26,11 @@ if (!fs.existsSync) {
 }
 
 var state = {};
-debuggable(state);
 
 // We load our own package file to get at the version number.
 
 state.pkg = require(path.join(__dirname, 'package.json'));
 
-var con = require('./lib/console');
 var init = require('./lib/init');
 var Client = require('./lib/client');
 
@@ -136,7 +134,6 @@ cmds.forEach(function (arr) {
 
         cmdp.callback(function (opts) {
             init(opts, state);
-            state.dforward(module);
             module(opts, state);
         });
     });

@@ -1,7 +1,6 @@
 "use strict";
 
-var debuggable = require('debuggable');
-var con = require('../lib/console');
+var con = require('yacon');
 var tun = require('../lib/tunnel');
 
 module.exports = exportf;
@@ -11,7 +10,6 @@ exportf.options = {
     file: { position: 2, help: 'File name to write tunnel definition to' },
 };
 exportf.prio = 5;
-debuggable(exportf);
 
 function exportf(opts, state) {
     if (opts.file) {

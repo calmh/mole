@@ -1,7 +1,7 @@
 "use strict";
 
 var _ = require('underscore');
-var debuggable = require('debuggable');
+var con = require('yacon');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var hostsfile = require('hostsfile');
@@ -10,7 +10,6 @@ var readline = require('readline');
 var spawn = require('child_process').spawn;
 var temp = require('temp');
 
-var con = require('../lib/console');
 var expectConfig = require('../lib/expect-config');
 var localIPs = require('../lib/setup-local-ips');
 var obfuscate = require('../lib/obfuscate');
@@ -27,13 +26,10 @@ dig.options = {
 };
 dig.prio = 1;
 dig.aliases = [ 'conn', 'connect' ];
-debuggable(dig);
 
 var vpnProviders = {};
 vpnProviders.vpnc = require('vpnc');
-dig.dforward(vpnProviders.vpnc);
 vpnProviders.openconnect = require('openconnect');
-dig.dforward(vpnProviders.openconnect);
 
 function dig(opts, state) {
     // Before we do any digging, we make sure that `expect` is available.
@@ -43,7 +39,7 @@ function dig(opts, state) {
             con.error(error.toString().trim());
             con.error('Verify that "expect" is installed and available in the path.');
         } else {
-            dig.dlog('found expect', {output: stdout.trim()});
+            con.debug('found expect', {output: stdout.trim()});
             digReal(opts, state);
         }
     });
@@ -54,7 +50,7 @@ function digReal(opts, state) {
 
     // Load the configuration.
 
-    dig.dlog('Loading tunnel');
+    con.debug('Loading tunnel');
     try {
         if (opts.local) {
             config = tun.loadFile(opts.tunnel);
@@ -85,7 +81,7 @@ function digWithTunnel(config, state, opts) {
         // that host as `main`.
 
         if (opts.host) {
-            dig.dlog('Using specified main host ' + opts.host);
+            con.debug('Using specified main host ' + opts.host);
             config.general.main = opts.host;
         }
 
@@ -103,7 +99,7 @@ function digWithTunnel(config, state, opts) {
                 handled = true;
 
                 if (opts.debug && provider.setDebug) {
-                    dig.dlog('Enabling debug for ' + name);
+                    con.debug('Enabling debug for ' + name);
                     provider.setDebug();
                 }
 
@@ -116,7 +112,7 @@ function digWithTunnel(config, state, opts) {
                         con.error(name + ' unavailable; try "mole install ' + name + '"');
                         con.fatal('Not continuing without ' + name);
                     } else {
-                        dig.dlog('Using ' + result.version);
+                        con.debug('Using ' + result.version);
 
                         // If the VPN provider is already running, it's almost
                         // certainly going to fail to bring up one more VPN connection.
@@ -168,7 +164,7 @@ function setupIPs(config, debug) {
     // forwardings from the configuration and warn the user, but proceed
     // anyway.
 
-    dig.dlog('Setting up local IP:s for forwarding');
+    con.debug('Setting up local IP:s for forwarding');
     localIPs.add(config, function (err) {
         if (err) {
             con.warning('Failed to set up IP:s for forwarding. Continuing without forwarding.');
@@ -176,7 +172,7 @@ function setupIPs(config, debug) {
         }
 
         if (config.general.main) {
-            dig.dlog('There is a main host, going to expect');
+            con.debug('There is a main host, going to expect');
             launchExpect(config, debug);
         } else if (_.size(config.forwards) > 0) {
             setupLocalForwards(config);
@@ -187,7 +183,7 @@ function setupIPs(config, debug) {
 }
 
 function removeIPs(config, debug) {
-    dig.dlog('Removing extra local IP:s');
+    con.debug('Removing extra local IP:s');
     localIPs.remove(config, function (err) {
         if (err) {
             con.warning('Failed to remove IP:s.');
@@ -261,7 +257,7 @@ function launchExpect(config, debug) {
     // Create and save the ssh config. We add some defaults to the top to avoid
     // complaints about missing or mismatching host keys.
 
-    dig.dlog('Creating ssh configuration');
+    con.debug('Creating ssh configuration');
     var defaults = [
         'Host *',
         '  UserKnownHostsFile /dev/null',
@@ -270,16 +266,16 @@ function launchExpect(config, debug) {
     config.sshConfig = temp.path({suffix: '.ssh.conf'});
     var conf = defaults + sshConfig(config, debug);
     fs.writeFileSync(config.sshConfig, conf);
-    dig.dlog(config.sshConfig);
+    con.debug(config.sshConfig);
 
     // Create and save the expect script that's going to drive the session.
 
-    dig.dlog('Creating expect script');
+    con.debug('Creating expect script');
     var expectFile = temp.path({suffix: '.expect'});
     try {
         var expect = expectConfig(config, debug);
         fs.writeFileSync(expectFile, expect);
-        dig.dlog(expectFile);
+        con.debug(expectFile);
     } catch (err) {
         con.fatal(err);
     }
@@ -303,7 +299,7 @@ function launchExpect(config, debug) {
 
     con.info('Hang on, digging the tunnel');
     spawn('expect', [expectFile], {stdio: 'inherit'}).on('exit', function (expCode) {
-        dig.dlog('expect complete', {exit: expCode});
+        con.debug('expect complete', {exit: expCode});
         cleanFiles();
         clearTimeout(cleanTimeout);
 

@@ -1,10 +1,9 @@
 "use strict";
 
-var debuggable = require('debuggable');
+var con = require('yacon');
 var fs = require('fs');
 var ini = require('ini')
 
-var con = require('../lib/console');
 var init = require('../lib/init');
 
 module.exports = register;
@@ -15,10 +14,9 @@ register.options = {
     port: { abbr: 'p', metafile: 'PORT', help: 'Set server port [9443]', default: 9443 },
 };
 register.prio = 5;
-debuggable(register);
 
 function register(opts, state) {
-    register.dlog('Requesting registration from server ' + opts.server + ':' + opts.port);
+    con.debug('Requesting registration from server ' + opts.server + ':' + opts.port);
 
     // Set the server and port we received from parameters in the config file,
     // and tell the server code to use them.  We don't save the config just
@@ -34,7 +32,7 @@ function register(opts, state) {
     // callback.
 
     state.client.register(opts.token, function (result) {
-        register.dlog('Received certificate and key from server');
+        con.debug('Received certificate and key from server');
 
         // Save the certificates and fingerprint for later.
 

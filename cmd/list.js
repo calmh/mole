@@ -1,19 +1,17 @@
 "use strict";
 
 var _ = require('underscore');
-var debuggable = require('debuggable');
+var con = require('yacon');
 var fs = require('fs');
 var path = require('path');
 var table = require('yatf');
 
-var con = require('../lib/console');
 var tun = require('../lib/tunnel');
 
 module.exports = list;
 list.help = 'List available tunnel definitions';
 list.prio = 1;
 list.aliases = [ 'ls' ];
-debuggable(list);
 
 function printV3List(tunnels) {
     // Build a table with information about the tunnel definitions. Basically,
@@ -67,6 +65,7 @@ function printList(tunnels) {
 function list(opts, state) {
     // Get a sorted list of all tunnels.
 
+    con.debug('Getting tunnel list');
     state.client.list(function (tunnels, proto) {
         if (proto === '3')
             printV3List(tunnels);
