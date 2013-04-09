@@ -18,8 +18,7 @@ install.prio = 5;
 
 function install(opts, state) {
     // We build the expected package name based on the name specified by the
-    // user, plus the platform, architecture and OS version.  FIXME: The OS
-    // version is way too specific.
+    // user, plus the platform and architecture.
 
     var file = [ opts.pkg, os.platform(), os.arch() ].join('-') + '.tar.gz';
     var local = path.join(state.path.pkgDir, file);

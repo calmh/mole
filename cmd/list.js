@@ -40,8 +40,7 @@ function printV3List(tunnels) {
                 opts += ' (socks)'.yellow;
             }
 
-            // Generate a lists of hosts. FIXME: For lots of hosts, this isn't
-            // all that useful since it'll be truncated by the table formatter.
+            // Generate a lists of hosts.
 
             var hosts = tunnel.hosts.join(', ');
             if (tunnel.localOnly) {
