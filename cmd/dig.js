@@ -53,7 +53,7 @@ function digReal(opts, state) {
     con.debug('Loading tunnel');
     try {
         if (opts.local) {
-            config = tun.loadFile(opts.tunnel);
+            config = tun.load(opts.tunnel);
             digWithTunnel(config, state, opts);
         } else {
             var req = state.client.bufferedRequest({path: '/store/' + opts.tunnel + '.ini'}, function (result) {

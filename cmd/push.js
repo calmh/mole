@@ -19,7 +19,7 @@ function push(opts, state) {
 
     con.debug('Testing ' + opts.file);
     try {
-        tun.loadFile(opts.file);
+        tun.load(opts.file);
         con.debug('It passed validation');
     } catch (err) {
         con.fatal(err);
