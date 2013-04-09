@@ -2,16 +2,14 @@
 
 var con = require('yacon');
 var fs = require('fs');
-var ini = require('ini')
-
-var init = require('../lib/init');
+var ini = require('ini');
 
 module.exports = register;
 register.help = 'Register with a mole server';
 register.options = {
     server: { position: 1, help: 'Server name', required: true },
     token: { position: 2, help: 'One time registration token', required: true },
-    port: { abbr: 'p', metafile: 'PORT', help: 'Set server port [9443]', default: 9443 },
+    port: { abbr: 'p', metafile: 'PORT', help: 'Set server port [9443]', default: 9443 }
 };
 register.prio = 5;
 

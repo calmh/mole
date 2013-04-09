@@ -1,12 +1,11 @@
 "use strict";
 
 var _ = require('underscore');
+var colors = require('colors');
 var con = require('yacon');
 var fs = require('fs');
 var path = require('path');
 var table = require('yatf');
-
-var tun = require('../lib/tunnel');
 
 module.exports = list;
 list.help = 'List available tunnel definitions';

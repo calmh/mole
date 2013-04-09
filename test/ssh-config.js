@@ -16,7 +16,7 @@ describe('sshConfig', function () {
                     user: 'testuser',
                     port: 1234,
                     password: 'something',
-                    via: 'another-host',
+                    via: 'another-host'
                 }
             }
         };
@@ -28,7 +28,7 @@ describe('sshConfig', function () {
             /Port 1234/,
             /ProxyCommand ssh -F \/tmp\/sshconf another-host nc -w 1800 %h %p/,
             /PubkeyAuthentication no/,
-            /PasswordAuthentication yes/,
+            /PasswordAuthentication yes/
         ];
 
         expected.forEach(function (line) {
@@ -45,7 +45,7 @@ describe('sshConfig', function () {
                     addr: '1.2.3.4',
                     user: 'testuser',
                     port: 1234,
-                    key: 'something',
+                    key: 'something'
                 }
             }
         };
@@ -57,7 +57,7 @@ describe('sshConfig', function () {
             /Port 1234/,
             /PubkeyAuthentication yes/,
             /PasswordAuthentication no/,
-            /IdentityFile \//,
+            /IdentityFile \//
         ];
 
         expected.forEach(function (line) {
@@ -73,14 +73,14 @@ describe('sshConfig', function () {
                 'another-host': {
                     addr: '2.2.3.4',
                     user: 'test1',
-                    password: 'something',
+                    password: 'something'
                 },
                 test: {
                     addr: '1.2.3.4',
                     user: 'testuser',
                     port: 1234,
                     via: 'another-host',
-                    password: 'something',
+                    password: 'something'
                 }
             }
         };
@@ -93,7 +93,7 @@ describe('sshConfig', function () {
             /User testuser/,
             /Hostname 1.2.3.4/,
             /Port 1234/,
-            /ProxyCommand ssh -F \/tmp\/sshconf another-host nc -w 1800 %h %p/,
+            /ProxyCommand ssh -F \/tmp\/sshconf another-host nc -w 1800 %h %p/
         ];
 
         expected.forEach(function (line) {
@@ -104,20 +104,20 @@ describe('sshConfig', function () {
     it('should return a config with forwards', function () {
         var config = {
             general: {
-                main: 'test',
+                main: 'test'
             },
             forwards: {
                 'Foo': { '127.0.0.1:3994': '127.0.0.1:3994' },
                 'Bar': {
                     '127.0.0.1:42000': '10.0.0.5:42000',
                     '127.0.0.1:42002': '10.0.0.5:42002'
-                },
+                }
             },
             hosts: {
                 test: {
                     addr: '1.2.3.4',
                     user: 'something',
-                    password: 'something',
+                    password: 'something'
                 }
             }
         };
@@ -130,7 +130,7 @@ describe('sshConfig', function () {
             /LocalForward 127.0.0.1:3994 127.0.0.1:3994/,
             /# Bar/,
             /LocalForward 127.0.0.1:42000 10.0.0.5:42000/,
-            /LocalForward 127.0.0.1:42002 10.0.0.5:42002/,
+            /LocalForward 127.0.0.1:42002 10.0.0.5:42002/
         ];
 
         expected.forEach(function (line) {

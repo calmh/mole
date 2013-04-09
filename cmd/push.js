@@ -5,7 +5,6 @@ var fs = require('fs');
 var path = require('path');
 
 var tun = require('../lib/tunnel');
-var hashSync = require('../lib/hash').sync;
 
 module.exports = push;
 push.help = 'Send a tunnel definition to the server';

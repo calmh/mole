@@ -6,7 +6,7 @@ module.exports = newuser;
 newuser.help = 'Create a new user (requires admin privileges)';
 newuser.options = {
     'name': { position: 1, help: 'User name', required: true },
-    'admin': { flag: true, abbr: 'a', help: 'Create an admin user' },
+    'admin': { flag: true, abbr: 'a', help: 'Create an admin user' }
 };
 newuser.prio = 8;
 

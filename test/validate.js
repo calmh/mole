@@ -12,7 +12,7 @@ describe('validate', function () {
             general: {
                 description: "An object",
                 author: "Someone <foo@example.com>",
-                main: "foo",
+                main: "foo"
             },
             hosts: {
                 foo: {
@@ -30,7 +30,7 @@ describe('validate', function () {
                 'A description': {
                     '127.0.0.1:9999': '10.0.0.1:9999'
                 }
-            },
+            }
         };
     });
 
@@ -77,7 +77,7 @@ describe('validate', function () {
         invalid.hosts = {
             foo: {
                 user: 'test',
-                password: 'test',
+                password: 'test'
             }
         };
         (function () {
@@ -90,7 +90,7 @@ describe('validate', function () {
         invalid.hosts = {
             foo: {
                 addr: 'a1234',
-                password: 'test',
+                password: 'test'
             }
         };
         (function () {
@@ -103,7 +103,7 @@ describe('validate', function () {
         invalid.hosts = {
             foo: {
                 addr: 'a1234',
-                user: 'test',
+                user: 'test'
             }
         };
         (function () {

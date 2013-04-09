@@ -22,7 +22,7 @@ dig.help = 'Dig a tunnel to the destination';
 dig.options = {
     local: { abbr: 'l', help: 'Tunnel name is a local file', flag: true },
     tunnel: { position: 1, help: 'Tunnel name or file name', required: true },
-    host: { position: 2, help: 'Host name within tunnel definition' },
+    host: { position: 2, help: 'Host name within tunnel definition' }
 };
 dig.prio = 1;
 dig.aliases = [ 'conn', 'connect' ];

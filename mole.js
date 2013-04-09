@@ -5,7 +5,6 @@
 "use strict";
 
 var _ = require('underscore');
-var colors = require('colors');
 var con = require('yacon');
 var fs = require('fs');
 var ini = require('ini');
@@ -90,7 +89,7 @@ try {
         server: {
             port: 9443
         }
-    }
+    };
     fs.writeFileSync(state.path.configFile, ini.stringify(state.config));
 }
 
