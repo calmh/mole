@@ -33,11 +33,6 @@ state.pkg = require(path.join(__dirname, 'package.json'));
 var init = require('./lib/init');
 var Client = require('./lib/client');
 
-// Prevent running as root.
-if (process.getuid && process.getuid() === 0) {
-    con.fatal('Do not run mole as root');
-}
-
 state.client = new Client();
 
 // All server errors are fatal.
@@ -139,16 +134,16 @@ cmds.forEach(function (arr) {
 });
 
 // `-d` always turns on debug.
-
 parser.option('debug', { abbr: 'd', flag: true, help: 'Display debug output' });
 
 // `-h` shows help. This is actually implemented totally by `nomnom`, but we
 // need to define the option so it shows up in the usage information.
-
 parser.option('help', { abbr: 'h', flag: true, help: 'Display command help' });
 
-// Generate the help text.
+// `-r` permit uid 0 execution. Allows the user to execute mole as root.
+parser.option('permit-root', { abbr: 'r', flag: true, help: 'Permit root execution' });
 
+// Generate the help text.
 function usage(cmds) {
     var sprint = require('sprint');
 
@@ -167,7 +162,8 @@ function usage(cmds) {
     str += '\nOptions:\n';
     [
         [ '-d, --debug', 'Display debug output' ],
-        [ '-h, --help', 'Display command help' ]
+        [ '-h, --help', 'Display command help' ],
+        [ '-r, --permit-root', 'Permit root execution' ]
     ].forEach(function (o) {
         str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
     });
@@ -199,7 +195,12 @@ if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
     // Print usage
     console.log(usage(cmds));
 } else {
-    // Parse command line arguments. This will call the defined callbacks for matching commands.
-    parser.parse();
+  // Parse command line arguments. This will call the defined callbacks for matching commands.
+  var opts = parser.parse();
+
+  // Prevent running as root.
+  if (process.getuid && process.getuid() === 0 && !opts['permit-root']) {
+    con.fatal('Running mole as root is generally unnecessary, please provide the -r flag to force execution.');
+  }
 }
 
