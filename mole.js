@@ -199,6 +199,12 @@ if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
 } else {
   // Parse command line arguments. This will call the defined callbacks for matching commands.
   var opts = parser.parse();
+  if (opts.command) {
+    // We should not have received this as an array, it should have been callbacked.
+    // i.e. user said "mole -d dig" instead of "mole dig -d". Might be a bug in
+    // nomnom depending on how you see it.
+    console.log(usage(cmds));
+  }
 
   // Prevent running as root.
   if (process.getuid && process.getuid() === 0 && !opts['permit-root']) {
