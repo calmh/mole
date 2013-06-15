@@ -168,6 +168,8 @@ function usage(cmds) {
         str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
     });
     str += '\n';
+    str += '   Use ' + 'mole <command> -h'.bold + ' to see command specific options.\n';
+    str += '\n';
 
     str += [
         'Version:',
