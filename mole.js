@@ -45,7 +45,7 @@ state.client.on('error', function (err) {
 // /tmp/<username>.
 
 var homeDir = path.resolve(process.env.HOME || process.env.USERPROFILE ||
-                           path.join('/tmp', process.env.USER || process.env.LOGNAME));
+    path.join('/tmp', process.env.USER || process.env.LOGNAME));
 
 // Set up variables pointing to our config directory, certificate files and
 // subdirectories for tunnels and packages.
@@ -96,19 +96,23 @@ parser.script('mole');
 // first elements to allow easy sorting. Sort by prio, name.
 
 var cmds = fs.readdirSync(path.join(__dirname, 'cmd'))
-.map(function (module) {
-    if (!module.match(/^[a-z0-9]+\.js$/)) { return null; }
+    .map(function (module) {
+        if (!module.match(/^[a-z0-9]+\.js$/)) {
+            return null;
+        }
 
-    var cmd = require('./cmd/' + module);
-    var name = path.basename(module, '.js');
-    return [ cmd.prio || 5, name, cmd ];
-})
-.sort();
+        var cmd = require('./cmd/' + module);
+        var name = path.basename(module, '.js');
+        return [ cmd.prio || 5, name, cmd ];
+    })
+    .sort();
 
 // Add them to the command line parser.
 
 cmds.forEach(function (arr) {
-    if (!arr) { return; }
+    if (!arr) {
+        return;
+    }
 
     var name = arr[1];
     var module = arr[2];
@@ -165,8 +169,8 @@ function usage(cmds) {
         [ '-h, --help', 'Display command help' ],
         [ '-r, --permit-root', 'Permit root execution' ]
     ].forEach(function (o) {
-        str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
-    });
+            str += sprint('   %-12s', o[0]).bold + ' ' + o[1] + '\n';
+        });
     str += '\n';
     str += '   Use ' + 'mole <command> -h'.bold + ' to see command specific options.\n';
     str += '\n';
@@ -197,18 +201,18 @@ if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
     // Print usage
     console.log(usage(cmds));
 } else {
-  // Parse command line arguments. This will call the defined callbacks for matching commands.
-  var opts = parser.parse();
-  if (opts.command) {
-    // We should not have received this as an array, it should have been callbacked.
-    // i.e. user said "mole -d dig" instead of "mole dig -d". Might be a bug in
-    // nomnom depending on how you see it.
-    console.log(usage(cmds));
-  }
+    // Parse command line arguments. This will call the defined callbacks for matching commands.
+    var opts = parser.parse();
+    if (opts.command) {
+        // We should not have received this as an array, it should have been callbacked.
+        // i.e. user said "mole -d dig" instead of "mole dig -d". Might be a bug in
+        // nomnom depending on how you see it.
+        console.log(usage(cmds));
+    }
 
-  // Prevent running as root.
-  if (process.getuid && process.getuid() === 0 && !opts['permit-root']) {
-    con.fatal('Running mole as root is generally unnecessary, please provide the -r flag to force execution.');
-  }
+    // Prevent running as root.
+    if (process.getuid && process.getuid() === 0 && !opts['permit-root']) {
+        con.fatal('Running mole as root is generally unnecessary, please provide the -r flag to force execution.');
+    }
 }
 
