@@ -281,6 +281,7 @@ function launchExpect(config, debug) {
     }
 
     var cleaned = false;
+
     function cleanFiles() {
         if (!cleaned) {
             con.debug('Removing temporary files');
@@ -355,16 +356,34 @@ function stopVPN(config, callback) {
     }
 }
 
+function getLocalIps(forwards) {
+    var ipMap = {};
+    var keys = Object.keys(forwards);
+    var ips = keys.map(function (f) {
+        return f.split(':')[0];
+    });
+    for (var i = 0; i < ips.length; i++) {
+        ipMap[ips[i]] = true;
+    }
+    return Object.keys(ipMap);
+}
+
 function setupHosts(config, callback) {
     var tag = 'mole';
     var hosts = [];
     _.each(config.forwards, function (fs, descr) {
         var m = descr.match(/^[a-z][a-z0-9_.-]+/i);
-        if (!m)
+        if (!m) {
+            con.warning('Not setting up hosts entry for "' + descr + '" (bad format).');
             return;
+        }
         var name = m[0].toLowerCase();
-        var ip = _.keys(fs)[0].split(':')[0];
-        hosts.push({ip: ip, names: [name]});
+        var ips = getLocalIps(fs);
+        if (ips.length > 1) {
+            con.warning('Host entry "' + name + '" would have more than one IP (' + ips.join(', ') + '), ignoring.');
+            return;
+        }
+        hosts.push({ip: ips[0], names: [name]});
     });
 
     hostsfile.readHostsFile(function (err, origData) {
