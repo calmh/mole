@@ -370,7 +370,8 @@ function getLocalIps(forwards) {
 
 function setupHosts(config, callback) {
     var tag = 'mole';
-    var hosts = [];
+    var hosts = {};
+
     _.each(config.forwards, function (fs, descr) {
         var m = descr.match(/^[a-z][a-z0-9_.-]+/i);
         if (!m) {
@@ -383,9 +384,34 @@ function setupHosts(config, callback) {
             con.warning('Host entry "' + name + '" would have more than one IP (' + ips.join(', ') + '), ignoring.');
             return;
         }
-        hosts.push({ip: ips[0], names: [name]});
+
+        var ip = ips[0];
+        if (!hosts[ip])
+            hosts[ip] = [name];
+        else
+            hosts[ip].push(name);
     });
 
+    if (config.general.aliases) {
+        config.general.aliases.forEach(function (alias) {
+            var l = alias.trim().split(/\s+/);
+            if (l.length !== 2) {
+                con.warning('Invalid alias specification "' + alias + '", ignored.');
+                return;
+            }
+            var name = l[0];
+            var ip = l[1];
+
+            if (!hosts[ip])
+                hosts[ip] = [name];
+            else
+                hosts[ip].push(name);
+        });
+    }
+
+    hosts = Object.keys(hosts).map(function (k) {
+        return {ip: k, names: hosts[k]};
+    });
     hostsfile.readHostsFile(function (err, origData) {
         var data = hostsfile.addHosts(hostsfile.removeTagged(origData, tag), hosts, tag);
         hostsfile.replaceHostsFile(data, function (err) {

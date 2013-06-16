@@ -33,6 +33,8 @@ The `general` section contains four mandatory elements;
   - `main` - Name of the host to connect to when the tunnel definition is
     invoked.
   - `version` - Configuration format version. Must be set to `3` currently.
+  - `aliases[]` - An array of extra name to IP mappings (white space separated)
+    to insert into the hosts file. (Optional)
 
 ### Example
 
@@ -40,6 +42,8 @@ The `general` section contains four mandatory elements;
     author = Jakob Borg <jakob@example.com>
     main = op1prod
     version = 3
+    aliases[] = srv1 127.0.0.1
+    aliases[] = srv2 127.0.0.2
 
 Section `hosts`
 ---------------
@@ -83,7 +87,7 @@ by `\n`. The key must not be protected by a password.
     port = 2222
     prompt = "~>"
     socks = 192.168.56.101:1080
-    
+
     [hosts.op1prod]
     addr = 10.0.33.66
     user = admin

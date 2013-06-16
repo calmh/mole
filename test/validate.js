@@ -137,7 +137,7 @@ describe('validate', function () {
 
     it('should deny unknown stuff', function () {
         var invalid = valid;
-        invalid.whatever = { 'hash': 'value' };
+        invalid.whatever = { 'hash': 'value' };
         (function () {
             validate(invalid);
         }).should.throw();
@@ -160,6 +160,35 @@ describe('validate', function () {
         var invalid = valid;
         invalid.hosts.foo.via = 'bar';
         invalid.hosts.foo.socks = '1.2.3.4:1080';
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should accept aliases', function () {
+        valid.general.aliases = ['foo 1.2.3.4', 'bar 2.3.4.5'];
+        validate(valid).should.equal(true);
+    });
+
+    it('should deny invalid alias format', function () {
+        var invalid = valid;
+        invalid.general.aliases = ['foo 1.2.3.4', 'bar:2.3.4.5'];
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should deny invalid alias format (ip)', function () {
+        var invalid = valid;
+        invalid.general.aliases = ['foo 1.b.3.4', 'bar 2.3.4.5'];
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should deny invalid alias format (name)', function () {
+        var invalid = valid;
+        invalid.general.aliases = ['foo 1.3.3.4', 'ba+r 2.3.4.5'];
         (function () {
             validate(invalid);
         }).should.throw();
