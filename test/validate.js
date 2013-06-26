@@ -145,7 +145,15 @@ describe('validate', function () {
 
     it('should deny malformed forward to', function () {
         var invalid = valid;
-        invalid.forwards.invalid = { '127.0.0.1:9999': '10.0.0.1:9999' };
+        invalid.forwards.invalid = { '127.0.0.2:9999': '10.0.0.1.9' };
+        (function () {
+            validate(invalid);
+        }).should.throw();
+    });
+
+    it('should deny missing port', function () {
+        var invalid = valid;
+        invalid.forwards.invalid = { '127.0.0.2': '10.0.0.1' };
         (function () {
             validate(invalid);
         }).should.throw();
