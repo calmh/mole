@@ -14,7 +14,7 @@ push.options = {
 push.prio = 1;
 
 function push(opts, state) {
-    if (!opts.file.match(/^[0-9a-z_.\-]+\.ini$/)) {
+    if (!path.basename(opts.file).match(/^[0-9a-z_.\-]+\.ini$/)) {
         con.error('File name does not conform to the pattern:');
         con.error(' * must have a .ini extension,');
         con.error(' * only letters, numbers, dots, dash and underscore are allowed.');
