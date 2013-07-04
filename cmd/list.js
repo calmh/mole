@@ -6,6 +6,7 @@ var con = require('yacon');
 var fs = require('fs');
 var path = require('path');
 var table = require('yatf');
+var tunnel = require('../lib/tunnel.js');
 
 module.exports = list;
 list.help = 'List available tunnel definitions';
@@ -13,10 +14,6 @@ list.prio = 1;
 list.aliases = [ 'ls' ];
 
 function printV3List(tunnels) {
-    // Build a table with information about the tunnel definitions. Basically,
-    // load each of them, create a row with information and push that row to
-    // the table.
-
     var rows = [];
     tunnels.sort(function (a, b) {
         if (a.name < b.name)
@@ -25,31 +22,33 @@ function printV3List(tunnels) {
             return 1;
         return 0;
     });
-    tunnels.forEach(function (tunnel) {
-        if (!tunnel.error) {
+    tunnels.forEach(function (tun) {
+        if (!tun.error) {
 
             // Add a flag to indicate that a tunnel definitions requires VPN
             // (i.e. vpnc must be installed).
 
             var opts = '';
-            if (tunnel.vpnc) {
+            if (tun.vpnc) {
                 opts += ' (vpnc)'.magenta;
-            } else if (tunnel.openconnect) {
+            } else if (tun.openconnect) {
                 opts += ' (opnc)'.green;
-            } else if (tunnel.socks) {
+            } else if (tun.socks) {
                 opts += ' (socks)'.yellow;
+            } else if (tun.version && tun.version > tunnel.formatVersion) {
+                opts += (' (requires v' + tun.version + ')').red.bold;
             }
 
             // Generate a lists of hosts.
 
-            var hosts = tunnel.hosts.join(', ');
-            if (tunnel.localOnly) {
+            var hosts = tun.hosts.join(', ');
+            if (tun.localOnly) {
                 hosts = '(local forward)'.grey;
             }
 
-            rows.push([ tunnel.name.blue.bold , tunnel.description + opts, hosts ]);
+            rows.push([ tun.name.blue.bold , tun.description + opts, hosts ]);
         } else {
-            rows.push([ tunnel.name.red.bold, tunnel.error, '-' ]);
+            rows.push([ tun.name.red.bold, tun.error, '-' ]);
         }
     });
 
