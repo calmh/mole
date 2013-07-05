@@ -43,7 +43,7 @@ describe('validate', function () {
         delete invalid.general.author;
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny missing description', function () {
@@ -51,7 +51,7 @@ describe('validate', function () {
         delete invalid.general.description;
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny missing main', function () {
@@ -60,7 +60,7 @@ describe('validate', function () {
         invalid.forwards = {};
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny missing hosts', function () {
@@ -69,7 +69,7 @@ describe('validate', function () {
         invalid.forwards = {};
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny hosts without addr', function () {
@@ -82,7 +82,7 @@ describe('validate', function () {
         };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny hosts without user', function () {
@@ -95,7 +95,7 @@ describe('validate', function () {
         };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny hosts without password or key', function () {
@@ -108,7 +108,7 @@ describe('validate', function () {
         };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny missing main host', function () {
@@ -116,7 +116,7 @@ describe('validate', function () {
         invalid.general.main = 'other';
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Missing/);
     });
 
     it('should deny malformed forward from', function () {
@@ -124,15 +124,15 @@ describe('validate', function () {
         invalid.forwards.invalid = { '127.0.0.1.99:44': '1.2.3.4:55' };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed forward/);
     });
 
     it('should deny duplicate forward', function () {
         var invalid = valid;
-        invalid.forwards.invalid = { '127.0.0.1.99:44': '1.2.3.4:55' };
+        invalid.forwards.invalid = { '127.0.0.1:9999': '1.2.3.4:55' };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Duplicate/);
     });
 
     it('should deny unknown stuff', function () {
@@ -140,7 +140,7 @@ describe('validate', function () {
         invalid.whatever = { 'hash': 'value' };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Unknown/);
     });
 
     it('should deny malformed forward to', function () {
@@ -148,7 +148,7 @@ describe('validate', function () {
         invalid.forwards.invalid = { '127.0.0.2:9999': '10.0.0.1.9' };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed forward/);
     });
 
     it('should deny missing port', function () {
@@ -156,7 +156,7 @@ describe('validate', function () {
         invalid.forwards.invalid = { '127.0.0.2': '10.0.0.1' };
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed forward/);
     });
 
     it('should accept socks', function () {
@@ -183,7 +183,7 @@ describe('validate', function () {
         invalid.general.aliases = ['foo 1.2.3.4', 'bar:2.3.4.5'];
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed alias/);
     });
 
     it('should deny invalid alias format (ip)', function () {
@@ -191,7 +191,7 @@ describe('validate', function () {
         invalid.general.aliases = ['foo 1.b.3.4', 'bar 2.3.4.5'];
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed alias/);
     });
 
     it('should deny invalid alias format (name)', function () {
@@ -199,6 +199,6 @@ describe('validate', function () {
         invalid.general.aliases = ['foo 1.3.3.4', 'ba+r 2.3.4.5'];
         (function () {
             validate(invalid);
-        }).should.throw();
+        }).should.throw(/Malformed alias/);
     });
 });
