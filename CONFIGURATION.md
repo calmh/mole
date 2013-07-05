@@ -32,7 +32,7 @@ The `general` section contains four mandatory elements;
   - `author` - Name and email of the configuration file author.
   - `main` - Name of the host to connect to when the tunnel definition is
     invoked.
-  - `version` - Configuration format version. Must be set to `3` currently.
+  - `version` - Configuration format version. Current version is `3.2`.
   - `aliases[]` - An array of extra name to IP mappings (white space separated)
     to insert into the hosts file. (Optional)
 
@@ -120,6 +120,11 @@ the forwards will be done from the local computer.  This can be used to
 provide the user with the same usage pattern as in the SSH forward case
 and also keep the tunnel definition self documenting.
 
+There can a `comment` attribute on the forward (introduced in config version
+`3.2`, mole version 3.2.0). This attributes contains a string, optionally
+with `\n` newlines, that will be displayed after the forward name when a
+tunnel is connected.
+
 ### Example
 
     [forwards.hostA]
@@ -127,6 +132,7 @@ and also keep the tunnel definition self documenting.
     127.0.0.1:22001-22005 = 10.0.33.69.193
 
     [forwards.hostB]
+    comment = This is a test system.\nNevertheless, be nice to it.
     127.0.0.2:22001-22005 = 10.0.33.70.194
 
 

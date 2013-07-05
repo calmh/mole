@@ -198,6 +198,13 @@ function setupLocalForwards(config) {
     console.log('\nThe following forwards are available to you:\n');
     _.each(config.forwards, function (fs, descr) {
         console.log(descr);
+        if (config.$.forwardComments && config.$.forwardComments[descr]) {
+            var cls = config.$.forwardComments[descr].split('\\n');
+            for (var i = 0; i < cls.length; i++) {
+                var cl = cls[i];
+                console.log('   * ' + cl);
+            }
+        }
         _.each(fs, function (to, from) {
             var sfrom = from.split(':');
             var sto = to.split(':');
