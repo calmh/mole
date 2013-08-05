@@ -1,14 +1,21 @@
 package main
 
 import (
-	"os"
-	"os/exec"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"github.com/calmh/mole/auth"
+	"os"
+	"os/exec"
+	//"github.com/calmh/mole/configuration"
+	"crypto/sha1"
+	"crypto/tls"
 	"math/big"
+	//"crypto/x509"
+	//"github.com/cznic/zappy"
+	"github.com/calmh/mole/proxy"
 )
 
 func sshTest() {
@@ -23,9 +30,9 @@ func sshTest() {
 
 func authTest() {
 	cfg := auth.Configuration{
-		Server: "sso.int.prnw.net",
-		Port: 389,
-		UseSSL: false,
+		Server:       "sso.int.prnw.net",
+		Port:         389,
+		UseSSL:       false,
 		BindTemplate: "uid=%s,cn=users,cn=accounts,dc=int,dc=prnw,dc=net",
 	}
 
@@ -44,9 +51,9 @@ func cryptoTest() {
 	}
 
 	pkm := make(map[string]*big.Int)
-	pkm["X"] = pk.X//.Bytes()
-	pkm["Y"] = pk.Y//.Bytes()
-	pkm["D"] = pk.D//.Bytes()
+	pkm["X"] = pk.X //.Bytes()
+	pkm["Y"] = pk.Y //.Bytes()
+	pkm["D"] = pk.D //.Bytes()
 	v, e := json.Marshal(pkm)
 	if e != nil {
 		panic(e)
@@ -66,7 +73,16 @@ func cryptoTest() {
 	print(string(v) + "\n")
 }
 
-func main() {
-	cryptoTest()
+func Fingerprint(c *tls.Conn) string {
+	state := c.ConnectionState()
+	if len(state.PeerCertificates) != 1 {
+		panic("incorrect certificate count")
+	}
+	s := sha1.New()
+	s.Write(state.PeerCertificates[0].Raw)
+	h := s.Sum(nil)
+	return fmt.Sprintf("%x", h)
 }
 
+func main() {
+}
