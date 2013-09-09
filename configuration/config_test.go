@@ -25,7 +25,7 @@ func TestGeneralSection(t *testing.T) {
 	if cfg.General.Version != 400 {
 		t.Errorf("Incorrect Version %d", cfg.General.Version)
 	}
-	if cfg.General.Main != "host_1" {
+	if cfg.General.Main != "tac1" {
 		t.Errorf("Incorrect Main %q", cfg.General.Main)
 	}
 
@@ -46,7 +46,10 @@ func TestHosts(t *testing.T) {
 
 	h := cfg.Hosts["tac1"]
 	if h.Addr != "172.16.32.32" {
-		t.Errorf("Incorrect Add %q", h.Addr)
+		t.Errorf("Incorrect Addr %q", h.Addr)
+	}
+	if h.Port != 22 {
+		t.Errorf("Incorrect Port %d", h.Port)
 	}
 	if h.User != "mole1" {
 		t.Errorf("Incorrect User %q", h.User)
@@ -57,13 +60,22 @@ func TestHosts(t *testing.T) {
 	if h.Pass != "" {
 		t.Errorf("Incorrect Pass %q", h.Pass)
 	}
+	if h.Prompt != `(%|\$|#|>)\s*$` {
+		t.Errorf("Incorrect Prompt %q", h.Prompt)
+	}
+	if h.Via != "tac2" {
+		t.Errorf("Incorrect Via %q", h.Via)
+	}
 	if l := len(h.Other); l != 2 {
 		t.Errorf("Incorrect len(Other) %d", l)
 	}
 
 	h = cfg.Hosts["tac2"]
 	if h.Addr != "172.16.32.33" {
-		t.Errorf("Incorrect Add %q", h.Addr)
+		t.Errorf("Incorrect Addr %q", h.Addr)
+	}
+	if h.Port != 2222 {
+		t.Errorf("Incorrect Port %d", h.Port)
 	}
 	if h.User != "mole2" {
 		t.Errorf("Incorrect User %q", h.User)
@@ -73,6 +85,12 @@ func TestHosts(t *testing.T) {
 	}
 	if h.Pass != "testpass" {
 		t.Errorf("Incorrect Pass %q", h.Pass)
+	}
+	if h.Prompt != "~>" {
+		t.Errorf("Incorrect Prompt %q", h.Prompt)
+	}
+	if h.Via != "" {
+		t.Errorf("Incorrect Via %q", h.Via)
 	}
 	if l := len(h.Other); l != 0 {
 		t.Errorf("Incorrect len(Other) %d", l)

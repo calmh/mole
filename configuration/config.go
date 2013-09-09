@@ -8,6 +8,11 @@ import (
 	"github.com/calmh/mole/configuration/configparser"
 )
 
+const (
+	DefaultPrompt = `(%|\$|#|>)\s*$`
+	DefaultPort   = 22
+)
+
 type Config struct {
 	General struct {
 		Description string
@@ -22,11 +27,15 @@ type Config struct {
 }
 
 type Host struct {
-	Addr  string
-	User  string
-	Key   string
-	Pass  string
-	Other map[string]string
+	Addr   string
+	Port   int
+	User   string
+	Key    string
+	Pass   string
+	Prompt string
+	Via    string
+	Unique string
+	Other  map[string]string
 }
 
 type Forward struct {
@@ -82,20 +91,34 @@ func Load(fname string) (*Config, error) {
 	if e != nil {
 		return nil, e
 	}
-	for _, sec := range secs {
+	for i, sec := range secs {
 		name := sec.Name()[6:]
-		host := Host{}
+		host := Host{
+			Port:   DefaultPort,
+			Prompt: DefaultPrompt,
+			Unique: fmt.Sprintf("host%d", i),
+		}
 		host.Other = make(map[string]string)
 		for k, v := range sec.Options() {
 			switch k {
 			case "addr":
 				host.Addr = v
+			case "port":
+				p, e := strconv.Atoi(v)
+				if e != nil {
+					return nil, e
+				}
+				host.Port = p
 			case "key":
 				host.Key = v
 			case "user":
 				host.User = v
 			case "password":
 				host.Pass = v
+			case "prompt":
+				host.Prompt = v
+			case "via":
+				host.Via = v
 			default:
 				host.Other[k] = v
 			}
