@@ -14,6 +14,10 @@ func sshConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		lines = append(lines, line)
 	}
 
+	nl("Host *")
+	nl("  UserKnownHostsFile /dev/null")
+	nl("  StrictHostKeyChecking no")
+
 	for name, host := range cfg.Hosts {
 		nl("Host " + name)
 		nl("  HostName " + host.Addr)
@@ -21,10 +25,9 @@ func sshConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		nl("  User " + host.User)
 
 		if host.Via != "" {
-			nl("  ProxyCommand ssh -F {ssh-config} " + host.Via + " nc -W 1800 %h %p")
+			nl("  ProxyCommand ssh -F {ssh-config} " + host.Via + " nc -w 1800 %h %p")
 		}
 
-		nl("  KeychainIntegration no")
 		if host.Pass != "" {
 			nl("  # password")
 			nl("  PasswordAuthentication yes")

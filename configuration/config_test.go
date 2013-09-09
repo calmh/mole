@@ -54,7 +54,7 @@ func TestHosts(t *testing.T) {
 	if h.User != "mole1" {
 		t.Errorf("Incorrect User %q", h.User)
 	}
-	if h.Key != "testkey" {
+	if h.Key != "test\nkey" {
 		t.Errorf("Incorrect Key %q", h.Key)
 	}
 	if h.Pass != "" {

@@ -110,7 +110,7 @@ func Load(fname string) (*Config, error) {
 				}
 				host.Port = p
 			case "key":
-				host.Key = v
+				host.Key = strings.Trim(strings.Replace(v, "\\n", "\n", -1), "\"")
 			case "user":
 				host.User = v
 			case "password":
