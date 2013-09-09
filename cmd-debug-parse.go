@@ -43,7 +43,7 @@ func (c *cmdParse) Execute(args []string) error {
 
 	var buf bytes.Buffer
 	json.Indent(&buf, bs, "", "    ")
-	fmt.Printf("%s\n", buf.Bytes())
+	log.Printf("%s\n", buf.Bytes())
 
 	return nil
 }

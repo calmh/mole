@@ -28,6 +28,8 @@ func main() {
 }
 
 func setup() {
+	globalOpts.Debug = globalOpts.Debug || isDebug
+
 	if globalOpts.Debug {
 		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 		log.Println("Debug enabled")

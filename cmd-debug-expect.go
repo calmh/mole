@@ -37,7 +37,7 @@ func (c *cmdExpect) Execute(args []string) error {
 
 	var fs tmpfileset.FileSet
 	expectConfig(cfg, &fs)
-	fmt.Println(fs)
+	log.Println(fs)
 
 	return nil
 }

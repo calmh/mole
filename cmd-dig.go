@@ -19,16 +19,20 @@ var digParser *flags.Parser
 
 func init() {
 	cmd := cmdDig{}
-	digParser = globalParser.AddCommand("dig", "Dig a tunnel", "Dig connects to a remote destination and sets up configured local TCP tunnels", &cmd)
+	digParser = globalParser.AddCommand("dig", "Dig a tunnel", "'dig' connects to a remote destination and sets up configured local TCP tunnels", &cmd)
+}
+
+func (c *cmdDig) Usage() string {
+	return "<tunnelname> [dig-OPTIONS]"
 }
 
 func (c *cmdDig) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {
-		writeParser.WriteHelp(os.Stdout)
+		digParser.WriteHelp(os.Stdout)
 		fmt.Println()
-		return fmt.Errorf("dig: missing required options <tunnelname>\n")
+		return fmt.Errorf("dig: missing required option <tunnelname>\n")
 	}
 
 	cfg, err := configuration.Load(args[0])

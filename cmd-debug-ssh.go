@@ -37,7 +37,7 @@ func (c *cmdSsh) Execute(args []string) error {
 
 	var fs tmpfileset.FileSet
 	sshConfig(cfg, &fs)
-	fmt.Println(fs)
+	log.Println(fs)
 
 	return nil
 }
