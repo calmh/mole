@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/calmh/mole/configuration"
-	"github.com/calmh/mole/ssh"
+	"github.com/calmh/mole/tmpfileset"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -33,8 +33,9 @@ func (c *cmdSsh) Execute(args []string) error {
 		log.Fatal(err)
 	}
 
-	ssh := ssh.New(cfg)
-	fmt.Println(ssh)
+	var fs tmpfileset.FileSet
+	sshConfig(cfg, &fs)
+	fmt.Println(fs)
 
 	return nil
 }

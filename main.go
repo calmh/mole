@@ -4,11 +4,15 @@ import (
 	"errors"
 	"log"
 	"os"
+	"os/user"
+	"path"
 
 	"github.com/jessevdk/go-flags"
 )
 
 var errParams = errors.New("incorrect command line parameters")
+
+var homeDir string
 
 var globalOpts struct {
 	Debug bool `short:"d" long:"debug" description:"Show debug output"`
@@ -30,4 +34,10 @@ func setup() {
 	} else {
 		log.SetFlags(0)
 	}
+
+	u, e := user.Current()
+	if e != nil {
+		log.Fatal(e)
+	}
+	homeDir = path.Join(u.HomeDir, ".mole")
 }

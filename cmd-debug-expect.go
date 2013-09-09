@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/calmh/mole/configuration"
-	"github.com/calmh/mole/expect"
+	"github.com/calmh/mole/tmpfileset"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -33,8 +33,9 @@ func (c *cmdExpect) Execute(args []string) error {
 		log.Fatal(err)
 	}
 
-	exp := expect.New(cfg)
-	fmt.Println(exp)
+	var fs tmpfileset.FileSet
+	expectConfig(cfg, &fs)
+	fmt.Println(fs)
 
 	return nil
 }
