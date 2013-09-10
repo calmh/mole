@@ -35,16 +35,30 @@ func (c *cmdDig) Execute(args []string) error {
 		return fmt.Errorf("dig: missing required option <tunnelname>\n")
 	}
 
-	cfg, err := configuration.Load(args[0])
-	if err != nil {
-		log.Fatal(err)
+	var cfg *configuration.Config
+	var err error
+
+	if c.Local {
+		cfg, err = configuration.Load(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if cfg == nil {
+		return fmt.Errorf("no tunnel loaded")
 	}
 
 	var fs tmpfileset.FileSet
 	sshConfig(cfg, &fs)
 	expectConfig(cfg, &fs)
+
+	defer fs.Remove()
 	fs.Save(homeDir)
 
+	if globalOpts.Debug {
+		log.Println("expect", "-f", fs.PathFor("expect-config"))
+	}
 	cmd := exec.Command("expect", "-f", fs.PathFor("expect-config"))
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

@@ -1,16 +1,7 @@
 package main
 
 import (
-	"log"
-	"runtime"
-
 	"github.com/jessevdk/go-flags"
-)
-
-var (
-	buildVersion string
-	buildDate    string
-	buildUser    string
 )
 
 type cmdVersion struct{}
@@ -24,12 +15,6 @@ func init() {
 
 func (c *cmdVersion) Execute(args []string) error {
 	setup()
-
-	log.Printf("mole (%s-%s)", runtime.GOOS, runtime.GOARCH)
-	log.Printf("  %s (%s)", buildVersion, buildKind)
-	if buildDate != "" {
-		log.Printf("  %s by %s", buildDate, buildUser)
-	}
-
+	printVersion()
 	return nil
 }

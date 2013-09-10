@@ -25,7 +25,11 @@ func sshConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		nl("  User " + host.User)
 
 		if host.Via != "" {
-			nl("  ProxyCommand ssh -F {ssh-config} " + host.Via + " nc -w 1800 %h %p")
+			if globalOpts.Debug {
+				nl("  ProxyCommand ssh -v -F {ssh-config} " + host.Via + " nc -w 1800 %h %p")
+			} else {
+				nl("  ProxyCommand ssh -F {ssh-config} " + host.Via + " nc -w 1800 %h %p")
+			}
 		}
 
 		if host.Pass != "" {

@@ -24,8 +24,16 @@ func expectConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		lines = append(lines, line)
 	}
 
+	if !globalOpts.Debug {
+		nl("log_user 0")
+	}
+
 	nl("set timeout 30")
-	nl("spawn ssh -F {ssh-config} " + cfg.General.Main)
+	if globalOpts.Debug {
+		nl("spawn ssh -F {ssh-config} " + cfg.General.Main)
+	} else {
+		nl("spawn ssh -v -F {ssh-config} " + cfg.General.Main)
+	}
 
 	nl("expect {")
 	for name, host := range cfg.Hosts {
