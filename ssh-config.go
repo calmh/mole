@@ -18,8 +18,8 @@ func sshConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 	nl("  UserKnownHostsFile /dev/null")
 	nl("  StrictHostKeyChecking no")
 
-	for name, host := range cfg.Hosts {
-		nl("Host " + name)
+	for _, host := range cfg.Hosts {
+		nl("Host " + host.Name)
 		nl("  HostName " + host.Addr)
 		nl(fmt.Sprintf("  Port %d", host.Port))
 		nl("  User " + host.User)
@@ -53,9 +53,9 @@ func sshConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		nl("  ServerAliveInterval 20")
 		nl("  ServerAliveCountMax 3")
 
-		if name == cfg.General.Main {
-			for name, fwd := range cfg.Forwards {
-				nl(fmt.Sprintf("  # forward %q", name))
+		if host.Name == cfg.General.Main {
+			for _, fwd := range cfg.Forwards {
+				nl(fmt.Sprintf("  # forward %q", host.Name))
 				for _, l := range fwd.Lines {
 					for i := 0; i <= l.Repeat; i++ {
 						nl(fmt.Sprintf("  LocalForward %s:%d %s:%d", l.SrcIP, l.SrcPort+i, l.DstIP, l.DstPort+i))

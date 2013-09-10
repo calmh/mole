@@ -14,7 +14,7 @@ func expectConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		log.Fatal("Cannot generate expect script for empty destination host")
 	}
 
-	_, ok := cfg.Hosts[cfg.General.Main]
+	_, ok := cfg.HostsMap[cfg.General.Main]
 	if !ok {
 		log.Fatalf("Cannot generate expect script for non-existent host %q", cfg.General.Main)
 	}
@@ -24,43 +24,52 @@ func expectConfig(cfg *configuration.Config, fs *tmpfileset.FileSet) {
 		lines = append(lines, line)
 	}
 
-	if !globalOpts.Debug {
-		nl("log_user 0")
-	}
-
 	nl("set timeout 30")
 	if globalOpts.Debug {
-		nl("spawn ssh -F {ssh-config} " + cfg.General.Main)
-	} else {
 		nl("spawn ssh -v -F {ssh-config} " + cfg.General.Main)
+	} else {
+		nl("spawn ssh -F {ssh-config} " + cfg.General.Main)
 	}
 
 	nl("expect {")
-	for name, host := range cfg.Hosts {
+	for _, host := range cfg.Hosts {
 		if host.User != "" && host.Pass != "" {
-			nl("  # " + name)
+			nl("  # " + host.Name)
 			nl(fmt.Sprintf(`  "%s@%s" {`, host.User, host.Addr))
-			nl(fmt.Sprintf(`    send "%s\n";`, host.Pass))
+			nl(fmt.Sprintf(`    send %q; send "\n";`, host.Pass))
 			nl("    exp_continue;")
 			nl("  }")
 
-			if name == cfg.General.Main {
-				nl("  # " + name + " (as main)")
+			if host.Name == cfg.General.Main {
+				nl("  # " + host.Name + " (as main)")
 				nl(`  "Password:" {`)
-				nl(fmt.Sprintf(`    send "%s\n";`, host.Pass))
+				nl(fmt.Sprintf(`    send %q; send "\n";`, host.Pass))
 				nl("    exp_continue;")
 				nl("  }")
 			}
 		} else {
-			nl("  # " + name + " does not need password authentication")
+			nl("  # " + host.Name + " does not need password authentication")
 		}
 		nl("")
 	}
 
 	nl("  # prompt")
-	nl(fmt.Sprintf("  -re %q {", cfg.Hosts[cfg.General.Main].Prompt))
+	nl(fmt.Sprintf("  -re %q {", cfg.Hosts[cfg.HostsMap[cfg.General.Main]].Prompt))
 	nl(`    send_user "\nThe login sequence seems to have worked.\n\n";`)
 	nl(`    send "\r";`)
+
+	for _, fwd := range cfg.Forwards {
+		nl(`    send_user "` + fwd.Name + `:\n";`)
+		for _, line := range fwd.Lines {
+			if line.Repeat > 0 {
+				nl(fmt.Sprintf("    send_user \"    %s %d-%d -> %s %d-%d\\n\";", line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat, line.DstIP, line.DstPort, line.DstPort+line.Repeat))
+			} else {
+				nl(fmt.Sprintf("    send_user \"    %s %d -> %s %d\\n\";", line.SrcIP, line.SrcPort, line.DstIP, line.DstPort))
+			}
+		}
+		nl(`    send_user "\n";`)
+	}
+
 	nl("    interact;")
 	nl("  }")
 	nl("")

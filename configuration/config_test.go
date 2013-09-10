@@ -6,15 +6,15 @@ import (
 	"github.com/calmh/mole/configuration"
 )
 
-func TestLoadWithoutError(t *testing.T) {
-	_, err := configuration.Load("test.ini")
+func TestLoadFileWithoutError(t *testing.T) {
+	_, err := configuration.LoadFile("test.ini")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestGeneralSection(t *testing.T) {
-	cfg, _ := configuration.Load("test.ini")
+	cfg, _ := configuration.LoadFile("test.ini")
 
 	if cfg.General.Description != "Operator (One)" {
 		t.Errorf("Incorrect Description %q", cfg.General.Description)
@@ -38,13 +38,16 @@ func TestGeneralSection(t *testing.T) {
 }
 
 func TestHosts(t *testing.T) {
-	cfg, _ := configuration.Load("test.ini")
+	cfg, _ := configuration.LoadFile("test.ini")
 
 	if l := len(cfg.Hosts); l != 2 {
 		t.Errorf("Incorrect len(Hosts) %d", l)
 	}
 
-	h := cfg.Hosts["tac1"]
+	h := cfg.Hosts[cfg.HostsMap["tac1"]]
+	if h.Name != "tac1" {
+		t.Errorf("Incorrect Name %q", h.Name)
+	}
 	if h.Addr != "172.16.32.32" {
 		t.Errorf("Incorrect Addr %q", h.Addr)
 	}
@@ -70,7 +73,10 @@ func TestHosts(t *testing.T) {
 		t.Errorf("Incorrect len(Other) %d", l)
 	}
 
-	h = cfg.Hosts["tac2"]
+	h = cfg.Hosts[cfg.HostsMap["tac2"]]
+	if h.Name != "tac2" {
+		t.Errorf("Incorrect Name %q", h.Name)
+	}
 	if h.Addr != "172.16.32.33" {
 		t.Errorf("Incorrect Addr %q", h.Addr)
 	}
@@ -98,13 +104,13 @@ func TestHosts(t *testing.T) {
 }
 
 func TestForwards(t *testing.T) {
-	cfg, _ := configuration.Load("test.ini")
+	cfg, _ := configuration.LoadFile("test.ini")
 
 	if l := len(cfg.Forwards); l != 2 {
 		t.Errorf("Incorrect len(Forwards) %d", l)
 	}
 
-	f := cfg.Forwards["Residential"]
+	f := cfg.Forwards[0]
 	if l := len(f.Lines); l != 2 {
 		t.Errorf("Incorrect len(Lines) %d", l)
 	}

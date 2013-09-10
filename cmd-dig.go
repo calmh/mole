@@ -39,7 +39,14 @@ func (c *cmdDig) Execute(args []string) error {
 	var err error
 
 	if c.Local {
-		cfg, err = configuration.Load(args[0])
+		cfg, err = configuration.LoadFile(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		cert := certificate()
+		cl := NewClient("mole.nym.se:9443", cert)
+		cfg, err = configuration.LoadString(cl.Get(args[0]))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -56,10 +63,12 @@ func (c *cmdDig) Execute(args []string) error {
 	defer fs.Remove()
 	fs.Save(homeDir)
 
+	params := []string{"-f", fs.PathFor("expect-config")}
 	if globalOpts.Debug {
-		log.Println("expect", "-f", fs.PathFor("expect-config"))
+		params = append(params, "-d")
+		log.Println("expect", params)
 	}
-	cmd := exec.Command("expect", "-f", fs.PathFor("expect-config"))
+	cmd := exec.Command("expect", params...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

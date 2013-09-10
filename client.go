@@ -3,10 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"sort"
+	"strings"
 )
 
 const ClientVersion = "3.99"
@@ -26,6 +29,8 @@ type ListItem struct {
 	LocalOnly   bool
 	Version     int
 }
+
+var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 
 func NewClient(host string, cert tls.Certificate) *Client {
 	transport := &http.Transport{
@@ -64,6 +69,8 @@ func (c *Client) request(method, path string) *http.Response {
 
 func (c *Client) List() []ListItem {
 	resp := c.request("GET", "/store")
+	defer resp.Body.Close()
+
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -72,6 +79,39 @@ func (c *Client) List() []ListItem {
 	json.Unmarshal(data, &items)
 	sort.Sort(listItems(items))
 	return items
+}
+
+func (c *Client) Get(tunnel string) string {
+	resp := c.request("GET", "/store/"+tunnel+".ini")
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res := string(data)
+
+	matches := obfuscatedRe.FindAllString(res, -1)
+	for _, o := range matches {
+		res = strings.Replace(res, o, c.deobfuscate(o[6:]), -1)
+	}
+
+	return res
+}
+
+func (c *Client) deobfuscate(token string) string {
+	resp := c.request("GET", "/key/"+token)
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var res map[string]string
+	json.Unmarshal(data, &res)
+	return fmt.Sprintf("%q", res["key"])
 }
 
 type listItems []ListItem

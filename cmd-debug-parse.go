@@ -31,7 +31,7 @@ func (c *cmdParse) Execute(args []string) error {
 		return fmt.Errorf("debug-parse: missing required option <filename>\n")
 	}
 
-	cfg, err := configuration.Load(args[0])
+	cfg, err := configuration.LoadFile(args[0])
 	if err != nil {
 		log.Fatal(err)
 	}
