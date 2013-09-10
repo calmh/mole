@@ -1,13 +1,15 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"fmt"
+	"io"
 	"log"
+	"net"
 	"os"
-	"os/exec"
+	"time"
 
 	"github.com/calmh/mole/configuration"
-	"github.com/calmh/mole/tmpfileset"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -56,23 +58,82 @@ func (c *cmdDig) Execute(args []string) error {
 		return fmt.Errorf("no tunnel loaded")
 	}
 
-	var fs tmpfileset.FileSet
-	sshConfig(cfg, &fs)
-	expectConfig(cfg, &fs)
+	client := sshHost(cfg.General.Main, cfg)
+	log.Println(bold(green("    Connected.")))
+	log.Println()
+	forwards(client, cfg)
 
-	defer fs.Remove()
-	fs.Save(homeDir)
+	log.Println(bold("^C"), "to quit")
+	log.Println()
 
-	params := []string{"-f", fs.PathFor("expect-config")}
-	if globalOpts.Debug {
-		params = append(params, "-d")
-		log.Println("expect", params)
+	progress := []string{"⣾⣽⣻⢿⡿⣟⣯⣷", "⠁⠂⠄⡀⢀⠠⠐⠈", "▉▊▋▌▍▎▏▎▍▌▋▊▉", "◐◓◑◒◐◓◑◒"}
+	for {
+		for _, p := range progress {
+			for i := 0; i < 5; i++ {
+				for _, c := range p {
+					fmt.Printf("\r %c ", c)
+					time.Sleep(250 * time.Millisecond)
+				}
+			}
+		}
 	}
-	cmd := exec.Command("expect", params...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 
 	return nil
+}
+
+func sshHost(host string, cfg *configuration.Config) *ssh.ClientConn {
+	h := cfg.Hosts[cfg.HostsMap[host]]
+	if h.Via != "" {
+		cl := sshHost(h.Via, cfg)
+		conn, err := cl.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
+		if err != nil {
+			panic(err)
+		}
+		return sshVia(conn, h)
+	} else {
+		return sshVia(nil, h)
+	}
+}
+
+func forwards(conn *ssh.ClientConn, cfg *configuration.Config) {
+	for _, fwd := range cfg.Forwards {
+		log.Println(underline(fwd.Name))
+		for _, line := range fwd.Lines {
+			if line.Repeat == 0 {
+				src := fmt.Sprintf(cyan("%s:%d"), line.SrcIP, line.SrcPort)
+				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort)
+				log.Printf("  %-37s -> %s", src, dst)
+			} else {
+				src := fmt.Sprintf(cyan("%s:%d-%d"), line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
+				dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
+				log.Printf("  %-37s -> %s", src, dst)
+			}
+			for i := 0; i <= line.Repeat; i++ {
+				src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
+				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
+
+				l, e := net.Listen("tcp", src)
+				if e != nil {
+					panic(e)
+				}
+
+				go func(l net.Listener, dest string) {
+					for {
+						c1, e := l.Accept()
+						if e != nil {
+							panic(e)
+						}
+
+						c2, e := conn.Dial("tcp", dest)
+						if e != nil {
+							panic(e)
+						}
+						go io.Copy(c1, c2)
+						go io.Copy(c2, c1)
+					}
+				}(l, dst)
+			}
+		}
+		log.Println()
+	}
 }
