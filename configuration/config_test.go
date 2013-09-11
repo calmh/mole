@@ -182,3 +182,26 @@ func TestSourceAddresses(t *testing.T) {
 		t.Errorf("incorrect addrs[0] %q", addrs[3])
 	}
 }
+
+func TestVpnc(t *testing.T) {
+	cfg, _ := configuration.LoadString(`
+[vpnc]
+IPSec_gateway = 1.2.3.4
+IPSec_ID = groupID
+IPSec_secret = s3cr3t
+Xauth_username = some.user.name
+Xauth_password = "3v3nm0r3s3cr3t"
+IKE_Authmode = psk
+DPD_idle_timeout = (our side) 0
+NAT_Traversal_Mode = force-natt
+Local_Port = 0
+Cisco_UDP_Encapsulation_Port = 0
+		`)
+
+	if cfg.Vpnc["IPSec_secret"] != "s3cr3t" {
+		t.Error("incorrectly parsed vpnc IPSec_secret")
+	}
+	if cfg.Vpnc["Xauth_password"] != "3v3nm0r3s3cr3t" {
+		t.Error("incorrectly parsed vpnc Xauth_password")
+	}
+}

@@ -90,7 +90,7 @@ func sshVia(conn net.Conn, h configuration.Host) *ssh.ClientConn {
 		client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port), config)
 	}
 	if err != nil {
-		panic("Failed to dial: " + err.Error())
+		log.Fatal(err)
 	}
 	return client
 }

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 
 	"github.com/calmh/mole/configuration"
 	"github.com/jessevdk/go-flags"
@@ -63,6 +64,10 @@ func (c *cmdDig) Execute(args []string) error {
 		addAddresses(addrs)
 	}
 
+	if cfg.Vpnc != nil {
+		vpnc(cfg)
+	}
+
 	client := sshHost(cfg.General.Main, cfg)
 	log.Println()
 	forwards(client, cfg)
@@ -81,26 +86,60 @@ func (c *cmdDig) Execute(args []string) error {
 func shell() {
 	help := func() {
 		log.Println("Available commands:")
-		log.Println("  help - shows help")
-		log.Println("  quit - stops forwarding and exits")
-		log.Println("  debug - enable debugging")
+		log.Println("  help, ?   - show help")
+		log.Println("  quit, ^D  - stop forwarding and exit")
+		log.Println("  debug     - enable debugging")
 	}
 
 	term := liner.NewLiner()
-loop:
+	defer term.Close()
+
+	// Receive commands
+
+	commands := make(chan string)
+	next := make(chan bool)
+	go func() {
+		for {
+			prompt := "mole> "
+			if globalOpts.Debug {
+				prompt = "(debug) mole>"
+			}
+			cmd, err := term.Prompt(prompt)
+			if err == io.EOF {
+				fmt.Println("quit")
+				commands <- "quit"
+				return
+			}
+
+			if cmd != "" {
+				commands <- cmd
+				_, ok := <-next
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
+
+	// Catch ^C and treat as "quit" command
+
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, os.Interrupt)
+	go func() {
+		<-sigchan
+		fmt.Println("quit")
+		commands <- "quit"
+	}()
+
+	// Handle commands
+
 	for {
-		cmd, err := term.Prompt("mole> ")
-		if err == io.EOF {
-			fmt.Println()
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+		cmd := <-commands
+
 		switch cmd {
-		case "":
 		case "quit":
-			break loop
+			close(next)
+			return
 		case "help":
 			help()
 		case "?":
@@ -109,10 +148,11 @@ loop:
 			fmt.Println("debug output enabled")
 			globalOpts.Debug = true
 		default:
-			log.Println("what? \"help\" might help.")
+			log.Println("what? try \"help\"")
 		}
+
+		next <- true
 	}
-	term.Close()
 }
 
 func sshHost(host string, cfg *configuration.Config) *ssh.ClientConn {
@@ -121,7 +161,7 @@ func sshHost(host string, cfg *configuration.Config) *ssh.ClientConn {
 		cl := sshHost(h.Via, cfg)
 		conn, err := cl.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		return sshVia(conn, h)
 	} else {
@@ -169,7 +209,7 @@ func forwards(conn *ssh.ClientConn, cfg *configuration.Config) {
 						}
 						c2, e := conn.Dial("tcp", dst)
 						if e != nil {
-							panic(e)
+							log.Fatal(e)
 						}
 
 						go func() {

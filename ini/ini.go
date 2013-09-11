@@ -26,7 +26,7 @@ func Parse(stream io.Reader) File {
 				curSection = m[1]
 				iniFile[curSection] = make(Section)
 			} else if m := iniOptionRe.FindStringSubmatch(line); len(m) > 0 {
-				iniFile[curSection][m[1]] = m[2]
+				iniFile[curSection][m[1]] = strings.Trim(m[2], `"`)
 			}
 		}
 	}

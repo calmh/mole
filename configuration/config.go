@@ -25,6 +25,7 @@ type Config struct {
 	Hosts    []Host
 	Forwards []Forward
 	HostsMap map[string]int
+	Vpnc     map[string]string
 }
 
 type Host struct {

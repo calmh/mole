@@ -57,7 +57,7 @@ func (c *Client) request(method, path string) *http.Response {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if globalOpts.Debug {

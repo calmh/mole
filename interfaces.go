@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/calmh/mole/configuration"
 	"log"
 	"net"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/calmh/mole/configuration"
 )
 
 var errNoLoopbackFound = errors.New("no loopback interface found")
@@ -31,7 +32,8 @@ func loInterface() string {
 		}
 	}
 
-	panic(errNoLoopbackFound)
+	log.Fatal(errNoLoopbackFound)
+	return "" // Unreachable
 }
 
 func currentAddresses() []string {
@@ -115,7 +117,7 @@ func ifconfigAddresses(command string, addrs []string) {
 	if globalOpts.Debug {
 		log.Println(cmd.String())
 	}
-	args := []string{"-p", "(sudo) Account password to invoke \"ifconfig " + command + "\": ", "sh", "-c", cmd.String()}
+	args := []string{"-p", "(sudo) Account password, to invoke \"ifconfig " + command + "\": ", "sh", "-c", cmd.String()}
 	sudo := exec.Command("sudo", args...)
 	sudo.Stderr = os.Stderr
 	sudo.Stdout = os.Stdout

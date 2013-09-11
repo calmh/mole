@@ -43,7 +43,6 @@ func parse(i ini.File) (*Config, error) {
 			}
 			host.Other = make(map[string]string)
 			for k, v := range options {
-				v = strings.Trim(v, `"`)
 				switch k {
 				case "addr":
 					host.Addr = v
@@ -106,6 +105,8 @@ func parse(i ini.File) (*Config, error) {
 				forw.Lines = append(forw.Lines, l)
 			}
 			c.Forwards = append(c.Forwards, forw)
+		} else if section == "vpnc" {
+			c.Vpnc = options
 		}
 	}
 	return &c, nil
