@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"os"
 	"sort"
+
+	"github.com/calmh/mole/ini"
 )
 
 const (
@@ -57,12 +59,12 @@ func LoadFile(fname string) (*Config, error) {
 	if e != nil {
 		return nil, e
 	}
-	return parse(tokenize(f))
+	return parse(ini.Parse(f))
 }
 
 func LoadString(data string) (*Config, error) {
 	f := bytes.NewBufferString(data)
-	return parse(tokenize(f))
+	return parse(ini.Parse(f))
 }
 
 func (c *Config) SourceAddresses() []string {

@@ -1,47 +1,20 @@
 package configuration
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/calmh/mole/ini"
 )
 
-type iniSection map[string]string
-type iniFile map[string]iniSection
-
-var (
-	iniSectionRe = regexp.MustCompile(`^\[(.+)\]$`)
-	iniOptionRe  = regexp.MustCompile(`^\s*([^\s]+)\s*=\s*(.+)\s*$`)
-)
-
-func tokenize(stream io.Reader) iniFile {
-	iniFile := make(iniFile)
-	var curSection string
-	scanner := bufio.NewScanner(bufio.NewReader(stream))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if !(strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";")) && len(line) > 0 {
-			if m := iniSectionRe.FindStringSubmatch(line); len(m) > 0 {
-				curSection = m[1]
-				iniFile[curSection] = make(iniSection)
-			} else if m := iniOptionRe.FindStringSubmatch(line); len(m) > 0 {
-				iniFile[curSection][m[1]] = m[2]
-			}
-		}
-	}
-	return iniFile
-}
-
-func parse(ini iniFile) (*Config, error) {
+func parse(i ini.File) (*Config, error) {
 	c := Config{}
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
 
 	var hostId int
-	for section, options := range ini {
+	for section, options := range i {
 		if section == "general" {
 			for k, v := range options {
 				switch k {

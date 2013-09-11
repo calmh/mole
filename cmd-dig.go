@@ -3,22 +3,18 @@ package main
 import (
 	"code.google.com/p/go.crypto/ssh"
 	"fmt"
+	"github.com/sbinet/liner"
 	"io"
 	"log"
-	"math/rand"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/calmh/mole/configuration"
 	"github.com/jessevdk/go-flags"
 )
 
 type cmdDig struct {
-	Local         bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
-	Blinkenlights bool `short:"b" long:"blinkenlights" description:"Display awesome blinkelights"`
+	Local bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
 }
 
 var digParser *flags.Parser
@@ -51,7 +47,7 @@ func (c *cmdDig) Execute(args []string) error {
 		}
 	} else {
 		cert := certificate()
-		cl := NewClient("mole.nym.se:9443", cert)
+		cl := NewClient(serverAddr, cert)
 		cfg, err = configuration.LoadString(cl.Get(args[0]))
 		if err != nil {
 			log.Fatal(err)
@@ -71,47 +67,52 @@ func (c *cmdDig) Execute(args []string) error {
 	log.Println()
 	forwards(client, cfg)
 
-	log.Println(bold("^C"), "to quit")
-	log.Println()
-
-	stopSpinner := make(chan bool)
-	if c.Blinkenlights {
-		go func() {
-			fmt.Printf(ansiHideCursor)
-		loop:
-			for {
-				select {
-				case <-stopSpinner:
-					break loop
-				default:
-					fmt.Printf("%s%s%s%c%c%c%c%c%s%s %s\r", ansiKillLine,
-						faint("["), ansiFgYellow, 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), ansiFgReset, faint("]"),
-						green("Forwarding"))
-					time.Sleep(250 * time.Millisecond)
-				}
-			}
-			fmt.Printf(ansiKillLine)
-			fmt.Printf(ansiShowCursor)
-			stopSpinner <- true
-		}()
-	}
-
-	sigrecv := make(chan os.Signal, 1)
-	signal.Notify(sigrecv, os.Interrupt, syscall.SIGTERM)
-	<-sigrecv
-
-	if c.Blinkenlights {
-		stopSpinner <- true
-		<-stopSpinner
-		fmt.Println()
-	}
+	shell()
 
 	addrs = extraneousAddresses(cfg)
 	if len(addrs) > 0 {
 		removeAddresses(addrs)
 	}
 
+	log.Println(bold(green("ok")))
 	return nil
+}
+
+func shell() {
+	help := func() {
+		log.Println("Available commands:")
+		log.Println("  help - shows help")
+		log.Println("  quit - stops forwarding and exits")
+		log.Println("  debug - enable debugging")
+	}
+
+	term := liner.NewLiner()
+loop:
+	for {
+		cmd, err := term.Prompt("mole> ")
+		if err == io.EOF {
+			fmt.Println()
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		switch cmd {
+		case "":
+		case "quit":
+			break loop
+		case "help":
+			help()
+		case "?":
+			help()
+		case "debug":
+			fmt.Println("debug output enabled")
+			globalOpts.Debug = true
+		default:
+			log.Println("what? \"help\" might help.")
+		}
+	}
+	term.Close()
 }
 
 func sshHost(host string, cfg *configuration.Config) *ssh.ClientConn {

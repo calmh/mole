@@ -6,6 +6,6 @@ builduser="$(whoami)@$(hostname)"
 ldflags="-X main.buildDate '$builddate' -X main.buildVersion '$buildver' -X main.buildUser '$builduser'"
 
 go build -ldflags "$ldflags" -tags debug \
-	&& mv mole $GOPATH/bin/mole-dbg
+	&& mv mole $GOPATH/bin/mole4-dbg
 go build -ldflags "$ldflags" \
-	&& mv mole $GOPATH/bin/mole
+	&& mv mole $GOPATH/bin/mole4

@@ -8,7 +8,9 @@ import (
 	"os/user"
 	"path"
 	"runtime"
+	"strings"
 
+	"github.com/calmh/mole/ini"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -19,10 +21,12 @@ var (
 	buildDate    string
 	buildUser    string
 	homeDir      string
+	serverAddr   string
 )
 
 var globalOpts struct {
-	Debug bool `short:"d" long:"debug" description:"Show debug output"`
+	Debug bool   `short:"d" long:"debug" description:"Show debug output"`
+	Home  string `short:"h" long:"home" description:"Mole home directory" default:"~/.mole" value-name:"DIR"`
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -52,10 +56,21 @@ func setup() {
 	if e != nil {
 		log.Fatal(e)
 	}
-	homeDir = path.Join(u.HomeDir, ".mole")
+
+	if strings.HasPrefix(globalOpts.Home, "~/") {
+		homeDir = strings.Replace(globalOpts.Home, "~", u.HomeDir, 1)
+	}
 	if globalOpts.Debug {
 		log.Println("homeDir", homeDir)
 	}
+
+	configFile := path.Join(homeDir, "mole.ini")
+	f, e := os.Open(configFile)
+	if e != nil {
+		log.Fatal(e)
+	}
+	config := ini.Parse(f)
+	serverAddr = config["server"]["host"] + ":" + config["server"]["port"]
 }
 
 func printVersion() {
