@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/calmh/mole/configuration"
@@ -14,7 +17,8 @@ import (
 )
 
 type cmdDig struct {
-	Local bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
+	Local     bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
+	NoSpinner bool `short:"n" long:"no-blinkenlights" description:"Do not display awesome blinkelights"`
 }
 
 var digParser *flags.Parser
@@ -58,6 +62,11 @@ func (c *cmdDig) Execute(args []string) error {
 		return fmt.Errorf("no tunnel loaded")
 	}
 
+	addrs := missingAddresses(cfg)
+	if len(addrs) > 0 {
+		addAddresses(addrs)
+	}
+
 	client := sshHost(cfg.General.Main, cfg)
 	log.Println(bold(green("    Connected.")))
 	log.Println()
@@ -66,16 +75,39 @@ func (c *cmdDig) Execute(args []string) error {
 	log.Println(bold("^C"), "to quit")
 	log.Println()
 
-	progress := []string{"⣾⣽⣻⢿⡿⣟⣯⣷", "⠁⠂⠄⡀⢀⠠⠐⠈", "▉▊▋▌▍▎▏▎▍▌▋▊▉", "◐◓◑◒◐◓◑◒"}
-	for {
-		for _, p := range progress {
-			for i := 0; i < 5; i++ {
-				for _, c := range p {
-					fmt.Printf("\r %c ", c)
+	stopSpinner := make(chan bool)
+	if !globalOpts.Debug && !c.NoSpinner {
+		go func() {
+			fmt.Printf(ansiHideCursor)
+		loop:
+			for {
+				select {
+				case <-stopSpinner:
+					break loop
+				default:
+					fmt.Printf("%s%c%c%c%c%c%s\r", ansiFgYellow, 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), ansiFgReset)
 					time.Sleep(250 * time.Millisecond)
 				}
 			}
-		}
+			fmt.Printf(ansiKillLine)
+			fmt.Printf(ansiShowCursor)
+			stopSpinner <- true
+		}()
+	}
+
+	sigrecv := make(chan os.Signal, 1)
+	signal.Notify(sigrecv, os.Interrupt, syscall.SIGTERM)
+	<-sigrecv
+
+	if !globalOpts.Debug && !c.NoSpinner {
+		stopSpinner <- true
+		<-stopSpinner
+		fmt.Println()
+	}
+
+	addrs = extraneousAddresses(cfg)
+	if len(addrs) > 0 {
+		removeAddresses(addrs)
 	}
 
 	return nil

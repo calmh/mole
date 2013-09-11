@@ -149,3 +149,36 @@ func TestForwards(t *testing.T) {
 		t.Errorf("Incorrect l2 Repeat %d", l2.Repeat)
 	}
 }
+
+func TestSourceAddresses(t *testing.T) {
+	cfg, _ := configuration.LoadString(`
+[forwards.baz (quux)]
+127.22.0.17:3994 = 10.22.0.9
+127.22.0.17:8443 = 10.22.0.9
+127.22.0.16:42000 = 10.22.0.9
+127.22.0.16:42002 = 10.22.0.9
+
+[forwards.foo (bar))]
+127.0.0.12:3994 = 10.22.0.6
+127.0.0.12:8443 = 10.22.0.6
+127.0.0.13:42000 = 10.22.0.6
+127.0.0.13:42002 = 10.22.0.6
+		`)
+
+	addrs := cfg.SourceAddresses()
+	if l := len(addrs); l != 4 {
+		t.Errorf("incorrect len(addrs) %d", l)
+	}
+	if addrs[0] != "127.0.0.12" {
+		t.Errorf("incorrect addrs[0] %q", addrs[0])
+	}
+	if addrs[1] != "127.0.0.13" {
+		t.Errorf("incorrect addrs[0] %q", addrs[1])
+	}
+	if addrs[2] != "127.22.0.16" {
+		t.Errorf("incorrect addrs[0] %q", addrs[2])
+	}
+	if addrs[3] != "127.22.0.17" {
+		t.Errorf("incorrect addrs[0] %q", addrs[3])
+	}
+}

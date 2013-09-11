@@ -3,6 +3,7 @@ package configuration
 import (
 	"bytes"
 	"os"
+	"sort"
 )
 
 const (
@@ -62,4 +63,21 @@ func LoadFile(fname string) (*Config, error) {
 func LoadString(data string) (*Config, error) {
 	f := bytes.NewBufferString(data)
 	return parse(tokenize(f))
+}
+
+func (c *Config) SourceAddresses() []string {
+	addrMap := make(map[string]bool)
+	for _, fwd := range c.Forwards {
+		for _, line := range fwd.Lines {
+			addrMap[line.SrcIP] = true
+		}
+	}
+
+	addrs := make([]string, 0, len(addrMap))
+	for ip := range addrMap {
+		addrs = append(addrs, ip)
+	}
+
+	sort.Strings(addrs)
+	return addrs
 }

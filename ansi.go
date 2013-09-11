@@ -14,6 +14,9 @@ const (
 	ansiFgMagenta    = "\033[35m"
 	ansiFgCyan       = "\033[36m"
 	ansiFgReset      = "\033[39m"
+	ansiKillLine     = "\033[K"
+	ansiHideCursor   = "\033[?25l"
+	ansiShowCursor   = "\033[?25h"
 )
 
 func bold(s string) string {
