@@ -17,8 +17,8 @@ import (
 )
 
 type cmdDig struct {
-	Local     bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
-	NoSpinner bool `short:"n" long:"no-blinkenlights" description:"Do not display awesome blinkelights"`
+	Local         bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
+	Blinkenlights bool `short:"b" long:"blinkenlights" description:"Display awesome blinkelights"`
 }
 
 var digParser *flags.Parser
@@ -68,7 +68,6 @@ func (c *cmdDig) Execute(args []string) error {
 	}
 
 	client := sshHost(cfg.General.Main, cfg)
-	log.Println(bold(green("    Connected.")))
 	log.Println()
 	forwards(client, cfg)
 
@@ -76,7 +75,7 @@ func (c *cmdDig) Execute(args []string) error {
 	log.Println()
 
 	stopSpinner := make(chan bool)
-	if !globalOpts.Debug && !c.NoSpinner {
+	if c.Blinkenlights {
 		go func() {
 			fmt.Printf(ansiHideCursor)
 		loop:
@@ -85,7 +84,9 @@ func (c *cmdDig) Execute(args []string) error {
 				case <-stopSpinner:
 					break loop
 				default:
-					fmt.Printf("%s%c%c%c%c%c%s\r", ansiFgYellow, 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), ansiFgReset)
+					fmt.Printf("%s%s%s%c%c%c%c%c%s%s %s\r", ansiKillLine,
+						faint("["), ansiFgYellow, 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), 0x2800+rand.Intn(0x80), ansiFgReset, faint("]"),
+						green("Forwarding"))
 					time.Sleep(250 * time.Millisecond)
 				}
 			}
@@ -99,7 +100,7 @@ func (c *cmdDig) Execute(args []string) error {
 	signal.Notify(sigrecv, os.Interrupt, syscall.SIGTERM)
 	<-sigrecv
 
-	if !globalOpts.Debug && !c.NoSpinner {
+	if c.Blinkenlights {
 		stopSpinner <- true
 		<-stopSpinner
 		fmt.Println()
@@ -144,24 +145,52 @@ func forwards(conn *ssh.ClientConn, cfg *configuration.Config) {
 				src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
 				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
 
+				if globalOpts.Debug {
+					log.Println("listen", src)
+				}
 				l, e := net.Listen("tcp", src)
 				if e != nil {
-					panic(e)
+					log.Fatal(e)
 				}
 
-				go func(l net.Listener, dest string) {
+				go func(l net.Listener, dst string) {
 					for {
 						c1, e := l.Accept()
 						if e != nil {
-							panic(e)
+							log.Fatal(e)
+						}
+						if globalOpts.Debug {
+							log.Println("accepted", c1.LocalAddr(), c1.RemoteAddr())
 						}
 
-						c2, e := conn.Dial("tcp", dest)
+						if globalOpts.Debug {
+							log.Println("dial", dst)
+						}
+						c2, e := conn.Dial("tcp", dst)
 						if e != nil {
 							panic(e)
 						}
-						go io.Copy(c1, c2)
-						go io.Copy(c2, c1)
+
+						go func() {
+							n, e := io.Copy(c1, c2)
+							if e != nil {
+								log.Fatal(e)
+							}
+							if globalOpts.Debug {
+								log.Println("close <-", c1.LocalAddr(), "bytes in:", n)
+							}
+							c1.Close()
+						}()
+						go func() {
+							n, e := io.Copy(c2, c1)
+							if e != nil {
+								log.Fatal(e)
+							}
+							if globalOpts.Debug {
+								log.Println("close ->", dst, "bytes out:", n)
+							}
+							c2.Close()
+						}()
 					}
 				}(l, dst)
 			}
