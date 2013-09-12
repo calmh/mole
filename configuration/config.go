@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"sort"
 
@@ -54,6 +55,18 @@ type ForwardLine struct {
 	DstIP   string
 	DstPort int
 	Repeat  int
+}
+
+func (line ForwardLine) String() string {
+	if line.Repeat == 0 {
+		src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort)
+		dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort)
+		return fmt.Sprintf("%s -> %s", src, dst)
+	} else {
+		src := fmt.Sprintf("%s:%d-%d", line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
+		dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
+		return fmt.Sprintf("%s -> %s", src, dst)
+	}
 }
 
 func LoadFile(fname string) (*Config, error) {

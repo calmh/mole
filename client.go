@@ -92,15 +92,19 @@ func (c *Client) Get(tunnel string) string {
 
 	res := string(data)
 
-	matches := obfuscatedRe.FindAllString(res, -1)
-	for _, o := range matches {
-		res = strings.Replace(res, o, c.deobfuscate(o[6:]), -1)
-	}
-
 	return res
 }
 
-func (c *Client) deobfuscate(token string) string {
+func (c *Client) Deobfuscate(tunnel string) string {
+	matches := obfuscatedRe.FindAllString(tunnel, -1)
+	for _, o := range matches {
+		tunnel = strings.Replace(tunnel, o, c.getToken(o[6:]), -1)
+	}
+
+	return tunnel
+}
+
+func (c *Client) getToken(token string) string {
 	resp := c.request("GET", "/key/"+token)
 	defer resp.Body.Close()
 

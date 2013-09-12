@@ -48,7 +48,8 @@ func (c *cmdDig) Execute(args []string) error {
 	} else {
 		cert := certificate()
 		cl := NewClient(serverAddr, cert)
-		cfg, err = configuration.LoadString(cl.Get(args[0]))
+		tun := cl.Deobfuscate(cl.Get(args[0]))
+		cfg, err = configuration.LoadString(tun)
 		if err != nil {
 			log.Fatal(err)
 		}
