@@ -107,6 +107,10 @@ func parse(i ini.File) (*Config, error) {
 			c.Forwards = append(c.Forwards, forw)
 		} else if section == "vpnc" {
 			c.Vpnc = options
+		} else if section == "vpn routes" {
+			for net, mask := range options {
+				c.VpnRoutes = append(c.VpnRoutes, net+"/"+mask)
+			}
 		}
 	}
 	return &c, nil

@@ -196,6 +196,16 @@ DPD_idle_timeout = (our side) 0
 NAT_Traversal_Mode = force-natt
 Local_Port = 0
 Cisco_UDP_Encapsulation_Port = 0
+
+[vpn routes]
+192.168.10.0 = 24
+192.168.12.0 = 24
+192.168.64.0 = 24
+192.168.76.0 = 24
+192.168.140.0 = 24
+192.168.162.0 = 24
+192.168.209.0 = 24
+192.168.214.0 = 24
 		`)
 
 	if cfg.Vpnc["IPSec_secret"] != "s3cr3t" {
@@ -203,5 +213,12 @@ Cisco_UDP_Encapsulation_Port = 0
 	}
 	if cfg.Vpnc["Xauth_password"] != "3v3nm0r3s3cr3t" {
 		t.Error("incorrectly parsed vpnc Xauth_password")
+	}
+
+	if l := len(cfg.VpnRoutes); l != 8 {
+		t.Errorf("incorrect number of vpn routes %d", l)
+	}
+	if r := cfg.VpnRoutes[0]; r != "192.168.10.0/24" {
+		t.Errorf("incorrect first route %q", r)
 	}
 }

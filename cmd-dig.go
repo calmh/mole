@@ -1,17 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/go.crypto/ssh"
 	"fmt"
-	"github.com/sbinet/liner"
 	"io"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 
+	"code.google.com/p/go.crypto/ssh"
 	"github.com/calmh/mole/configuration"
 	"github.com/jessevdk/go-flags"
+	"github.com/sbinet/liner"
 )
 
 type cmdDig struct {
@@ -64,15 +63,25 @@ func (c *cmdDig) Execute(args []string) error {
 		addAddresses(addrs)
 	}
 
+	var vpn *Vpnc
 	if cfg.Vpnc != nil {
-		vpnc(cfg)
+		vpn = vpnc(cfg)
 	}
 
-	client := sshHost(cfg.General.Main, cfg)
-	log.Println()
-	forwards(client, cfg)
+	var sshTun *ssh.ClientConn
+	if cfg.General.Main != "" {
+		sshTun = sshHost(cfg.General.Main, cfg)
+		log.Println()
+	}
+
+	fwdChan := startForwarder(sshTun)
+	sendForwards(fwdChan, cfg)
 
 	shell()
+
+	if vpn != nil {
+		vpn.Stop()
+	}
 
 	addrs = extraneousAddresses(cfg)
 	if len(addrs) > 0 {
@@ -169,7 +178,7 @@ func sshHost(host string, cfg *configuration.Config) *ssh.ClientConn {
 	}
 }
 
-func forwards(conn *ssh.ClientConn, cfg *configuration.Config) {
+func sendForwards(fwdChan chan<- configuration.ForwardLine, cfg *configuration.Config) {
 	for _, fwd := range cfg.Forwards {
 		log.Println(underline(fwd.Name))
 		for _, line := range fwd.Lines {
@@ -182,59 +191,7 @@ func forwards(conn *ssh.ClientConn, cfg *configuration.Config) {
 				dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
 				log.Printf("  %-37s -> %s", src, dst)
 			}
-			for i := 0; i <= line.Repeat; i++ {
-				src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
-				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
-
-				if globalOpts.Debug {
-					log.Println("listen", src)
-				}
-				l, e := net.Listen("tcp", src)
-				if e != nil {
-					log.Fatal(e)
-				}
-
-				go func(l net.Listener, dst string) {
-					for {
-						c1, e := l.Accept()
-						if e != nil {
-							log.Fatal(e)
-						}
-						if globalOpts.Debug {
-							log.Println("accepted", c1.LocalAddr(), c1.RemoteAddr())
-						}
-
-						if globalOpts.Debug {
-							log.Println("dial", dst)
-						}
-						c2, e := conn.Dial("tcp", dst)
-						if e != nil {
-							log.Fatal(e)
-						}
-
-						go func() {
-							n, e := io.Copy(c1, c2)
-							if e != nil {
-								log.Fatal(e)
-							}
-							if globalOpts.Debug {
-								log.Println("close <-", c1.LocalAddr(), "bytes in:", n)
-							}
-							c1.Close()
-						}()
-						go func() {
-							n, e := io.Copy(c2, c1)
-							if e != nil {
-								log.Fatal(e)
-							}
-							if globalOpts.Debug {
-								log.Println("close ->", dst, "bytes out:", n)
-							}
-							c2.Close()
-						}()
-					}
-				}(l, dst)
-			}
+			fwdChan <- line
 		}
 		log.Println()
 	}
