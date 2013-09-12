@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 
@@ -32,36 +31,46 @@ func startForwarder(conn *ssh.ClientConn) chan<- configuration.ForwardLine {
 						}
 						debug("accepted", c1.LocalAddr(), c1.RemoteAddr())
 						var c2 net.Conn
-						debug("dial (ssh)", dst)
 						if conn != nil {
+							debug("dial (ssh)", dst)
 							c2, e = conn.Dial("tcp", dst)
 						} else {
+							debug("dial (direct)", dst)
 							c2, e = net.Dial("tcp", dst)
 						}
 						if e != nil {
 							log.Fatal(e)
 						}
 
-						go func() {
-							n, e := io.Copy(c1, c2)
-							if e != nil {
-								log.Fatal(e)
-							}
-							debug("close <-", c1.LocalAddr(), "bytes in:", n)
-							c1.Close()
-						}()
-						go func() {
-							n, e := io.Copy(c2, c1)
-							if e != nil {
-								log.Fatal(e)
-							}
-							debug("close ->", dst, "bytes out:", n)
-							c2.Close()
-						}()
+						go copyData(c1, c2)
+						go copyData(c2, c1)
 					}
 				}(l, dst)
 			}
 		}
 	}()
 	return fwdChan
+}
+
+func copyData(dst net.Conn, src net.Conn) {
+	buf := make([]byte, 10240)
+	for {
+		n, e := src.Read(buf)
+
+		if e != nil {
+			debug("close (r)")
+			src.Close()
+			dst.Close()
+			break
+		}
+
+		_, e = dst.Write(buf[:n])
+
+		if e != nil {
+			debug("close (w)")
+			src.Close()
+			dst.Close()
+			break
+		}
+	}
 }

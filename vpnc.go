@@ -38,11 +38,11 @@ func vpnc(cfg *configuration.Config) *Vpnc {
 		log.Fatal(err)
 	}
 
-	log.Println("Starting vpnc")
 	err = cmd.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Started vpnc (pid %d)", cmd.Process.Pid)
 
 	for k, v := range cfg.Vpnc {
 		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
@@ -68,7 +68,7 @@ func vpnc(cfg *configuration.Config) *Vpnc {
 }
 
 func (v *Vpnc) Stop() {
-	log.Printf("Stopping vpnc (%d)", v.cmd.Process.Pid)
+	log.Printf("Stopping vpnc (pid %d)", v.cmd.Process.Pid)
 	e := v.cmd.Process.Signal(syscall.SIGTERM)
 	if e != nil {
 		log.Println(e)
@@ -161,6 +161,7 @@ add_route() {
 
 echo mole-vpnc-script-next
 . /usr/local/etc/vpnc/vpnc-script
+. /etc/vpnc/vpnc-script
 `
 
 	var addCmds []string

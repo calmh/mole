@@ -70,7 +70,7 @@ func setup() {
 		log.Fatal(e)
 	}
 	config := ini.Parse(f)
-	serverAddr = config["server"]["host"] + ":" + config["server"]["port"]
+	serverAddr = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
 }
 
 func printVersion() {

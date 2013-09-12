@@ -8,7 +8,10 @@ import (
 )
 
 type Section map[string]string
-type File map[string]Section
+type File struct {
+	Sections     map[string]Section
+	SectionNames []string
+}
 
 var (
 	iniSectionRe = regexp.MustCompile(`^\[(.+)\]$`)
@@ -16,7 +19,7 @@ var (
 )
 
 func Parse(stream io.Reader) File {
-	iniFile := make(File)
+	iniFile := File{Sections: make(map[string]Section)}
 	var curSection string
 	scanner := bufio.NewScanner(bufio.NewReader(stream))
 	for scanner.Scan() {
@@ -24,9 +27,10 @@ func Parse(stream io.Reader) File {
 		if !(strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";")) && len(line) > 0 {
 			if m := iniSectionRe.FindStringSubmatch(line); len(m) > 0 {
 				curSection = m[1]
-				iniFile[curSection] = make(Section)
+				iniFile.Sections[curSection] = make(Section)
+				iniFile.SectionNames = append(iniFile.SectionNames, curSection)
 			} else if m := iniOptionRe.FindStringSubmatch(line); len(m) > 0 {
-				iniFile[curSection][m[1]] = strings.Trim(m[2], `"`)
+				iniFile.Sections[curSection][m[1]] = strings.Trim(m[2], `"`)
 			}
 		}
 	}

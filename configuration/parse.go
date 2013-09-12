@@ -14,7 +14,9 @@ func parse(i ini.File) (*Config, error) {
 	c.HostsMap = make(map[string]int)
 
 	var hostId int
-	for section, options := range i {
+	for _, section := range i.SectionNames {
+		options := i.Sections[section]
+
 		if section == "general" {
 			for k, v := range options {
 				switch k {
