@@ -27,11 +27,16 @@ var (
 var globalOpts struct {
 	Debug bool   `short:"d" long:"debug" description:"Show debug output"`
 	Home  string `short:"h" long:"home" description:"Mole home directory" default:"~/.mole" value-name:"DIR"`
+	Remap bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
 
 func main() {
+	if runtime.GOOS == "windows" {
+		globalOpts.Remap = true
+	}
+
 	globalParser.ApplicationName = "mole"
 	if _, e := globalParser.Parse(); e != nil {
 		os.Exit(1)

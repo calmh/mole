@@ -45,6 +45,10 @@ func (c *cmdShow) Execute(args []string) error {
 			log.Fatal(err)
 		}
 
+		if globalOpts.Remap {
+			cfg.Remap()
+		}
+
 		for _, host := range cfg.Hosts {
 			log.Printf("Host %q", host.Name)
 			log.Printf("  %s@%s:%d", host.User, host.Addr, host.Port)
