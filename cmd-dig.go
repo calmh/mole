@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 
 	"code.google.com/p/go.crypto/ssh"
 	"github.com/calmh/mole/configuration"
@@ -64,9 +66,14 @@ func (c *cmdDig) Execute(args []string) error {
 		addAddresses(addrs)
 	}
 
-	var vpn *Vpnc
+	var vpn VPN
+
 	if cfg.Vpnc != nil {
-		vpn = vpnc(cfg)
+		prov, ok := vpnProviders["vpnc"]
+		if !ok {
+			log.Fatal("No VPN provider for \"vpnc\" available.")
+		}
+		vpn = prov.Start(cfg)
 	}
 
 	var sshTun *ssh.ClientConn
@@ -78,7 +85,7 @@ func (c *cmdDig) Execute(args []string) error {
 	fwdChan := startForwarder(sshTun)
 	sendForwards(fwdChan, cfg)
 
-	shell()
+	shell(fwdChan)
 
 	if vpn != nil {
 		vpn.Stop()
@@ -93,12 +100,13 @@ func (c *cmdDig) Execute(args []string) error {
 	return nil
 }
 
-func shell() {
+func shell(fwdChan chan<- configuration.ForwardLine) {
 	help := func() {
 		log.Println("Available commands:")
-		log.Println("  help, ?   - show help")
-		log.Println("  quit, ^D  - stop forwarding and exit")
-		log.Println("  debug     - enable debugging")
+		log.Println("  help, ?                          - show help")
+		log.Println("  quit, ^D                         - stop forwarding and exit")
+		log.Println("  debug                            - enable debugging")
+		log.Println("  fwd srcip:srcport dstip:dstport  - add forward")
 	}
 
 	term := liner.NewLiner()
@@ -146,7 +154,9 @@ func shell() {
 	for {
 		cmd := <-commands
 
-		switch cmd {
+		parts := strings.SplitN(cmd, " ", -1)
+
+		switch parts[0] {
 		case "quit":
 			close(next)
 			return
@@ -157,6 +167,59 @@ func shell() {
 		case "debug":
 			fmt.Println("debug output enabled")
 			globalOpts.Debug = true
+		case "fwd":
+			if len(parts) != 3 {
+				log.Printf("incorrect fwd command %q", cmd)
+				break
+			}
+
+			src := strings.SplitN(parts[1], ":", 2)
+			if len(src) != 2 {
+				log.Printf("incorrect source format %q", parts[1])
+				break
+			}
+
+			var ipExists bool
+			for _, ip := range currentAddresses() {
+				if ip == src[0] {
+					ipExists = true
+					break
+				}
+			}
+			if !ipExists {
+				log.Printf("cannot fwd from nonexistant ip %q", src[0])
+				break
+			}
+
+			dst := strings.SplitN(parts[2], ":", 2)
+			if len(dst) != 2 {
+				log.Printf("incorrect destination format %q", parts[2])
+				break
+			}
+
+			srcp, err := strconv.Atoi(src[1])
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			if srcp < 1024 {
+				log.Printf("cannot fwd from privileged source port %d", srcp)
+				break
+			}
+
+			dstp, err := strconv.Atoi(dst[1])
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			fwd := configuration.ForwardLine{
+				SrcIP:   src[0],
+				SrcPort: srcp,
+				DstIP:   dst[0],
+				DstPort: dstp,
+			}
+			log.Println("add", fwd)
+			fwdChan <- fwd
 		default:
 			log.Println("what? try \"help\"")
 		}
@@ -183,15 +246,7 @@ func sendForwards(fwdChan chan<- configuration.ForwardLine, cfg *configuration.C
 	for _, fwd := range cfg.Forwards {
 		log.Println(underline(fwd.Name))
 		for _, line := range fwd.Lines {
-			if line.Repeat == 0 {
-				src := fmt.Sprintf(cyan("%s:%d"), line.SrcIP, line.SrcPort)
-				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort)
-				log.Printf("  %-37s -> %s", src, dst)
-			} else {
-				src := fmt.Sprintf(cyan("%s:%d-%d"), line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
-				dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
-				log.Printf("  %-37s -> %s", src, dst)
-			}
+			log.Println("  ", line)
 			fwdChan <- line
 		}
 		log.Println()

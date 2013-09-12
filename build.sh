@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 builddate=$(TZ=UTC date +"%Y-%m-%d %H:%M:%S %Z")
 buildver=$(git describe --always)
 builduser="$(whoami)@$(hostname)"

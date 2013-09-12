@@ -1,3 +1,5 @@
+// +build darwin linux
+
 package main
 
 import (
@@ -6,27 +8,44 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/calmh/mole/configuration"
 )
+
+type VPNCProvider struct {
+	vpncBinary string
+}
+
+func init() {
+	locations := []string{
+		"/usr/bin/vpnc",
+		"/usr/sbin/vpnc",
+		"/usr/local/bin/vpnc",
+		"/usr/local/sbin/vpnc",
+	}
+	for _, path := range locations {
+		if _, err := os.Stat(path); err == nil {
+			vpnProviders["vpnc"] = VPNCProvider{path}
+			return
+		}
+	}
+}
 
 type Vpnc struct {
 	cmd exec.Cmd
 }
 
-func vpnc(cfg *configuration.Config) *Vpnc {
+func (p VPNCProvider) Start(cfg *configuration.Config) VPN {
 	script := writeVpncScript(cfg)
-	defer func() {
-		debug("rm", script)
-		os.Remove(script)
-	}()
+	// defer func() {
+	// 	debug("rm", script)
+	// 	os.Remove(script)
+	// }()
 
-	// Absurd contortions with subshell because I can't seem to otherwise work
-	// around "permission denied" when sending sigintr to the child.
-
-	cmd := exec.Command("/bin/bash", "-c", "(sudo -p '(sudo) Account password, to invoke vpnc: ' /usr/local/sbin/vpnc --no-detach --non-inter --script "+script+" -)")
+	cmd := exec.Command("sudo", "-p", "(sudo) Account password, to invoke vpnc: ",
+		p.vpncBinary, "--no-detach", "--non-inter", "--script", script, "-")
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -38,11 +57,16 @@ func vpnc(cfg *configuration.Config) *Vpnc {
 		log.Fatal(err)
 	}
 
+	if globalOpts.Debug {
+		cmd.Stderr = os.Stderr
+	}
+
 	err = cmd.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Started vpnc (pid %d)", cmd.Process.Pid)
+	log.Printf("vpnc: Started (pid %d)", cmd.Process.Pid)
+	log.Println("vpnc: Waiting for connect...")
 
 	for k, v := range cfg.Vpnc {
 		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
@@ -57,7 +81,8 @@ func vpnc(cfg *configuration.Config) *Vpnc {
 		debug("vpnc:", line)
 
 		if line == "mole-vpnc-script-next" {
-			debug("vpn running")
+			log.Println("vpnc: Connected")
+			log.Println()
 			return &Vpnc{*cmd}
 		}
 
@@ -68,11 +93,10 @@ func vpnc(cfg *configuration.Config) *Vpnc {
 }
 
 func (v *Vpnc) Stop() {
-	log.Printf("Stopping vpnc (pid %d)", v.cmd.Process.Pid)
-	e := v.cmd.Process.Signal(syscall.SIGTERM)
-	if e != nil {
-		log.Println(e)
-	}
+	log.Printf("vpnc: Stopping (pid %d)", v.cmd.Process.Pid)
+	cmd := exec.Command("sudo", "-p", "(sudo) Account password, to stop vpnc: ",
+		"kill", strconv.Itoa(v.cmd.Process.Pid))
+	cmd.Run()
 	v.cmd.Wait()
 }
 
@@ -159,9 +183,12 @@ add_route() {
 
 {add_cmds}
 
-echo mole-vpnc-script-next
-. /usr/local/etc/vpnc/vpnc-script
-. /etc/vpnc/vpnc-script
+[ -f /usr/local/etc/vpnc/vpnc-script ] && /usr/local/etc/vpnc/vpnc-script
+[ -f /etc/vpnc/vpnc-script ] && /etc/vpnc/vpnc-script
+
+if [ "$reason" == "connect" ] ; then
+	echo mole-vpnc-script-next
+fi
 `
 
 	var addCmds []string
