@@ -60,9 +60,14 @@ func (c *Client) request(method, path string) *http.Response {
 		log.Fatal(err)
 	}
 
-	if globalOpts.Debug {
-		log.Println(resp.Status, resp.Header.Get("Content-type"), resp.ContentLength)
+	if resp.StatusCode != 200 {
+		data, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		log.Println(resp.Status)
+		log.Fatal(string(data))
 	}
+
+	debug(resp.Status, resp.Header.Get("Content-type"), resp.ContentLength)
 
 	return resp
 }
