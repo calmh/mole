@@ -106,6 +106,8 @@ func removeAddresses(addrs []string) {
 }
 
 func ifconfigAddresses(command string, addrs []string) {
+	requireRoot("ifconfig")
+
 	lo := loInterface()
 	var cmd bytes.Buffer
 	for i := range addrs {
@@ -117,8 +119,6 @@ func ifconfigAddresses(command string, addrs []string) {
 	ifconfig.Stderr = os.Stderr
 	ifconfig.Stdout = os.Stdout
 	ifconfig.Stdin = os.Stdin
-	gainRoot("ifconfig")
-	defer dropRoot()
 	e := ifconfig.Run()
 	if e != nil {
 		log.Fatal(e)

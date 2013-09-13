@@ -38,8 +38,6 @@ var globalStats struct {
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
 
 func main() {
-	dropRoot()
-
 	if runtime.GOOS == "windows" {
 		globalOpts.Remap = true
 	}

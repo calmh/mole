@@ -37,11 +37,13 @@ type Vpnc struct {
 }
 
 func (p VPNCProvider) Start(cfg *conf.Config) VPN {
+	requireRoot("vpnc")
+
 	script := writeVpncScript(cfg)
-	// defer func() {
-	// 	debug("rm", script)
-	// 	os.Remove(script)
-	// }()
+	defer func() {
+		debug("rm", script)
+		os.Remove(script)
+	}()
 
 	cmd := exec.Command(p.vpncBinary, "--no-detach", "--non-inter", "--script", script, "-")
 
@@ -59,7 +61,6 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 		cmd.Stderr = os.Stderr
 	}
 
-	gainRoot("vpnc")
 	err = cmd.Start()
 	if err != nil {
 		log.Fatal(err)

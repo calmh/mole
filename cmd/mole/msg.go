@@ -3,9 +3,13 @@ package main
 const (
 	msgDebugEnabled = `Debug output enabled.`
 
-	msgErrGainRoot = `Could not gain root privileges (%v) to execute "%s".
-Mole uses root euid only during operations that require it, otherwise falling
-back to the regular user id. To give mole root access, execute it using sudo.`
+	msgErrGainRoot = `Error: missing root privileges to execute "%s".
+
+To give mole root access, execute it using sudo. Mole itself drops root
+privilege on startup and executes as the non privileged user. However, child
+processes such as ifconfig will inherit the saved user ID and have the
+ability to become root as necessary.
+`
 
 	msgErrNoVPN = `No VPN provider for "%s" available.`
 
