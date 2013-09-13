@@ -8,7 +8,9 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ini"
@@ -18,7 +20,8 @@ var errParams = errors.New("incorrect command line parameters")
 
 var (
 	buildVersion string
-	buildDate    string
+	buildStamp   string
+	buildDate    time.Time
 	buildUser    string
 	homeDir      string
 	serverAddr   string
@@ -38,6 +41,20 @@ var globalStats struct {
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
 
 func main() {
+	epoch, e := strconv.ParseInt(buildStamp, 10, 64)
+	if e == nil {
+		buildDate = time.Unix(epoch, 0)
+	}
+
+	// TIME LIMITED BETA
+	// 14 days self destruct
+	if !buildDate.IsZero() && time.Since(buildDate) > 14*24*time.Hour {
+		fmt.Println("This is an expired beta version.\nPlease grab a new build from http://ps-build1.vbg.se.prnw.net/job/mole")
+		os.Exit(42)
+	}
+	// TIME LIMITED BETA
+	// 14 days self destruct
+
 	if runtime.GOOS == "windows" {
 		globalOpts.Remap = true
 	}
@@ -68,10 +85,6 @@ func formatBytes(n uint64) string {
 		divisor *= 1024
 	}
 	return ""
-}
-
-func printStatistics() {
-	log.Printf(" -- %sB in, %sB out", formatBytes(globalStats.dataIn), formatBytes(globalStats.dataOut))
 }
 
 func setup() {
@@ -112,8 +125,8 @@ func printVersion() {
 	if buildVersion != "" {
 		log.Printf("  %s", buildVersion)
 	}
-	if buildDate != "" {
-		log.Printf("  %s by %s", buildDate, buildUser)
+	if !buildDate.IsZero() {
+		log.Printf("  %v by %s", buildDate, buildUser)
 	}
 }
 
@@ -123,4 +136,8 @@ func certificate() tls.Certificate {
 		log.Fatal(err)
 	}
 	return cert
+}
+
+func printStatistics() {
+	log.Printf(" -- %sB in, %sB out", formatBytes(globalStats.dataIn), formatBytes(globalStats.dataOut))
 }
