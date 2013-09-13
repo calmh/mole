@@ -35,11 +35,11 @@ type keyring struct {
 	keys []*rsa.PrivateKey
 }
 
-func (k *keyring) Key(i int) (interface{}, error) {
+func (k *keyring) Key(i int) (ssh.PublicKey, error) {
 	if i < 0 || i >= len(k.keys) {
 		return nil, nil
 	}
-	return &k.keys[i].PublicKey, nil
+	return ssh.NewRSAPublicKey(&k.keys[i].PublicKey), nil
 }
 
 func (k *keyring) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
