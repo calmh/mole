@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -14,8 +13,8 @@ func startForwarder(conn *ssh.ClientConn) chan<- configuration.ForwardLine {
 	go func() {
 		for line := range fwdChan {
 			for i := 0; i <= line.Repeat; i++ {
-				src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
-				dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
+				src := line.SrcString(i)
+				dst := line.DstString(i)
 
 				debug("listen", src)
 				l, e := net.Listen("tcp", src)
@@ -39,7 +38,8 @@ func startForwarder(conn *ssh.ClientConn) chan<- configuration.ForwardLine {
 							c2, e = net.Dial("tcp", dst)
 						}
 						if e != nil {
-							log.Fatal(e)
+							// Connection problems here are not fatal; just log them.
+							log.Println(e)
 						}
 
 						go copyData(c1, c2)

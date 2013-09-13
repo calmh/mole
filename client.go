@@ -45,9 +45,7 @@ func NewClient(host string, cert tls.Certificate) *Client {
 
 func (c *Client) request(method, path string) *http.Response {
 	url := "https://" + c.host + path
-	if globalOpts.Debug {
-		log.Println(method, url)
-	}
+	debug(method, url)
 
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
@@ -59,6 +57,8 @@ func (c *Client) request(method, path string) *http.Response {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println(resp.Request.TLS)
 
 	if resp.StatusCode != 200 {
 		data, _ := ioutil.ReadAll(resp.Body)

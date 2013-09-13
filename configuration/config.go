@@ -57,6 +57,20 @@ type ForwardLine struct {
 	Repeat  int
 }
 
+func (line ForwardLine) SrcString(i int) string {
+	if i > line.Repeat {
+		panic("index > repeat")
+	}
+	return fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
+}
+
+func (line ForwardLine) DstString(i int) string {
+	if i > line.Repeat {
+		panic("index > repeat")
+	}
+	return fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
+}
+
 func (line ForwardLine) String() string {
 	if line.Repeat == 0 {
 		src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort)
