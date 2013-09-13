@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"os/user"
 	"path"
 	"runtime"
 	"strings"
@@ -57,13 +56,10 @@ func setup() {
 		printVersion()
 	}
 
-	u, e := user.Current()
-	if e != nil {
-		log.Fatal(e)
-	}
-
+	userHome := os.Getenv("HOME")
+	debug("userHome", userHome)
 	if strings.HasPrefix(globalOpts.Home, "~/") {
-		homeDir = strings.Replace(globalOpts.Home, "~", u.HomeDir, 1)
+		homeDir = strings.Replace(globalOpts.Home, "~", userHome, 1)
 	}
 	if globalOpts.Debug {
 		log.Println("homeDir", homeDir)
