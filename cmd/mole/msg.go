@@ -35,6 +35,12 @@ ability to become root as necessary.
 	msgVpncConnected = `vpnc: Connected.`
 	msgVpncStopped   = `vpnc: Stopped.`
 
+	msgOpncStart     = `openconnect: Started (pid %d).`
+	msgOpncStopping  = `openconnect: Stopping (pid %d).`
+	msgOpncWait      = `openconnect: Waiting for connect...`
+	msgOpncConnected = `openconnect: Connected.`
+	msgOpncStopped   = `openconnect: Stopped.`
+
 	msgStatistics = ` -- %d bytes in, %d bytes out`
 )
 

@@ -107,6 +107,8 @@ func parse(i ini.File) (*Config, error) {
 				forw.Lines = append(forw.Lines, l)
 			}
 			c.Forwards = append(c.Forwards, forw)
+		} else if section == "openconnect" {
+			c.OpenConnect = options
 		} else if section == "vpnc" {
 			c.Vpnc = options
 		} else if section == "vpn routes" {

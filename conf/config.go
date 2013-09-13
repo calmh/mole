@@ -23,11 +23,12 @@ type Config struct {
 		Other       map[string]string
 	}
 
-	Hosts     []Host
-	Forwards  []Forward
-	HostsMap  map[string]int
-	Vpnc      map[string]string
-	VpnRoutes []string
+	Hosts       []Host
+	Forwards    []Forward
+	HostsMap    map[string]int
+	OpenConnect map[string]string
+	Vpnc        map[string]string
+	VpnRoutes   []string
 }
 
 type Host struct {

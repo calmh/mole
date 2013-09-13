@@ -222,3 +222,17 @@ Cisco_UDP_Encapsulation_Port = 0
 		t.Errorf("incorrect first route %q", r)
 	}
 }
+
+func TestOpenConnect(t *testing.T) {
+	cfg, _ := conf.LoadString(`
+[openconnect]
+server = foo.example.com
+user = procera
+password = somepass
+no-cert-check = yes
+		`)
+
+	if cfg.OpenConnect["server"] != "foo.example.com" {
+		t.Error("incorrectly parsed openconnect server")
+	}
+}

@@ -70,6 +70,8 @@ func (c *cmdDig) Execute(args []string) error {
 
 	if cfg.Vpnc != nil {
 		vpn = startVpn("vpnc", cfg)
+	} else if cfg.OpenConnect != nil {
+		vpn = startVpn("openconnect", cfg)
 	}
 
 	var sshTun *ssh.ClientConn
