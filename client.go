@@ -58,8 +58,6 @@ func (c *Client) request(method, path string) *http.Response {
 		log.Fatal(err)
 	}
 
-	log.Println(resp.Request.TLS)
-
 	if resp.StatusCode != 200 {
 		data, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()

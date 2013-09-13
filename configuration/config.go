@@ -68,7 +68,7 @@ func (line ForwardLine) DstString(i int) string {
 	if i > line.Repeat {
 		panic("index > repeat")
 	}
-	return fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
+	return fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
 }
 
 func (line ForwardLine) String() string {

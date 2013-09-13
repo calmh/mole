@@ -49,9 +49,7 @@ func currentAddresses() []string {
 		cur[i] = ps[0]
 	}
 
-	if globalOpts.Debug {
-		log.Printf("current interface addresses: %v", cur)
-	}
+	debug("current interface addresses: %v", cur)
 	return cur
 }
 

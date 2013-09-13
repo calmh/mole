@@ -40,6 +40,8 @@ func startForwarder(conn *ssh.ClientConn) chan<- configuration.ForwardLine {
 						if e != nil {
 							// Connection problems here are not fatal; just log them.
 							log.Println(e)
+							c1.Close()
+							continue
 						}
 
 						go copyData(c1, c2)

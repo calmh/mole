@@ -120,7 +120,7 @@ func shell(fwdChan chan<- configuration.ForwardLine) {
 		for {
 			prompt := "mole> "
 			if globalOpts.Debug {
-				prompt = "(debug) mole>"
+				prompt = "(debug) mole> "
 			}
 			cmd, err := term.Prompt(prompt)
 			if err == io.EOF {
