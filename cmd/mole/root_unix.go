@@ -24,7 +24,7 @@ func init() {
 }
 
 func gainRoot(reason string) {
-	e := syscall.Seteuid(0)
+	e := syscall.Setreuid(-1, 0)
 	if e != nil {
 		log.Fatalf(msgErrGainRoot, e, reason)
 	}
@@ -32,7 +32,7 @@ func gainRoot(reason string) {
 }
 
 func dropRoot() {
-	e := syscall.Seteuid(realUid)
+	e := syscall.Setreuid(-1, realUid)
 	if e != nil {
 		log.Fatal(e)
 	}
