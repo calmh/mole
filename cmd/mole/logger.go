@@ -8,13 +8,6 @@ import (
 	"nym.se/mole/ansi"
 )
 
-var (
-	debugPrefix = ansi.Magenta("debug ")
-	okPrefix    = ansi.Bold(ansi.Green("ok "))
-	warnPrefix  = ansi.Bold(ansi.Yellow("warning "))
-	fatalPrefix = ansi.Bold(ansi.Red("fatal "))
-)
-
 var logger = log.New(os.Stdout, "", 0)
 var debugConfig bool
 
@@ -24,7 +17,7 @@ func debugln(vals ...interface{}) {
 			logger.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 			debugConfig = true
 		}
-		logger.SetPrefix(debugPrefix)
+		logger.SetPrefix(ansi.Magenta("debug "))
 		s := fmt.Sprintln(vals...)
 		_ = logger.Output(2, s)
 	}
@@ -36,7 +29,7 @@ func debugf(format string, vals ...interface{}) {
 			logger.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 			debugConfig = true
 		}
-		logger.SetPrefix(debugPrefix)
+		logger.SetPrefix(ansi.Magenta("debug "))
 		s := fmt.Sprintf(format, vals...)
 		_ = logger.Output(2, s)
 	}
@@ -55,38 +48,38 @@ func infof(format string, vals ...interface{}) {
 }
 
 func okln(vals ...interface{}) {
-	logger.SetPrefix(okPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Green("ok ")))
 	s := fmt.Sprintln(vals...)
 	_ = logger.Output(2, s)
 }
 
 func okf(format string, vals ...interface{}) {
-	logger.SetPrefix(okPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Green("ok ")))
 	s := fmt.Sprintf(format, vals...)
 	_ = logger.Output(2, s)
 }
 
 func warnln(vals ...interface{}) {
-	logger.SetPrefix(warnPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Yellow("warning ")))
 	s := fmt.Sprintln(vals...)
 	_ = logger.Output(2, s)
 }
 
 func warnf(format string, vals ...interface{}) {
-	logger.SetPrefix(warnPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Yellow("warning ")))
 	s := fmt.Sprintf(format, vals...)
 	_ = logger.Output(2, s)
 }
 
 func fatalln(vals ...interface{}) {
-	logger.SetPrefix(fatalPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Red("fatal ")))
 	s := fmt.Sprintln(vals...)
 	_ = logger.Output(2, s)
 	os.Exit(3)
 }
 
 func fatalf(format string, vals ...interface{}) {
-	logger.SetPrefix(fatalPrefix)
+	logger.SetPrefix(ansi.Bold(ansi.Red("fatal ")))
 	s := fmt.Sprintf(format, vals...)
 	_ = logger.Output(2, s)
 	os.Exit(3)
@@ -94,7 +87,7 @@ func fatalf(format string, vals ...interface{}) {
 
 func fatalErr(err error) {
 	if err != nil {
-		logger.SetPrefix(fatalPrefix)
+		logger.SetPrefix(ansi.Bold(ansi.Red("fatal ")))
 		_ = logger.Output(2, err.Error())
 		os.Exit(3)
 	}

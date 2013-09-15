@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
+	"nym.se/mole/ansi"
 	"nym.se/mole/ini"
 )
 
@@ -26,9 +27,10 @@ var (
 )
 
 var globalOpts struct {
-	Debug bool   `short:"d" long:"debug" description:"Show debug output"`
-	Home  string `short:"h" long:"home" description:"Mole home directory" default:"~/.mole" value-name:"DIR"`
-	Remap bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
+	Home   string `short:"h" long:"home" description:"Mole home directory" default:"~/.mole" value-name:"DIR"`
+	Debug  bool   `short:"d" long:"debug" description:"Show debug output"`
+	NoAnsi bool   `long:"no-ansi" description:"Disable ANSI formatting sequences"`
+	Remap  bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -78,6 +80,10 @@ func formatBytes(n uint64) string {
 }
 
 func setup() {
+	if globalOpts.NoAnsi {
+		ansi.Disable()
+	}
+
 	if globalOpts.Debug {
 		printVersion()
 	}
