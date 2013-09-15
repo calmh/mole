@@ -32,11 +32,6 @@ var globalOpts struct {
 	Remap bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
 }
 
-var globalStats struct {
-	dataIn  uint64
-	dataOut uint64
-}
-
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
 
 func main() {
@@ -62,10 +57,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	printTotalStats()
 	okln("done")
-	if globalStats.dataIn+globalStats.dataOut > 0 {
-		printStatistics()
-	}
 }
 
 func formatBytes(n uint64) string {
@@ -123,8 +116,4 @@ func certificate() tls.Certificate {
 	cert, err := tls.LoadX509KeyPair(path.Join(homeDir, "mole.crt"), path.Join(homeDir, "mole.key"))
 	fatalErr(err)
 	return cert
-}
-
-func printStatistics() {
-	infof(" -- %sB in, %sB out", formatBytes(globalStats.dataIn), formatBytes(globalStats.dataOut))
 }

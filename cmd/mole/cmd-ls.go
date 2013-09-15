@@ -62,7 +62,7 @@ func (c *cmdls) Execute(args []string) error {
 	}
 
 	// Never prefix table with log stuff
-	fmt.Printf(table(rows))
+	fmt.Printf(tablef("lll", rows))
 
 	if matched != len(l) {
 		fmt.Printf(faint(" - Matched %d out of %d records\n"), matched, len(l))

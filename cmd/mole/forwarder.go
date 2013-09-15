@@ -1,12 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"sync/atomic"
 
 	"code.google.com/p/go.crypto/ssh"
 	"nym.se/mole/conf"
 )
+
+type trafficCounter struct {
+	name  string
+	conns uint64
+	in    uint64
+	out   uint64
+}
+
+var globalConnectionStats []*trafficCounter
+
+func (cnt trafficCounter) row() []string {
+	return []string{cnt.name, fmt.Sprintf("%d", cnt.conns), formatBytes(cnt.in) + "B", formatBytes(cnt.out) + "B"}
+}
 
 func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 	fwdChan := make(chan conf.ForwardLine)
@@ -20,7 +34,10 @@ func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 				l, e := net.Listen("tcp", src)
 				fatalErr(e)
 
-				go func(l net.Listener, dst string) {
+				cnt := trafficCounter{name: dst}
+				globalConnectionStats = append(globalConnectionStats, &cnt)
+
+				go func(l net.Listener, dst string, cnt *trafficCounter) {
 					for {
 						c1, e := l.Accept()
 						fatalErr(e)
@@ -40,10 +57,11 @@ func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 							continue
 						}
 
-						go copyData(c1, c2, &globalStats.dataIn)
-						go copyData(c2, c1, &globalStats.dataOut)
+						atomic.AddUint64(&cnt.conns, 1)
+						go copyData(c1, c2, &cnt.in)
+						go copyData(c2, c1, &cnt.out)
 					}
-				}(l, dst)
+				}(l, dst, &cnt)
 			}
 		}
 	}()

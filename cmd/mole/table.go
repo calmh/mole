@@ -18,7 +18,7 @@ func ansiRuneLen(s string) int {
 	return utf8.RuneCountInString(cleaned)
 }
 
-func table(rows [][]string) string {
+func tablef(fmt string, rows [][]string) string {
 	cols := len(rows[0])
 	width := make([]int, cols)
 	for _, row := range rows {
@@ -35,14 +35,20 @@ func table(rows [][]string) string {
 			if r == 0 {
 				cell = underline(cell)
 			}
-			buf.WriteString(cell)
 
 			l := ansiRuneLen(cell)
 			pad := paddingChars[:width[c]-l]
 			if r == 0 {
 				pad = underline(pad)
 			}
-			buf.WriteString(pad)
+
+			if r == 0 || fmt[c] == 'l' {
+				buf.WriteString(cell)
+				buf.WriteString(pad)
+			} else if fmt[c] == 'r' {
+				buf.WriteString(pad)
+				buf.WriteString(cell)
+			}
 
 			if c < cols-1 {
 				buf.WriteString(paddingChars[:intraColumnPadding])
