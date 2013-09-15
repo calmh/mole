@@ -1,0 +1,14 @@
+language: go
+
+before_install:
+   - sudo apt-get update -qq
+
+install: go get -d -v ./... && go build -v ./...
+script: go test ./...
+
+notifications:
+  email:
+    recipients:
+      - binet@cern.ch
+    on_success: change
+    on_failure: always
