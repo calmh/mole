@@ -8,7 +8,7 @@ import (
 	"nym.se/mole/ini"
 )
 
-func parse(i ini.File) (*Config, error) {
+func parse(i ini.File) (cp *Config, err error) {
 	c := Config{}
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
@@ -28,9 +28,9 @@ func parse(i ini.File) (*Config, error) {
 					c.General.Main = v
 				case "version":
 					var f float64
-					_, e := fmt.Sscan(v, &f)
-					if e != nil {
-						return nil, e
+					_, err = fmt.Sscan(v, &f)
+					if err != nil {
+						return
 					}
 					c.General.Version = int(100 * f)
 				default:
@@ -53,7 +53,8 @@ func parse(i ini.File) (*Config, error) {
 				case "port":
 					p, e := strconv.Atoi(v)
 					if e != nil {
-						return nil, e
+						err = e
+						return
 					}
 					host.Port = p
 				case "key":
@@ -81,7 +82,18 @@ func parse(i ini.File) (*Config, error) {
 			var srcfs, dstfs, srcps []string
 			var srcport, dstport, repeat int
 			for k, v := range options {
+				if c.General.Version >= 320 {
+					if k == "comment" {
+						forw.Comment = v
+						continue
+					}
+				}
+
 				srcfs = strings.SplitN(k, ":", 2)
+				if len(srcfs) != 2 {
+					err = fmt.Errorf("incorrect forward source %q", k)
+					return
+				}
 				srcps = strings.SplitN(srcfs[1], "-", 2)
 				srcport, _ = strconv.Atoi(srcps[0])
 				if len(srcps) == 2 {
@@ -119,5 +131,7 @@ func parse(i ini.File) (*Config, error) {
 			}
 		}
 	}
-	return &c, nil
+
+	cp = &c
+	return
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"code.google.com/p/go.crypto/ssh"
 	"github.com/jessevdk/go-flags"
@@ -111,8 +112,14 @@ func sshHost(host string, cfg *conf.Config) *ssh.ClientConn {
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
 		infoln(ansi.Underline(fwd.Name))
+		if fwd.Comment != "" {
+			lines := strings.Split(fwd.Comment, "\\n") // Yes, literal backslash-n
+			for i := range lines {
+				infoln(ansi.Cyan("  # " + lines[i]))
+			}
+		}
 		for _, line := range fwd.Lines {
-			infoln("  ", line)
+			infoln("  " + line.String())
 			fwdChan <- line
 		}
 	}

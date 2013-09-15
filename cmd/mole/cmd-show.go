@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"nym.se/mole/conf"
 	"os"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
-	"nym.se/mole/conf"
 )
 
 type cmdShow struct {
@@ -59,8 +60,14 @@ func (c *cmdShow) Execute(args []string) error {
 		}
 		for _, fwd := range cfg.Forwards {
 			infof("Forward %q", fwd.Name)
+			if fwd.Comment != "" {
+				lines := strings.Split(fwd.Comment, "\\n") // Yes, literal backslash-n
+				for i := range lines {
+					infoln("  # " + lines[i])
+				}
+			}
 			for _, line := range fwd.Lines {
-				infoln("  ", line)
+				infoln("  " + line.String())
 			}
 		}
 	}

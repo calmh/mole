@@ -45,9 +45,10 @@ type Host struct {
 }
 
 type Forward struct {
-	Name  string
-	Lines []ForwardLine
-	Other map[string]string
+	Name    string
+	Lines   []ForwardLine
+	Other   map[string]string
+	Comment string
 }
 
 type ForwardLine struct {

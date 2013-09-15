@@ -148,6 +148,11 @@ func TestForwards(t *testing.T) {
 	if l2.Repeat != 0 {
 		t.Errorf("Incorrect l2 Repeat %d", l2.Repeat)
 	}
+
+	f = cfg.Forwards[1]
+	if f.Comment != "yo" {
+		t.Errorf("Incorrect f[1] Comment %q", f.Comment)
+	}
 }
 
 func TestSourceAddresses(t *testing.T) {

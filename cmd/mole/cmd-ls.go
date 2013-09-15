@@ -10,7 +10,9 @@ import (
 	"nym.se/mole/table"
 )
 
-type cmdls struct{}
+type cmdls struct {
+	Long bool `short:"l" description:"Long listing"`
+}
 
 var lsParser *flags.Parser
 
@@ -38,7 +40,11 @@ func (c *cmdls) Execute(args []string) error {
 	l := cl.List()
 
 	var rows [][]string
-	rows = append(rows, []string{"TUNNEL", "DESCRIPTION", "HOSTS"})
+	header := []string{"TUNNEL", "DESCRIPTION", "HOSTS"}
+	if c.Long {
+		header = append(header, "VER")
+	}
+	rows = append(rows, header)
 
 	var matched int
 	for _, i := range l {
@@ -59,12 +65,16 @@ func (c *cmdls) Execute(args []string) error {
 				hosts = ansi.Faint("(local forward)")
 			}
 
-			rows = append(rows, []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts})
+			row := []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts}
+			if c.Long {
+				row = append(row, fmt.Sprintf("%d", i.IntVersion))
+			}
+			rows = append(rows, row)
 		}
 	}
 
 	// Never prefix table with log stuff
-	fmt.Printf(table.Fmt("lll", rows))
+	fmt.Printf(table.Fmt("lllr", rows))
 
 	if matched != len(l) {
 		fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
