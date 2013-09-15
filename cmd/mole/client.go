@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -39,7 +40,7 @@ type ListItem struct {
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 
 func caCert() *x509.Certificate {
-	file, err := os.Open(homeDir + "/ca-cert.pem")
+	file, err := os.Open(path.Join(globalOpts.Home, "ca-cert.pem"))
 	if err != nil {
 		return nil
 	}

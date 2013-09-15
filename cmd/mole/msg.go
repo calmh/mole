@@ -45,7 +45,3 @@ ability to become root as necessary.
 
 	msgWarnNoCert = `Warning: no server CA certificate present, cannot authenticate server.`
 )
-
-var (
-	msgOk = bold(green("\nOK"))
-)

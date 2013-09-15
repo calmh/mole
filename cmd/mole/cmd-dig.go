@@ -6,6 +6,7 @@ import (
 
 	"code.google.com/p/go.crypto/ssh"
 	"github.com/jessevdk/go-flags"
+	"nym.se/mole/ansi"
 	"nym.se/mole/conf"
 )
 
@@ -53,9 +54,14 @@ func (c *cmdDig) Execute(args []string) error {
 		return fmt.Errorf("no tunnel loaded")
 	}
 
-	addrs := missingAddresses(cfg)
-	if len(addrs) > 0 {
-		addAddresses(addrs)
+	var addrs []string
+	if globalOpts.Remap {
+		cfg.Remap()
+	} else {
+		addrs = missingAddresses(cfg)
+		if len(addrs) > 0 {
+			addAddresses(addrs)
+		}
 	}
 
 	var vpn VPN
@@ -80,9 +86,11 @@ func (c *cmdDig) Execute(args []string) error {
 		vpn.Stop()
 	}
 
-	addrs = extraneousAddresses(cfg)
-	if len(addrs) > 0 {
-		removeAddresses(addrs)
+	if !globalOpts.Remap {
+		addrs = extraneousAddresses(cfg)
+		if len(addrs) > 0 {
+			removeAddresses(addrs)
+		}
 	}
 
 	return nil
@@ -102,7 +110,7 @@ func sshHost(host string, cfg *conf.Config) *ssh.ClientConn {
 
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
-		infoln(underline(fwd.Name))
+		infoln(ansi.Underline(fwd.Name))
 		for _, line := range fwd.Lines {
 			infoln("  ", line)
 			fwdChan <- line

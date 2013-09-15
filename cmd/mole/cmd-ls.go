@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jessevdk/go-flags"
+	"nym.se/mole/ansi"
 )
 
 type cmdls struct{}
@@ -46,18 +47,18 @@ func (c *cmdls) Execute(args []string) error {
 
 			descr := i.Description
 			if i.Vpnc {
-				descr = descr + magenta(" (vpnc)")
+				descr = descr + ansi.Magenta(" (vpnc)")
 			} else if i.OpenConnect {
-				descr = descr + green(" (opnc)")
+				descr = descr + ansi.Green(" (opnc)")
 			} else if i.Socks {
-				descr = descr + yellow(" (socks)")
+				descr = descr + ansi.Yellow(" (socks)")
 			}
 
 			if hosts == "" {
-				hosts = faint("(local forward)")
+				hosts = ansi.Faint("(local forward)")
 			}
 
-			rows = append(rows, []string{bold(blue(i.Name)), descr, hosts})
+			rows = append(rows, []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts})
 		}
 	}
 
@@ -65,7 +66,7 @@ func (c *cmdls) Execute(args []string) error {
 	fmt.Printf(tablef("lll", rows))
 
 	if matched != len(l) {
-		fmt.Printf(faint(" - Matched %d out of %d records\n"), matched, len(l))
+		fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
 	}
 
 	return nil

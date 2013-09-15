@@ -12,7 +12,7 @@ if [[ $1 == "all" ]] ; then
 	source /usr/local/golang-crosscompile/crosscompile.bash
 	for arch in linux-386 linux-amd64 darwin-amd64 windows-386 windows-amd64 ; do
 		echo $arch
-		rm -r bin
+		rm -rf bin
 		go-$arch install -ldflags "$ldflags" nym.se/mole/cmd/...
 		tar zcf mole-$arch.tar.gz bin
 	done

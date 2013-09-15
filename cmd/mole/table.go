@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"regexp"
-	"unicode/utf8"
+
+	"nym.se/mole/ansi"
 )
 
 const (
@@ -11,19 +11,12 @@ const (
 	intraColumnPadding = 2
 )
 
-var re = regexp.MustCompile("\033.+?m")
-
-func ansiRuneLen(s string) int {
-	cleaned := re.ReplaceAllString(s, "")
-	return utf8.RuneCountInString(cleaned)
-}
-
 func tablef(fmt string, rows [][]string) string {
 	cols := len(rows[0])
 	width := make([]int, cols)
 	for _, row := range rows {
 		for i, cell := range row {
-			if l := ansiRuneLen(cell); l > width[i] {
+			if l := ansi.Strlen(cell); l > width[i] {
 				width[i] = l
 			}
 		}
@@ -33,13 +26,13 @@ func tablef(fmt string, rows [][]string) string {
 	for r, row := range rows {
 		for c, cell := range row {
 			if r == 0 {
-				cell = underline(cell)
+				cell = ansi.Underline(cell)
 			}
 
-			l := ansiRuneLen(cell)
+			l := ansi.Strlen(cell)
 			pad := paddingChars[:width[c]-l]
 			if r == 0 {
-				pad = underline(pad)
+				pad = ansi.Underline(pad)
 			}
 
 			if r == 0 || fmt[c] == 'l' {

@@ -1,4 +1,6 @@
-package main
+// +build darwin linux
+
+package ansi
 
 const (
 	ansiBold         = "\033[1m"
@@ -19,42 +21,42 @@ const (
 	ansiShowCursor   = "\033[?25h"
 )
 
-func bold(s string) string {
+func Bold(s string) string {
 	return ansiBold + s + ansiBoldOff
 }
 
-func faint(s string) string {
+func Faint(s string) string {
 	return ansiFaint + s + ansiBoldOff
 }
 
-func black(s string) string {
+func Black(s string) string {
 	return ansiFgBlack + s + ansiFgReset
 }
 
-func red(s string) string {
+func Red(s string) string {
 	return ansiFgRed + s + ansiFgReset
 }
 
-func green(s string) string {
+func Green(s string) string {
 	return ansiFgGreen + s + ansiFgReset
 }
 
-func yellow(s string) string {
+func Yellow(s string) string {
 	return ansiFgYellow + s + ansiFgReset
 }
 
-func blue(s string) string {
+func Blue(s string) string {
 	return ansiFgBlue + s + ansiFgReset
 }
 
-func magenta(s string) string {
+func Magenta(s string) string {
 	return ansiFgMagenta + s + ansiFgReset
 }
 
-func cyan(s string) string {
+func Cyan(s string) string {
 	return ansiFgCyan + s + ansiFgReset
 }
 
-func underline(s string) string {
+func Underline(s string) string {
 	return ansiUnderline + s + ansiUnderlineOff
 }

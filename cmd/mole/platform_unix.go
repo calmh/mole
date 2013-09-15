@@ -3,6 +3,7 @@
 package main
 
 import (
+	"os"
 	"strconv"
 	"syscall"
 )
@@ -32,4 +33,13 @@ func requireRoot(reason string) {
 	if !hasRoot {
 		fatalf(msgErrGainRoot, reason)
 	}
+}
+
+func getHomeDir() string {
+	home := os.Getenv("HOME")
+	debugln("HOME", home)
+	if home == "" {
+		fatalln(msgErrNoHome)
+	}
+	return home
 }

@@ -22,7 +22,6 @@ var (
 	buildStamp   string
 	buildDate    time.Time
 	buildUser    string
-	homeDir      string
 	serverAddr   string
 )
 
@@ -83,18 +82,13 @@ func setup() {
 		printVersion()
 	}
 
-	userHome := os.Getenv("HOME")
-	debugln("userHome", userHome)
-	if userHome == "" {
-		fatalln(msgErrNoHome)
-	}
-
 	if strings.HasPrefix(globalOpts.Home, "~/") {
-		homeDir = strings.Replace(globalOpts.Home, "~", userHome, 1)
+		home := getHomeDir()
+		globalOpts.Home = strings.Replace(globalOpts.Home, "~", home, 1)
 	}
-	debugln("homeDir", homeDir)
+	debugln("homeDir", globalOpts.Home)
 
-	configFile := path.Join(homeDir, "mole.ini")
+	configFile := path.Join(globalOpts.Home, "mole.ini")
 	f, e := os.Open(configFile)
 	fatalErr(e)
 
@@ -113,7 +107,7 @@ func printVersion() {
 }
 
 func certificate() tls.Certificate {
-	cert, err := tls.LoadX509KeyPair(path.Join(homeDir, "mole.crt"), path.Join(homeDir, "mole.key"))
+	cert, err := tls.LoadX509KeyPair(path.Join(globalOpts.Home, "mole.crt"), path.Join(globalOpts.Home, "mole.key"))
 	fatalErr(err)
 	return cert
 }

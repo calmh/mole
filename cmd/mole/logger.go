@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"nym.se/mole/ansi"
+)
+
+var (
+	debugPrefix = ansi.Magenta("debug ")
+	okPrefix    = ansi.Bold(ansi.Green("ok "))
+	warnPrefix  = ansi.Bold(ansi.Yellow("warning "))
+	fatalPrefix = ansi.Bold(ansi.Red("fatal "))
 )
 
 var logger = log.New(os.Stdout, "", 0)
 var debugConfig bool
-
-var (
-	debugPrefix = magenta("debug ")
-	okPrefix    = bold(green("ok "))
-	infoPrefix  = ""
-	warnPrefix  = bold(yellow("warning "))
-	fatalPrefix = bold(red("fatal "))
-)
 
 func debugln(vals ...interface{}) {
 	if globalOpts.Debug {
@@ -42,13 +43,13 @@ func debugf(format string, vals ...interface{}) {
 }
 
 func infoln(vals ...interface{}) {
-	logger.SetPrefix(infoPrefix)
+	logger.SetPrefix("")
 	s := fmt.Sprintln(vals...)
 	logger.Output(2, s)
 }
 
 func infof(format string, vals ...interface{}) {
-	logger.SetPrefix(infoPrefix)
+	logger.SetPrefix("")
 	s := fmt.Sprintf(format, vals...)
 	logger.Output(2, s)
 }
@@ -93,6 +94,8 @@ func fatalf(format string, vals ...interface{}) {
 
 func fatalErr(err error) {
 	if err != nil {
-		fatalln(err)
+		logger.SetPrefix(fatalPrefix)
+		logger.Output(2, err.Error())
+		os.Exit(3)
 	}
 }
