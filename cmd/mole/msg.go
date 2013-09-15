@@ -43,5 +43,5 @@ ability to become root as necessary.
 
 	msgStatistics = ` -- %d bytes in, %d bytes out`
 
-	msgWarnNoCert = `Warning: no server CA certificate present, cannot authenticate server.`
+	msgWarnNoCert = `no server CA certificate present, cannot authenticate server.`
 )

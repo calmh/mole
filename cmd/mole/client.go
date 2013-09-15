@@ -81,7 +81,7 @@ func NewClient(host string, cert tls.Certificate) *Client {
 		client := &http.Client{Transport: transport}
 		return &Client{ServerCertificateName, client}
 	} else {
-		warnln(msgWarnNoCert)
+		debugln(msgWarnNoCert)
 		transport := &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
