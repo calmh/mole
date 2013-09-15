@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 
 	"code.google.com/p/go.crypto/ssh"
@@ -84,14 +83,12 @@ func sshVia(conn net.Conn, h conf.Host) *ssh.ClientConn {
 	var client *ssh.ClientConn
 	var err error
 	if conn != nil {
-		log.Printf(msgSshVia, h.User, h.Addr)
+		infof(msgSshVia, h.User, h.Addr)
 		client, err = ssh.Client(conn, config)
 	} else {
-		log.Printf(msgSshFirst, h.User, h.Addr)
+		infof(msgSshFirst, h.User, h.Addr)
 		client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port), config)
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 	return client
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -18,29 +17,23 @@ var errNoLoopbackFound = errors.New("no loopback interface found")
 var keepAddressRe = regexp.MustCompile(`^127\.0\.0\.([0-9]|[0-2][0-9]|3[0-1])$`)
 
 func loInterface() string {
-	intfs, e := net.Interfaces()
-	if e != nil {
-		log.Fatal(e)
-	}
+	intfs, err := net.Interfaces()
+	fatalErr(err)
 
 	for _, intf := range intfs {
 		if intf.Flags&net.FlagLoopback == net.FlagLoopback {
-			if globalOpts.Debug {
-				log.Printf("loopback interface on %q", intf.Name)
-			}
+			debugf("loopback interface on %q", intf.Name)
 			return intf.Name
 		}
 	}
 
-	log.Fatal(errNoLoopbackFound)
+	fatalln(errNoLoopbackFound)
 	return "" // Unreachable
 }
 
 func currentAddresses() []string {
-	addrs, e := net.InterfaceAddrs()
-	if e != nil {
-		log.Fatal(e)
-	}
+	addrs, err := net.InterfaceAddrs()
+	fatalErr(err)
 
 	cur := make([]string, len(addrs))
 	for i := range addrs {
@@ -49,7 +42,7 @@ func currentAddresses() []string {
 		cur[i] = ps[0]
 	}
 
-	debug("current interface addresses: %v", cur)
+	debugln("current interface addresses: %v", cur)
 	return cur
 }
 
@@ -69,9 +62,7 @@ func missingAddresses(cfg *conf.Config) []string {
 		}
 	}
 
-	if globalOpts.Debug {
-		log.Printf("missing local addresses: %v", missing)
-	}
+	debugf("missing local addresses: %v", missing)
 	return missing
 }
 
@@ -90,10 +81,7 @@ func extraneousAddresses(cfg *conf.Config) []string {
 		}
 	}
 
-	if globalOpts.Debug {
-		log.Printf("extraneous interface addresses: %v", extra)
-	}
-
+	debugf("extraneous interface addresses: %v", extra)
 	return extra
 }
 
@@ -114,13 +102,11 @@ func ifconfigAddresses(command string, addrs []string) {
 		cmd.WriteString(fmt.Sprintf("ifconfig %s %s %s;", lo, command, addrs[i]))
 	}
 
-	debug(cmd.String())
+	debugln(cmd.String())
 	ifconfig := exec.Command("sh", "-c", cmd.String())
 	ifconfig.Stderr = os.Stderr
 	ifconfig.Stdout = os.Stdout
 	ifconfig.Stdin = os.Stdin
-	e := ifconfig.Run()
-	if e != nil {
-		log.Fatal(e)
-	}
+	err := ifconfig.Run()
+	fatalErr(err)
 }

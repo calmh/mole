@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -29,8 +28,8 @@ func (c *cmdShow) Execute(args []string) error {
 
 	if len(args) != 1 {
 		showParser.WriteHelp(os.Stdout)
-		fmt.Println()
-		return fmt.Errorf("show: missing required option <tunnelname>\n")
+		infoln()
+		fatalln("show: missing required option <tunnelname>")
 	}
 
 	cert := certificate()
@@ -38,34 +37,31 @@ func (c *cmdShow) Execute(args []string) error {
 	tun := cl.Get(args[0])
 
 	if c.Raw {
-		log.Println(tun)
+		// No log function, since it must be possible to pipe to a valid file
+		fmt.Printf(tun)
 	} else {
 		cfg, err := conf.LoadString(tun)
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 
 		if globalOpts.Remap {
 			cfg.Remap()
 		}
 
 		for _, host := range cfg.Hosts {
-			log.Printf("Host %q", host.Name)
-			log.Printf("  %s@%s:%d", host.User, host.Addr, host.Port)
+			infof("Host %q", host.Name)
+			infof("  %s@%s:%d", host.User, host.Addr, host.Port)
 			if host.Pass != "" {
-				log.Println("  Password authentication")
+				infoln("  Password authentication")
 			}
 			if host.Key != "" {
-				log.Println("  Key authentication")
+				infoln("  Key authentication")
 			}
-			log.Println()
 		}
 		for _, fwd := range cfg.Forwards {
-			log.Printf("Forward %q", fwd.Name)
+			infof("Forward %q", fwd.Name)
 			for _, line := range fwd.Lines {
-				log.Println("  ", line)
+				infoln("  ", line)
 			}
-			log.Println()
 		}
 	}
 

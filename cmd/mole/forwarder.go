@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"sync/atomic"
 
@@ -17,30 +16,26 @@ func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 				src := line.SrcString(i)
 				dst := line.DstString(i)
 
-				debug("listen", src)
+				debugln("listen", src)
 				l, e := net.Listen("tcp", src)
-				if e != nil {
-					log.Fatal(e)
-				}
+				fatalErr(e)
 
 				go func(l net.Listener, dst string) {
 					for {
 						c1, e := l.Accept()
-						if e != nil {
-							log.Fatal(e)
-						}
-						debug("accepted", c1.LocalAddr(), c1.RemoteAddr())
+						fatalErr(e)
+						debugln("accepted", c1.LocalAddr(), c1.RemoteAddr())
 						var c2 net.Conn
 						if conn != nil {
-							debug("dial (ssh)", dst)
+							debugln("dial (ssh)", dst)
 							c2, e = conn.Dial("tcp", dst)
 						} else {
-							debug("dial (direct)", dst)
+							debugln("dial (direct)", dst)
 							c2, e = net.Dial("tcp", dst)
 						}
 						if e != nil {
 							// Connection problems here are not fatal; just log them.
-							log.Println(e)
+							warnln(e)
 							c1.Close()
 							continue
 						}
@@ -62,7 +57,7 @@ func copyData(dst net.Conn, src net.Conn, counter *uint64) {
 		atomic.AddUint64(counter, uint64(n))
 
 		if e != nil {
-			debug("close (r)")
+			debugln("close (r)")
 			src.Close()
 			dst.Close()
 			break
@@ -71,7 +66,7 @@ func copyData(dst net.Conn, src net.Conn, counter *uint64) {
 		_, e = dst.Write(buf[:n])
 
 		if e != nil {
-			debug("close (w)")
+			debugln("close (w)")
 			src.Close()
 			dst.Close()
 			break

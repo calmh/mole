@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 
@@ -47,25 +46,17 @@ var lenToMaskMap = map[string]string{
 
 func writeVpncScript(cfg *conf.Config) string {
 	f, e := ioutil.TempFile("", "vpnc-script.")
-	if e != nil {
-		log.Fatal(e)
-	}
-	debug(f.Name())
+	fatalErr(e)
+	debugln(f.Name())
 
 	_, e = f.Write([]byte(vpncScript(cfg)))
-	if e != nil {
-		log.Fatal(e)
-	}
+	fatalErr(e)
 
 	e = f.Close()
-	if e != nil {
-		log.Fatal(e)
-	}
+	fatalErr(e)
 
 	e = os.Chmod(f.Name(), 0x755)
-	if e != nil {
-		log.Fatal(e)
-	}
+	fatalErr(e)
 
 	return f.Name()
 }
@@ -107,6 +98,6 @@ fi
 	}
 
 	script = strings.Replace(script, "{add_cmds}", strings.Join(addCmds, "\n"), 1)
-	debug(script)
+	debugln(script)
 	return script
 }

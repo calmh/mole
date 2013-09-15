@@ -42,6 +42,8 @@ ability to become root as necessary.
 	msgOpncStopped   = `openconnect: Stopped.`
 
 	msgStatistics = ` -- %d bytes in, %d bytes out`
+
+	msgWarnNoCert = `Warning: no server CA certificate present, cannot authenticate server.`
 )
 
 var (

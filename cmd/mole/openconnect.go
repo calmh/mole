@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -57,25 +56,19 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 	cmd := exec.Command(p.openconnectBinary, args...)
 
 	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 
 	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 
 	if globalOpts.Debug {
 		cmd.Stderr = os.Stderr
 	}
 
 	err = cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf(msgOpncStart, cmd.Process.Pid)
-	log.Println(msgOpncWait)
+	fatalErr(err)
+	infof(msgOpncStart, cmd.Process.Pid)
+	infoln(msgOpncWait)
 
 	stdin.Write([]byte(cfg.OpenConnect["password"] + "\n"))
 	stdin.Close()
@@ -84,28 +77,25 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 	for {
 		bs, _, err := bufReader.ReadLine()
 		line := strings.TrimSpace(string(bs))
-		debug("opnc:", line)
+		debugln("opnc:", line)
 
 		if strings.Contains(line, "Established DTLS connection") {
-			log.Println(msgOpncConnected)
-			log.Println()
+			infoln(msgOpncConnected)
 			return &OpenConnect{*cmd, script}
 		}
 
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 	}
 }
 
 func (v *OpenConnect) Stop() {
 	defer func() {
-		debug("rm", v.script)
+		debugln("rm", v.script)
 		os.Remove(v.script)
 	}()
 
-	log.Printf(msgOpncStopping, v.cmd.Process.Pid)
+	infof(msgOpncStopping, v.cmd.Process.Pid)
 	v.cmd.Process.Signal(os.Interrupt)
 	v.cmd.Wait()
-	log.Println(msgOpncStopped)
+	infoln(msgOpncStopped)
 }

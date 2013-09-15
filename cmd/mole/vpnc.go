@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,25 +42,19 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 	cmd := exec.Command(p.vpncBinary, "--no-detach", "--non-inter", "--script", script, "-")
 
 	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 
 	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 
 	if globalOpts.Debug {
 		cmd.Stderr = os.Stderr
 	}
 
 	err = cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf(msgVpncStart, cmd.Process.Pid)
-	log.Println(msgVpncWait)
+	fatalErr(err)
+	infof(msgVpncStart, cmd.Process.Pid)
+	infoln(msgVpncWait)
 
 	for k, v := range cfg.Vpnc {
 		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
@@ -73,28 +66,25 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 	for {
 		bs, _, err := bufReader.ReadLine()
 		line := strings.TrimSpace(string(bs))
-		debug("vpnc:", line)
+		debugln("vpnc:", line)
 
 		if line == "mole-vpnc-script-next" {
-			log.Println(msgVpncConnected)
-			log.Println()
+			infoln(msgVpncConnected)
 			return &Vpnc{*cmd, script}
 		}
 
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 	}
 }
 
 func (v *Vpnc) Stop() {
 	defer func() {
-		debug("rm", v.script)
+		debugln("rm", v.script)
 		os.Remove(v.script)
 	}()
 
-	log.Printf(msgVpncStopping, v.cmd.Process.Pid)
+	infof(msgVpncStopping, v.cmd.Process.Pid)
 	v.cmd.Process.Signal(os.Interrupt)
 	v.cmd.Wait()
-	log.Println(msgVpncStopped)
+	infoln(msgVpncStopped)
 }

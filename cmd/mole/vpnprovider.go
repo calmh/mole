@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"nym.se/mole/conf"
 )
 
@@ -19,7 +17,7 @@ var vpnProviders = make(map[string]VPNProvider)
 func startVpn(provider string, cfg *conf.Config) VPN {
 	prov, ok := vpnProviders[provider]
 	if !ok {
-		log.Fatalf(msgErrNoVPN, provider)
+		fatalf(msgErrNoVPN, provider)
 	}
 	return prov.Start(cfg)
 }

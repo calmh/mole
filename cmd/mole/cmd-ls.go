@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -29,9 +28,7 @@ func (c *cmdls) Execute(args []string) error {
 	var err error
 	if len(args) == 1 {
 		re, err = regexp.Compile("(?i)" + args[0])
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 	}
 
 	cert := certificate()

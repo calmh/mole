@@ -3,7 +3,6 @@
 package main
 
 import (
-	"log"
 	"syscall"
 )
 
@@ -14,6 +13,6 @@ func init() {
 
 	err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		log.Println(msgWarnSetrlimit, err)
+		warnln(msgWarnSetrlimit, err)
 	}
 }

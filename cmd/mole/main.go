@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"runtime"
@@ -49,8 +48,7 @@ func main() {
 	// TIME LIMITED BETA
 	// 14 days self destruct
 	if !buildDate.IsZero() && time.Since(buildDate) > 14*24*time.Hour {
-		fmt.Println("This is an expired beta version.\nPlease grab a new build from http://ps-build1.vbg.se.prnw.net/job/mole")
-		os.Exit(42)
+		fatalln("This is an expired beta version.\nPlease grab a new build from http://ps-build1.vbg.se.prnw.net/job/mole")
 	}
 	// TIME LIMITED BETA
 	// 14 days self destruct
@@ -64,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Println(msgOk)
+	okln("done")
 	if globalStats.dataIn+globalStats.dataOut > 0 {
 		printStatistics()
 	}
@@ -89,55 +87,44 @@ func formatBytes(n uint64) string {
 
 func setup() {
 	if globalOpts.Debug {
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-		log.Println(msgDebugEnabled)
-	} else {
-		log.SetFlags(0)
-	}
-
-	if globalOpts.Debug {
 		printVersion()
 	}
 
 	userHome := os.Getenv("HOME")
-	debug("userHome", userHome)
+	debugln("userHome", userHome)
 	if userHome == "" {
-		log.Fatal(msgErrNoHome)
+		fatalln(msgErrNoHome)
 	}
 
 	if strings.HasPrefix(globalOpts.Home, "~/") {
 		homeDir = strings.Replace(globalOpts.Home, "~", userHome, 1)
 	}
-	debug("homeDir", homeDir)
+	debugln("homeDir", homeDir)
 
 	configFile := path.Join(homeDir, "mole.ini")
 	f, e := os.Open(configFile)
-	if e != nil {
-		log.Fatal(e)
-	}
+	fatalErr(e)
 
 	config := ini.Parse(f)
 	serverAddr = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
 }
 
 func printVersion() {
-	log.Printf("mole (%s-%s)", runtime.GOOS, runtime.GOARCH)
+	infof("mole (%s-%s)", runtime.GOOS, runtime.GOARCH)
 	if buildVersion != "" {
-		log.Printf("  %s", buildVersion)
+		infof("  %s", buildVersion)
 	}
 	if !buildDate.IsZero() {
-		log.Printf("  %v by %s", buildDate, buildUser)
+		infof("  %v by %s", buildDate, buildUser)
 	}
 }
 
 func certificate() tls.Certificate {
 	cert, err := tls.LoadX509KeyPair(path.Join(homeDir, "mole.crt"), path.Join(homeDir, "mole.key"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	fatalErr(err)
 	return cert
 }
 
 func printStatistics() {
-	log.Printf(" -- %sB in, %sB out", formatBytes(globalStats.dataIn), formatBytes(globalStats.dataOut))
+	infof(" -- %sB in, %sB out", formatBytes(globalStats.dataIn), formatBytes(globalStats.dataOut))
 }

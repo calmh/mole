@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -35,8 +34,8 @@ func (c *cmdDig) Execute(args []string) error {
 
 	if len(args) != 1 {
 		digParser.WriteHelp(os.Stdout)
-		fmt.Println()
-		return fmt.Errorf("dig: missing required option <tunnelname>\n")
+		infoln()
+		fatalln("dig: missing required option <tunnelname>")
 	}
 
 	var cfg *conf.Config
@@ -45,16 +44,14 @@ func (c *cmdDig) Execute(args []string) error {
 	if c.Local {
 		cfg, err = conf.LoadFile(args[0])
 		if err != nil {
-			log.Fatal(err)
+			fatalln(err)
 		}
 	} else {
 		cert := certificate()
 		cl := NewClient(serverAddr, cert)
 		tun := cl.Deobfuscate(cl.Get(args[0]))
 		cfg, err = conf.LoadString(tun)
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 	}
 
 	if cfg == nil {
@@ -77,7 +74,6 @@ func (c *cmdDig) Execute(args []string) error {
 	var sshTun *ssh.ClientConn
 	if cfg.General.Main != "" {
 		sshTun = sshHost(cfg.General.Main, cfg)
-		log.Println()
 	}
 
 	fwdChan := startForwarder(sshTun)
@@ -99,11 +95,11 @@ func (c *cmdDig) Execute(args []string) error {
 
 func shell(fwdChan chan<- conf.ForwardLine) {
 	help := func() {
-		log.Println("Available commands:")
-		log.Println("  help, ?                          - show help")
-		log.Println("  quit, ^D                         - stop forwarding and exit")
-		log.Println("  debug                            - enable debugging")
-		log.Println("  fwd srcip:srcport dstip:dstport  - add forward")
+		infoln("Available commands:")
+		infoln("  help, ?                          - show help")
+		infoln("  quit, ^D                         - stop forwarding and exit")
+		infoln("  debug                            - enable debugging")
+		infoln("  fwd srcip:srcport dstip:dstport  - add forward")
 	}
 
 	term := liner.NewLiner()
@@ -166,13 +162,13 @@ func shell(fwdChan chan<- conf.ForwardLine) {
 			globalOpts.Debug = true
 		case "fwd":
 			if len(parts) != 3 {
-				log.Printf(msgErrIncorrectFwd, cmd)
+				warnf(msgErrIncorrectFwd, cmd)
 				break
 			}
 
 			src := strings.SplitN(parts[1], ":", 2)
 			if len(src) != 2 {
-				log.Printf(msgErrIncorrectFwdSrc, parts[1])
+				warnf(msgErrIncorrectFwdSrc, parts[1])
 				break
 			}
 
@@ -184,29 +180,29 @@ func shell(fwdChan chan<- conf.ForwardLine) {
 				}
 			}
 			if !ipExists {
-				log.Printf(msgErrIncorrectFwdIP, src[0])
+				warnf(msgErrIncorrectFwdIP, src[0])
 				break
 			}
 
 			dst := strings.SplitN(parts[2], ":", 2)
 			if len(dst) != 2 {
-				log.Printf(msgErrIncorrectFwdDst, parts[2])
+				warnf(msgErrIncorrectFwdDst, parts[2])
 				break
 			}
 
 			srcp, err := strconv.Atoi(src[1])
 			if err != nil {
-				log.Println(err)
+				warnln(err)
 				break
 			}
 			if srcp < 1024 {
-				log.Printf(msgErrIncorrectFwdPriv, srcp)
+				warnf(msgErrIncorrectFwdPriv, srcp)
 				break
 			}
 
 			dstp, err := strconv.Atoi(dst[1])
 			if err != nil {
-				log.Println(err)
+				warnln(err)
 				break
 			}
 			fwd := conf.ForwardLine{
@@ -215,10 +211,10 @@ func shell(fwdChan chan<- conf.ForwardLine) {
 				DstIP:   dst[0],
 				DstPort: dstp,
 			}
-			log.Println("add", fwd)
+			okln("add", fwd)
 			fwdChan <- fwd
 		default:
-			log.Println(msgErrNoSuchCommand, parts[0])
+			warnln(msgErrNoSuchCommand, parts[0])
 		}
 
 		next <- true
@@ -230,9 +226,7 @@ func sshHost(host string, cfg *conf.Config) *ssh.ClientConn {
 	if h.Via != "" {
 		cl := sshHost(h.Via, cfg)
 		conn, err := cl.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
-		if err != nil {
-			log.Fatal(err)
-		}
+		fatalErr(err)
 		return sshVia(conn, h)
 	} else {
 		return sshVia(nil, h)
@@ -241,11 +235,10 @@ func sshHost(host string, cfg *conf.Config) *ssh.ClientConn {
 
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
-		log.Println(underline(fwd.Name))
+		infoln(underline(fwd.Name))
 		for _, line := range fwd.Lines {
-			log.Println("  ", line)
+			infoln("  ", line)
 			fwdChan <- line
 		}
-		log.Println()
 	}
 }
