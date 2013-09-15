@@ -1,23 +1,31 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"fmt"
 	"io"
+	"net"
+	"nym.se/mole/ansi"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/sbinet/liner"
 	"nym.se/mole/conf"
 	"nym.se/mole/table"
 )
 
-func shell(fwdChan chan<- conf.ForwardLine) {
+var errTimeout = fmt.Errorf("connection timeout")
+
+func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, sshTun *ssh.ClientConn) {
 	help := func() {
 		infoln("Available commands:")
 		infoln("  help, ?                          - show help")
 		infoln("  quit, ^D                         - stop forwarding and exit")
+		infoln("  test                             - test each forward for connection")
 		infoln("  stat                             - show forwarding statistics")
 		infoln("  debug                            - enable debugging")
 		infoln("  fwd srcip:srcport dstip:dstport  - add forward")
@@ -45,6 +53,7 @@ func shell(fwdChan chan<- conf.ForwardLine) {
 
 			if cmd != "" {
 				commands <- cmd
+				term.AppendHistory(cmd)
 				_, ok := <-next
 				if !ok {
 					return
@@ -78,6 +87,8 @@ func shell(fwdChan chan<- conf.ForwardLine) {
 			help()
 		case "stat":
 			printStats()
+		case "test":
+			test(sshTun, cfg)
 		case "debug":
 			infoln(msgDebugEnabled)
 			globalOpts.Debug = true
@@ -166,4 +177,78 @@ func printTotalStats() {
 	if total.conns > 0 {
 		infof("Total: %d connections, %sB in, %sB out", total.conns, formatBytes(total.in), formatBytes(total.out))
 	}
+}
+
+type forwardTest struct {
+	name    string
+	results []testResult
+}
+type testResult struct {
+	dst string
+	ms  float64
+	err error
+}
+
+func test(sshTun *ssh.ClientConn, cfg *conf.Config) {
+	results := make(chan forwardTest)
+
+	var printWg sync.WaitGroup
+	printWg.Add(1)
+	go func() {
+		for res := range results {
+			infof(ansi.Underline(res.name))
+			for _, line := range res.results {
+				if line.err == nil {
+					infof("%22s %s in %.02f ms", line.dst, ansi.Bold(ansi.Green("-ok-")), line.ms)
+				} else {
+					infof("%22s %s in %.02f ms (%s)", line.dst, ansi.Bold(ansi.Red("fail")), line.ms, line.err)
+				}
+			}
+		}
+		printWg.Done()
+	}()
+
+	var scanWg sync.WaitGroup
+	for _, fwd := range cfg.Forwards {
+		scanWg.Add(1)
+		go func(fwd conf.Forward) {
+			res := forwardTest{name: fwd.Name}
+			for _, line := range fwd.Lines {
+				for i := 0; i <= line.Repeat; i++ {
+					t0 := time.Now()
+					var conn net.Conn
+					var err error
+					if sshTun == nil {
+						conn, err = net.DialTimeout("tcp", line.DstString(i), 5*time.Second)
+						if conn != nil {
+							defer conn.Close()
+						}
+					} else {
+						res := make(chan error, 1)
+						go func() {
+							time.Sleep(5 * time.Second)
+							res <- errTimeout
+						}()
+						go func() {
+							conn, err := sshTun.Dial("tcp", line.DstString(i))
+							if conn != nil {
+								defer conn.Close()
+							}
+							res <- err
+						}()
+						err = <-res
+					}
+
+					ms := time.Since(t0).Seconds() * 1000
+					res.results = append(res.results, testResult{dst: line.DstString(i), ms: ms, err: err})
+				}
+			}
+			results <- res
+			scanWg.Done()
+		}(fwd)
+	}
+
+	scanWg.Wait()
+	close(results)
+	printWg.Wait()
 }

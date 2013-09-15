@@ -81,7 +81,7 @@ func (c *cmdDig) Execute(args []string) error {
 	fwdChan := startForwarder(sshTun)
 	sendForwards(fwdChan, cfg)
 
-	shell(fwdChan)
+	shell(fwdChan, cfg, sshTun)
 
 	if vpn != nil {
 		vpn.Stop()
