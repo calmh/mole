@@ -22,7 +22,7 @@ func TestGeneralSection(t *testing.T) {
 	if cfg.General.Author != "Jakob Borg <jakob@nym.se>" {
 		t.Errorf("Incorrect Author %q", cfg.General.Author)
 	}
-	if cfg.General.Version != 400 {
+	if cfg.General.Version != 320 {
 		t.Errorf("Incorrect Version %d", cfg.General.Version)
 	}
 	if cfg.General.Main != "tac1" {

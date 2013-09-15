@@ -34,7 +34,8 @@ type ListItem struct {
 	Socks       bool
 	Hosts       []string
 	LocalOnly   bool
-	Version     int
+	Version     float64
+	IntVersion  int
 }
 
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
@@ -123,6 +124,9 @@ func (c *Client) List() []ListItem {
 	var items []ListItem
 	err = json.Unmarshal(data, &items)
 	fatalErr(err)
+	for i := range items {
+		items[i].IntVersion = int(100 * items[i].Version)
+	}
 	sort.Sort(listItems(items))
 	return items
 }

@@ -27,10 +27,12 @@ func parse(i ini.File) (*Config, error) {
 				case "main":
 					c.General.Main = v
 				case "version":
-					_, e := fmt.Sscan(v, &c.General.Version)
+					var f float64
+					_, e := fmt.Sscan(v, &f)
 					if e != nil {
 						return nil, e
 					}
+					c.General.Version = int(100 * f)
 				default:
 					c.General.Other[k] = v
 				}
