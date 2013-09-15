@@ -14,6 +14,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ansi"
 	"nym.se/mole/ini"
+	"nym.se/mole/upgrade"
 )
 
 var errParams = errors.New("incorrect command line parameters")
@@ -42,12 +43,12 @@ func main() {
 	}
 
 	// TIME LIMITED BETA
-	// 14 days self destruct
-	if !buildDate.IsZero() && time.Since(buildDate) > 14*24*time.Hour {
+	// 30 days self destruct
+	if !buildDate.IsZero() && time.Since(buildDate) > 30*24*time.Hour {
 		fatalln("This is an expired beta version.\nPlease grab a new build from http://ps-build1.vbg.se.prnw.net/job/mole")
 	}
 	// TIME LIMITED BETA
-	// 14 days self destruct
+	// 30 days self destruct
 
 	if runtime.GOOS == "windows" {
 		globalOpts.Remap = true
@@ -100,6 +101,28 @@ func setup() {
 
 	config := ini.Parse(f)
 	serverAddr = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
+
+	go func() {
+		time.Sleep(30 * time.Second)
+		debugln("checking for upgrade")
+		// FIXME not to be hard coded...
+		build, err := upgrade.Newest("mole", "http://ps-build1.vbg.se.prnw.net/job/mole/lastSuccessfulBuild/artifact/src/nym.se/mole/auto")
+		if e == nil {
+			bd := time.Unix(int64(build.BuildStamp), 0)
+			age := bd.Sub(buildDate).Seconds()
+			if age > 0 {
+				debugln("upgrading to", build)
+				err = upgrade.UpgradeTo(build)
+				if err != nil {
+					warnln(err)
+				} else {
+					okf("Upgraded mole to %s.", build.Version)
+				}
+			}
+		} else {
+			debugln(err)
+		}
+	}()
 }
 
 func printVersion() {
