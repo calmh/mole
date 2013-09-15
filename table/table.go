@@ -1,4 +1,4 @@
-package main
+package table
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ const (
 	intraColumnPadding = 2
 )
 
-func tablef(fmt string, rows [][]string) string {
+func Fmt(fmt string, rows [][]string) string {
 	cols := len(rows[0])
 	width := make([]int, cols)
 	for _, row := range rows {

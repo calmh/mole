@@ -7,6 +7,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ansi"
+	"nym.se/mole/table"
 )
 
 type cmdls struct{}
@@ -63,7 +64,7 @@ func (c *cmdls) Execute(args []string) error {
 	}
 
 	// Never prefix table with log stuff
-	fmt.Printf(tablef("lll", rows))
+	fmt.Printf(table.Fmt("lll", rows))
 
 	if matched != len(l) {
 		fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))

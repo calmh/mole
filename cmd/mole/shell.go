@@ -10,6 +10,7 @@ import (
 
 	"github.com/sbinet/liner"
 	"nym.se/mole/conf"
+	"nym.se/mole/table"
 )
 
 func shell(fwdChan chan<- conf.ForwardLine) {
@@ -152,7 +153,7 @@ func printStats() {
 		total.out += cnt.out
 	}
 	rows = append(rows, total.row())
-	fmt.Println(tablef("lrrr", rows))
+	fmt.Println(table.Fmt("lrrr", rows))
 }
 
 func printTotalStats() {
