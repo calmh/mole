@@ -99,7 +99,7 @@ func ifconfigAddresses(command string, addrs []string) {
 	lo := loInterface()
 	var cmd bytes.Buffer
 	for i := range addrs {
-		cmd.WriteString(fmt.Sprintf("ifconfig %s %s %s;", lo, command, addrs[i]))
+		_, _ = cmd.WriteString(fmt.Sprintf("ifconfig %s %s %s;", lo, command, addrs[i]))
 	}
 
 	debugln(cmd.String())

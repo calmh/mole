@@ -105,7 +105,6 @@ func (c *Client) request(method, path string) *http.Response {
 
 	if resp.StatusCode != 200 {
 		data, _ := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
 		warnln(resp.Status)
 		fatalln(string(data))
 	}
@@ -122,7 +121,8 @@ func (c *Client) List() []ListItem {
 	data, err := ioutil.ReadAll(resp.Body)
 	fatalErr(err)
 	var items []ListItem
-	json.Unmarshal(data, &items)
+	err = json.Unmarshal(data, &items)
+	fatalErr(err)
 	sort.Sort(listItems(items))
 	return items
 }
@@ -155,7 +155,8 @@ func (c *Client) getToken(token string) string {
 	fatalErr(err)
 
 	var res map[string]string
-	json.Unmarshal(data, &res)
+	err = json.Unmarshal(data, &res)
+	fatalErr(err)
 	return fmt.Sprintf("%q", res["key"])
 }
 

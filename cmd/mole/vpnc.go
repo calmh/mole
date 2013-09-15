@@ -58,9 +58,11 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 
 	for k, v := range cfg.Vpnc {
 		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
-		stdin.Write([]byte(line))
+		_, err := stdin.Write([]byte(line))
+		fatalErr(err)
 	}
-	stdin.Close()
+	err = stdin.Close()
+	fatalErr(err)
 
 	bufReader := bufio.NewReader(stdout)
 	for {
@@ -80,11 +82,20 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 func (v *Vpnc) Stop() {
 	defer func() {
 		debugln("rm", v.script)
-		os.Remove(v.script)
+		err := os.Remove(v.script)
+		if err != nil {
+			warnln(err)
+		}
 	}()
 
 	infof(msgVpncStopping, v.cmd.Process.Pid)
-	v.cmd.Process.Signal(os.Interrupt)
-	v.cmd.Wait()
+	err := v.cmd.Process.Signal(os.Interrupt)
+	if err != nil {
+		warnln(err)
+	}
+	err = v.cmd.Wait()
+	if err != nil {
+		warnln(err)
+	}
 	infoln(msgVpncStopped)
 }

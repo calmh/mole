@@ -53,7 +53,7 @@ func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 						if e != nil {
 							// Connection problems here are not fatal; just log them.
 							warnln(e)
-							c1.Close()
+							_ = c1.Close()
 							continue
 						}
 
@@ -76,8 +76,8 @@ func copyData(dst net.Conn, src net.Conn, counter *uint64) {
 
 		if e != nil {
 			debugln("close (r)")
-			src.Close()
-			dst.Close()
+			_ = src.Close()
+			_ = dst.Close()
 			break
 		}
 
@@ -85,8 +85,8 @@ func copyData(dst net.Conn, src net.Conn, counter *uint64) {
 
 		if e != nil {
 			debugln("close (w)")
-			src.Close()
-			dst.Close()
+			_ = src.Close()
+			_ = dst.Close()
 			break
 		}
 	}

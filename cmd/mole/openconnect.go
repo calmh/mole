@@ -70,8 +70,10 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 	infof(msgOpncStart, cmd.Process.Pid)
 	infoln(msgOpncWait)
 
-	stdin.Write([]byte(cfg.OpenConnect["password"] + "\n"))
-	stdin.Close()
+	_, err = stdin.Write([]byte(cfg.OpenConnect["password"] + "\n"))
+	fatalErr(err)
+	err = stdin.Close()
+	fatalErr(err)
 
 	bufReader := bufio.NewReader(stdout)
 	for {
@@ -91,11 +93,20 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 func (v *OpenConnect) Stop() {
 	defer func() {
 		debugln("rm", v.script)
-		os.Remove(v.script)
+		err := os.Remove(v.script)
+		if err != nil {
+			warnln(err)
+		}
 	}()
 
 	infof(msgOpncStopping, v.cmd.Process.Pid)
-	v.cmd.Process.Signal(os.Interrupt)
-	v.cmd.Wait()
+	err := v.cmd.Process.Signal(os.Interrupt)
+	if err != nil {
+		warnln(err)
+	}
+	err = v.cmd.Wait()
+	if err != nil {
+		warnln(err)
+	}
 	infoln(msgOpncStopped)
 }

@@ -44,7 +44,8 @@ func (k *keyring) Key(i int) (ssh.PublicKey, error) {
 func (k *keyring) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
 	hashFunc := crypto.SHA1
 	h := hashFunc.New()
-	h.Write(data)
+	_, err = h.Write(data)
+	fatalErr(err)
 	digest := h.Sum(nil)
 	return rsa.SignPKCS1v15(rand, k.keys[i], hashFunc, digest)
 }
@@ -71,7 +72,8 @@ func sshVia(conn net.Conn, h conf.Host) *ssh.ClientConn {
 	}
 	if h.Key != "" {
 		k := &keyring{}
-		k.loadPEM([]byte(h.Key))
+		err := k.loadPEM([]byte(h.Key))
+		fatalErr(err)
 		auths = append(auths, ssh.ClientAuthKeyring(k))
 	}
 
