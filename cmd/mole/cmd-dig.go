@@ -74,7 +74,7 @@ func (c *cmdDig) Execute(args []string) error {
 		vpn = startVpn("openconnect", cfg)
 	}
 
-	var dialer Dialer
+	var dialer Dialer = proxy.Direct
 	if mh := cfg.General.Main; mh != "" {
 		dialer = sshHost(mh, cfg)
 	}
@@ -106,8 +106,7 @@ func sshHost(host string, cfg *conf.Config) Dialer {
 	if h.Via != "" {
 		conn, err = sshHost(h.Via, cfg).Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
 	} else {
-		var dialer Dialer
-		dialer = proxy.Direct
+		var dialer Dialer = proxy.Direct
 		if h.SOCKS != "" {
 			dialer, err = proxy.SOCKS5("tcp", h.SOCKS, nil, proxy.Direct)
 			fatalErr(err)
