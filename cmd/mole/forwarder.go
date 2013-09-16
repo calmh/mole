@@ -5,7 +5,6 @@ import (
 	"net"
 	"sync/atomic"
 
-	"code.google.com/p/go.crypto/ssh"
 	"nym.se/mole/conf"
 )
 
@@ -22,7 +21,11 @@ func (cnt trafficCounter) row() []string {
 	return []string{cnt.name, fmt.Sprintf("%d", cnt.conns), formatBytes(cnt.in) + "B", formatBytes(cnt.out) + "B"}
 }
 
-func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
+type Dialer interface {
+	Dial(network, addr string) (c net.Conn, err error)
+}
+
+func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 	fwdChan := make(chan conf.ForwardLine)
 	go func() {
 		for line := range fwdChan {
@@ -43,13 +46,8 @@ func startForwarder(conn *ssh.ClientConn) chan<- conf.ForwardLine {
 						fatalErr(e)
 						debugln("accepted", c1.LocalAddr(), c1.RemoteAddr())
 						var c2 net.Conn
-						if conn != nil {
-							debugln("dial (ssh)", dst)
-							c2, e = conn.Dial("tcp", dst)
-						} else {
-							debugln("dial (direct)", dst)
-							c2, e = net.Dial("tcp", dst)
-						}
+						debugln("dial", dst)
+						c2, e = dialer.Dial("tcp", dst)
 						if e != nil {
 							// Connection problems here are not fatal; just log them.
 							warnln(e)

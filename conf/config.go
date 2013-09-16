@@ -41,6 +41,7 @@ type Host struct {
 	Prompt string
 	Via    string
 	Unique string
+	SOCKS  string
 	Other  map[string]string
 }
 

@@ -67,6 +67,8 @@ func parse(i ini.File) (cp *Config, err error) {
 					host.Prompt = v
 				case "via":
 					host.Via = v
+				case "socks":
+					host.SOCKS = v
 				default:
 					host.Other[k] = v
 				}

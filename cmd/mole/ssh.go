@@ -63,7 +63,7 @@ func (k *keyring) loadPEM(data []byte) error {
 	return nil
 }
 
-func sshVia(conn net.Conn, h conf.Host) *ssh.ClientConn {
+func sshOnConn(conn net.Conn, h conf.Host) *ssh.ClientConn {
 	var auths []ssh.ClientAuth
 
 	if h.Pass != "" {

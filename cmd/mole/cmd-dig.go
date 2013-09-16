@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
-	"code.google.com/p/go.crypto/ssh"
+	"code.google.com/p/go.net/proxy"
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ansi"
 	"nym.se/mole/conf"
@@ -73,15 +74,15 @@ func (c *cmdDig) Execute(args []string) error {
 		vpn = startVpn("openconnect", cfg)
 	}
 
-	var sshTun *ssh.ClientConn
-	if cfg.General.Main != "" {
-		sshTun = sshHost(cfg.General.Main, cfg)
+	var dialer Dialer
+	if mh := cfg.General.Main; mh != "" {
+		dialer = sshHost(mh, cfg)
 	}
 
-	fwdChan := startForwarder(sshTun)
+	fwdChan := startForwarder(dialer)
 	sendForwards(fwdChan, cfg)
 
-	shell(fwdChan, cfg, sshTun)
+	shell(fwdChan, cfg, dialer)
 
 	if vpn != nil {
 		vpn.Stop()
@@ -98,16 +99,23 @@ func (c *cmdDig) Execute(args []string) error {
 	return nil
 }
 
-func sshHost(host string, cfg *conf.Config) *ssh.ClientConn {
+func sshHost(host string, cfg *conf.Config) Dialer {
 	h := cfg.Hosts[cfg.HostsMap[host]]
+	var conn net.Conn
+	var err error
 	if h.Via != "" {
-		cl := sshHost(h.Via, cfg)
-		conn, err := cl.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
-		fatalErr(err)
-		return sshVia(conn, h)
+		conn, err = sshHost(h.Via, cfg).Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
 	} else {
-		return sshVia(nil, h)
+		var dialer Dialer
+		dialer = proxy.Direct
+		if h.SOCKS != "" {
+			dialer, err = proxy.SOCKS5("tcp", h.SOCKS, nil, proxy.Direct)
+			fatalErr(err)
+		}
+		conn, err = dialer.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
 	}
+	fatalErr(err)
+	return sshOnConn(conn, h)
 }
 
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {

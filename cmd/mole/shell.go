@@ -1,7 +1,6 @@
 package main
 
 import (
-	"code.google.com/p/go.crypto/ssh"
 	"fmt"
 	"io"
 	"net"
@@ -20,7 +19,7 @@ import (
 
 var errTimeout = fmt.Errorf("connection timeout")
 
-func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, sshTun *ssh.ClientConn) {
+func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, sshTun Dialer) {
 	help := func() {
 		infoln("Available commands:")
 		infoln("  help, ?                          - show help")
@@ -189,7 +188,7 @@ type testResult struct {
 	err error
 }
 
-func test(sshTun *ssh.ClientConn, cfg *conf.Config) {
+func test(sshTun Dialer, cfg *conf.Config) {
 	results := make(chan forwardTest)
 
 	var printWg sync.WaitGroup
