@@ -50,4 +50,16 @@ ability to become root as necessary.
 	msgDownloadingUpgrade = `Downloading upgrade...`
 	msgUpgraded           = `Upgraded your mole to %s.`
 	msgNoUpgrades         = `You are already running the latest version.`
+	msgAutoUpgrades       = `
+Mole uses automatic upgrades to keep your client up to date. To disable these
+automatic upgrades (which is a bad idea for most users), add:
+
+  [upgrades]
+  automatic = no
+
+to your ~/.mole/mole.ini file. To silence this message, you can instead add:
+
+  [upgrades]
+  automatic = yes
+`
 )

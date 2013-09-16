@@ -34,7 +34,7 @@ func (c *cmdShow) Execute(args []string) error {
 	}
 
 	cert := certificate()
-	cl := NewClient(serverAddr, cert)
+	cl := NewClient(serverIni.address, cert)
 	tun := cl.Get(args[0])
 
 	if c.Raw {

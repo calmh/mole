@@ -14,6 +14,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ansi"
 	"nym.se/mole/ini"
+	"nym.se/mole/upgrade"
 )
 
 var errParams = errors.New("incorrect command line parameters")
@@ -23,7 +24,6 @@ var (
 	buildStamp   string
 	buildDate    time.Time
 	buildUser    string
-	serverAddr   string
 )
 
 var globalOpts struct {
@@ -31,6 +31,11 @@ var globalOpts struct {
 	Debug  bool   `short:"d" long:"debug" description:"Show debug output"`
 	NoAnsi bool   `long:"no-ansi" description:"Disable ANSI formatting sequences"`
 	Remap  bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
+}
+
+var serverIni struct {
+	address  string
+	upgrades bool
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -106,14 +111,37 @@ func setup() {
 	fatalErr(e)
 
 	config := ini.Parse(f)
-	serverAddr = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
+	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
 
-	go func() {
-		time.Sleep(10 * time.Second)
+	displayUpgradeNotice := true
+	serverIni.upgrades = true
+	if upgSec, ok := config.Sections["upgrades"]; ok {
+		upgs, ok := upgSec["automatic"]
+		displayUpgradeNotice = !ok
+		serverIni.upgrades = !ok || upgs == "yes"
+	}
 
-		cmd := cmdUpgrade{Silently: true}
-		cmd.Execute(nil)
-	}()
+	if serverIni.upgrades {
+		go func() {
+			time.Sleep(10 * time.Second)
+
+			build, err := latestBuild()
+			if err == nil {
+				bd := time.Unix(int64(build.BuildStamp), 0)
+				if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
+					err = upgrade.UpgradeTo(build)
+					if err == nil {
+						if displayUpgradeNotice {
+							infoln(msgAutoUpgrades)
+						}
+						okf(msgUpgraded, build.Version)
+					}
+				}
+			}
+		}()
+	} else {
+		debugln("automatic upgrades disabled")
+	}
 }
 
 func printVersion() {

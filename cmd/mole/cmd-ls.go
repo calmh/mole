@@ -36,7 +36,7 @@ func (c *cmdls) Execute(args []string) error {
 	}
 
 	cert := certificate()
-	cl := NewClient(serverAddr, cert)
+	cl := NewClient(serverIni.address, cert)
 	l := cl.List()
 
 	var rows [][]string
