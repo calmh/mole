@@ -94,6 +94,7 @@ func (c *cmdDig) Execute(args []string) error {
 		}
 	}
 
+	okln("Done")
 	return nil
 }
 

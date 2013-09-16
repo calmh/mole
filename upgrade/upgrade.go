@@ -10,7 +10,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
+	"time"
 
 	"bitbucket.org/kardianos/osext"
 )
@@ -44,6 +46,11 @@ func Newest(binary string, url string) (b Build, err error) {
 
 func UpgradeTo(build Build) error {
 	path, err := osext.Executable()
+	if err != nil {
+		return err
+	}
+
+	path, err = filepath.EvalSymlinks(path)
 	if err != nil {
 		return err
 	}
@@ -91,6 +98,9 @@ func UpgradeTo(build Build) error {
 	if hash != build.Hash {
 		return ErrHashMismatch
 	}
+
+	ftime := time.Unix(int64(build.BuildStamp), 0)
+	_ = os.Chtimes(tmp, ftime, ftime)
 
 	return os.Rename(tmp, path)
 }

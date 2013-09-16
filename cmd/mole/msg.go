@@ -43,5 +43,11 @@ ability to become root as necessary.
 
 	msgStatistics = ` -- %d bytes in, %d bytes out`
 
-	msgWarnNoCert = `no server CA certificate present, cannot authenticate server.`
+	msgWarnNoCert = `No server CA certificate present, cannot authenticate server.`
+
+	msgNoUpgradeURL       = `Server contains no information about possible upgrades.`
+	msgCheckingUpgrade    = `Checking for upgrades (%s)`
+	msgDownloadingUpgrade = `Downloading upgrade...`
+	msgUpgraded           = `Upgraded your mole to %s.`
+	msgNoUpgrades         = `You are already running the latest version.`
 )

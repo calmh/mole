@@ -38,6 +38,10 @@ type ListItem struct {
 	IntVersion  int
 }
 
+type upgradeManifest struct {
+	URL string
+}
+
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 
 func caCert() *x509.Certificate {
@@ -149,6 +153,36 @@ func (c *Client) Deobfuscate(tunnel string) string {
 	}
 
 	return tunnel
+}
+
+func (c *Client) UpgradesURL() string {
+	url := "https://" + c.host + "/extra/upgrades.json"
+	debugln("GET", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return ""
+	}
+	req.Header.Add("X-Mole-Version", ClientVersion)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return ""
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+
+	var manifest upgradeManifest
+	err = json.Unmarshal(data, &manifest)
+	if err != nil {
+		return ""
+	}
+	return manifest.URL
 }
 
 func (c *Client) getToken(token string) string {
