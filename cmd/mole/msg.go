@@ -3,12 +3,14 @@ package main
 const (
 	msgDigShort     = `Dig tunnel`
 	msgLsShort      = `List tunnels`
+	msgPushShort    = `Push tunnel`
 	msgShowShort    = `Show tunnel`
 	msgUpgradeShort = `Upgrade mole`
 	msgVersionShort = `Show version`
 
 	msgDigLong     = `"dig" connects the tunnel and sets up forwards`
 	msgLsLong      = `"ls" lists tunnels, optionally filtering on a regular expression`
+	msgPushLong    = `"push" sends a new or updated tunnel file to the server`
 	msgShowLong    = `"show" show the tunnel configuration`
 	msgUpgradeLong = `"upgrade" upgrades mole to the latest version`
 	msgVersionLong = `"version" shows current mole version`
@@ -82,5 +84,9 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
   mole show -r foo       # show the raw config file for the tunnel "foo"
   sudo mole dig foo      # dig the tunnel "foo"
   sudo mole -d dig foo   # dig the tunnel "foo", while showing debug output
+  mole push foo.ini      # create or update the "foo" tunnel from a local file
 `
+
+	msgFileNotInit = `File %q should have .ini extension`
+	msgOkPushed    = `Pushed %q`
 )

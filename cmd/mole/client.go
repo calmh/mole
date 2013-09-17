@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -97,11 +98,11 @@ func NewClient(host string, cert tls.Certificate) *Client {
 	}
 }
 
-func (c *Client) request(method, path string) *http.Response {
+func (c *Client) request(method, path string, content io.Reader) *http.Response {
 	url := "https://" + c.host + path
 	debugln(method, url)
 
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(method, url, content)
 	fatalErr(err)
 	req.Header.Add("X-Mole-Version", ClientVersion)
 
@@ -120,7 +121,7 @@ func (c *Client) request(method, path string) *http.Response {
 }
 
 func (c *Client) List() []ListItem {
-	resp := c.request("GET", "/store")
+	resp := c.request("GET", "/store", nil)
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -136,7 +137,7 @@ func (c *Client) List() []ListItem {
 }
 
 func (c *Client) Get(tunnel string) string {
-	resp := c.request("GET", "/store/"+tunnel+".ini")
+	resp := c.request("GET", "/store/"+tunnel+".ini", nil)
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -144,6 +145,11 @@ func (c *Client) Get(tunnel string) string {
 	res := string(data)
 
 	return res
+}
+
+func (c *Client) Put(tunnel string, data io.Reader) {
+	resp := c.request("PUT", "/store/"+tunnel+".ini", data)
+	defer resp.Body.Close()
 }
 
 func (c *Client) Deobfuscate(tunnel string) string {
@@ -186,7 +192,7 @@ func (c *Client) UpgradesURL() string {
 }
 
 func (c *Client) getToken(token string) string {
-	resp := c.request("GET", "/key/"+token)
+	resp := c.request("GET", "/key/"+token, nil)
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
