@@ -17,7 +17,7 @@ var errNoUpgradeUrl = errors.New("no upgrade URL")
 
 func init() {
 	cmd := cmdUpgrade{}
-	upgradeParser = globalParser.AddCommand("upgrade", "Upgrade mole", "'upgrade' checks for the latest version of the mole client and performs upgrades", &cmd)
+	upgradeParser = globalParser.AddCommand("upgrade", msgUpgradeShort, msgUpgradeLong, &cmd)
 }
 
 func latestBuild() (build upgrade.Build, err error) {

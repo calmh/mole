@@ -18,7 +18,7 @@ var lsParser *flags.Parser
 
 func init() {
 	cmd := cmdls{}
-	lsParser = globalParser.AddCommand("ls", "List available tunnels", "'ls' lists tunnels while optionally filtering on a provided regular expression", &cmd)
+	lsParser = globalParser.AddCommand("ls", msgLsShort, msgLsLong, &cmd)
 }
 
 func (c *cmdls) Usage() string {

@@ -20,7 +20,7 @@ var digParser *flags.Parser
 
 func init() {
 	cmd := cmdDig{}
-	digParser = globalParser.AddCommand("dig", "Dig a tunnel", "'dig' connects to a remote destination and sets up configured local TCP tunnels", &cmd)
+	digParser = globalParser.AddCommand("dig", msgDigShort, msgDigLong, &cmd)
 }
 
 func (c *cmdDig) Usage() string {

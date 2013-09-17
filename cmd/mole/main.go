@@ -60,6 +60,17 @@ func main() {
 
 	globalParser.ApplicationName = "mole"
 	if _, e := globalParser.Parse(); e != nil {
+		if e, ok := e.(*flags.Error); ok {
+			switch e.Type {
+			case flags.ErrRequired:
+				fmt.Println()
+				globalParser.WriteHelp(os.Stdout)
+				fmt.Println()
+				fallthrough
+			case flags.ErrHelp:
+				fmt.Printf(msgExamples)
+			}
+		}
 		os.Exit(1)
 	}
 

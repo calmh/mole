@@ -17,7 +17,7 @@ var showParser *flags.Parser
 
 func init() {
 	cmd := cmdShow{}
-	showParser = globalParser.AddCommand("show", "Show a tunnel", "'show' show the tunnel definition file without connecting to it", &cmd)
+	showParser = globalParser.AddCommand("show", msgShowShort, msgShowLong, &cmd)
 }
 
 func (c *cmdShow) Usage() string {

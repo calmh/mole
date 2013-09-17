@@ -10,7 +10,7 @@ var versionParser *flags.Parser
 
 func init() {
 	cmd := cmdVersion{}
-	versionParser = globalParser.AddCommand("version", "Show version", "'version' shows current and latest available client and server versions", &cmd)
+	versionParser = globalParser.AddCommand("version", msgVersionShort, msgVersionLong, &cmd)
 }
 
 func (c *cmdVersion) Execute(args []string) error {

@@ -1,6 +1,18 @@
 package main
 
 const (
+	msgDigShort     = `Dig tunnel`
+	msgLsShort      = `List tunnels`
+	msgShowShort    = `Show tunnel`
+	msgUpgradeShort = `Upgrade mole`
+	msgVersionShort = `Show version`
+
+	msgDigLong     = `"dig" connects the tunnel and sets up forwards`
+	msgLsLong      = `"ls" lists tunnels, optionally filtering on a regular expression`
+	msgShowLong    = `"show" show the tunnel configuration`
+	msgUpgradeLong = `"upgrade" upgrades mole to the latest version`
+	msgVersionLong = `"version" shows current mole version`
+
 	msgDebugEnabled = `Debug output enabled.`
 
 	msgErrGainRoot = `Error: missing root privileges to execute "%s".
@@ -61,5 +73,14 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
 
   [upgrades]
   automatic = yes
+`
+
+	msgExamples = `Examples:
+  mole ls                # show all available tunnels
+  mole ls foo            # show all available tunnels matching the non-achored regexp "foo"
+  mole show foo          # show the hosts and forwards set up by the tunnel "foo"
+  mole show -r foo       # show the raw config file for the tunnel "foo"
+  sudo mole dig foo      # dig the tunnel "foo"
+  sudo mole -d dig foo   # dig the tunnel "foo", while showing debug output
 `
 )
