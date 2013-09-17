@@ -10,7 +10,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"nym.se/mole/ansi"
 	"nym.se/mole/conf"
-	"nym.se/mole/hosts"
 )
 
 type cmdDig struct {
@@ -84,15 +83,11 @@ func (c *cmdDig) Execute(args []string) error {
 	fwdChan := startForwarder(dialer)
 	sendForwards(fwdChan, cfg)
 
-	if c.QualifyHosts {
-		setupHostAliases("mole."+args[0], args[0], cfg)
-		defer restoreHostsFile("mole." + args[0])
-	} else {
-		setupHostAliases("mole", "", cfg)
-		defer restoreHostsFile("mole")
-	}
+	setupHostsFile(args[0], cfg, c.QualifyHosts)
 
 	shell(fwdChan, cfg, dialer)
+
+	restoreHostsFile(args[0], c.QualifyHosts)
 
 	if vpn != nil {
 		vpn.Stop()
@@ -107,31 +102,6 @@ func (c *cmdDig) Execute(args []string) error {
 
 	okln("Done")
 	return nil
-}
-
-func setupHostAliases(tag string, domain string, cfg *conf.Config) {
-	var entries []hosts.Entry
-	for _, fwd := range cfg.Forwards {
-		ps := strings.SplitN(fwd.Name, " ", 2)
-		name := strings.ToLower(ps[0])
-		if domain != "" {
-			name = name + "." + domain
-		}
-		ip := fwd.Lines[0].SrcIP
-		entries = append(entries, hosts.Entry{IP: ip, Names: []string{name}})
-	}
-
-	requireRoot("/etc/hosts")
-	becomeRoot()
-	err := hosts.ReplaceTagged(tag, entries)
-	dropRoot()
-	fatalErr(err)
-}
-
-func restoreHostsFile(tag string) {
-	becomeRoot()
-	hosts.ReplaceTagged(tag, nil)
-	dropRoot()
 }
 
 func sshHost(host string, cfg *conf.Config) Dialer {
