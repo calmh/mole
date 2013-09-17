@@ -25,14 +25,23 @@ func init() {
 		realUid = syscall.Getuid()
 	}
 
-	e := syscall.Setreuid(-1, realUid)
-	fatalErr(e)
+	dropRoot()
 }
 
 func requireRoot(reason string) {
 	if !hasRoot {
 		fatalf(msgErrGainRoot, reason)
 	}
+}
+
+func becomeRoot() {
+	e := syscall.Setreuid(-1, 0)
+	fatalErr(e)
+}
+
+func dropRoot() {
+	e := syscall.Setreuid(-1, realUid)
+	fatalErr(e)
 }
 
 func getHomeDir() string {
