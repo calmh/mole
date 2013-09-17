@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	ClientVersion         = "3.99"
 	ServerCertificateName = "server"
 )
+
+var clientVersion = strings.Replace(buildVersion, "v", "", 1)
 
 type Client struct {
 	host   string
@@ -104,7 +105,7 @@ func (c *Client) request(method, path string, content io.Reader) *http.Response 
 
 	req, err := http.NewRequest(method, url, content)
 	fatalErr(err)
-	req.Header.Add("X-Mole-Version", ClientVersion)
+	req.Header.Add("X-Mole-Version", clientVersion)
 
 	resp, err := c.client.Do(req)
 	fatalErr(err)
@@ -169,7 +170,7 @@ func (c *Client) UpgradesURL() string {
 	if err != nil {
 		return ""
 	}
-	req.Header.Add("X-Mole-Version", ClientVersion)
+	req.Header.Add("X-Mole-Version", clientVersion)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
