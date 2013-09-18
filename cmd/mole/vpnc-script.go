@@ -69,9 +69,10 @@ init() {
 	if [ "$has_init" == "no" ] ; then
 		has_init="yes"
 		export CISCO_SPLIT_INC=0
-		unset INTERNAL_IP4_DNS
 	fi
 }
+
+unset INTERNAL_IP4_DNS
 
 add_route() {
 	init
