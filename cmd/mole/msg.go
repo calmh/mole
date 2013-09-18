@@ -89,4 +89,18 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
 	msgOkPushed    = `Pushed %q`
 
 	msgErrNoTunModule = `Required tunnel module (kernel extension) not available and not loadable.`
+
+	msgVpncUnavailable = `I cant't find a working "vpnc" on your system.
+
+Tunnels marked as requiring "(vpnc)" will not work. Consider installing vpnc.
+On Mac OS X, the recommended  way is to use homebrew (http://brew.sh/) to
+install the "tuntap" and "vpnc" packages. On Linux, do whatever your
+distribution recommends.`
+
+	msgOpncUnavailable = `I cant't find a working "openconnect" on your system.
+
+Tunnels marked as requiring "(opnc)" will not work. Consider installing
+OpenConnect. On Mac OS X, the recommended  way is to use homebrew
+(http://brew.sh/) to install the "tuntap" and "openconnect" packages.
+On Linux, do whatever your distribution recommends.`
 )
