@@ -37,6 +37,10 @@ func (c *cmdDig) Execute(args []string) error {
 		fatalln("dig: missing required option <tunnelname>")
 	}
 
+	// Fail early in case we don't have root since it's always required on
+	// platforms where it matters
+	requireRoot("dig")
+
 	var cfg *conf.Config
 	var err error
 

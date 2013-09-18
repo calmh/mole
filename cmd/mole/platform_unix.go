@@ -87,7 +87,7 @@ func addToHostsFile(tag string, domain string, cfg *conf.Config) {
 		entries = append(entries, hosts.Entry{IP: ip, Names: []string{name}})
 	}
 
-	requireRoot("/etc/hosts")
+	requireRoot("update /etc/hosts")
 	becomeRoot()
 	err := hosts.ReplaceTagged(tag, entries)
 	dropRoot()
