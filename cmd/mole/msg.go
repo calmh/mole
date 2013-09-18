@@ -36,8 +36,6 @@ ability to become root as necessary.
 
 	msgErrNoHome = `No home directory that I could find; cannot proceed.`
 
-	msgWarnSetrlimit = `Warning: setrlimit: %v`
-
 	msgErrPEMNoKey = `No ssh key found after PEM decode.`
 
 	msgSshFirst = `ssh: Dial %s@%s`

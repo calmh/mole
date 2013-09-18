@@ -13,6 +13,6 @@ func init() {
 
 	err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		warnln(msgWarnSetrlimit, err)
+		warnln("setrlimit:", err)
 	}
 }
