@@ -156,7 +156,7 @@ func (c *Client) Put(tunnel string, data io.Reader) {
 func (c *Client) Deobfuscate(tunnel string) string {
 	matches := obfuscatedRe.FindAllString(tunnel, -1)
 	for _, o := range matches {
-		tunnel = strings.Replace(tunnel, o, c.getToken(o[6:]), -1)
+		tunnel = strings.Replace(tunnel, o, c.resolveKey(o[6:]), -1)
 	}
 
 	return tunnel
@@ -192,8 +192,8 @@ func (c *Client) UpgradesURL() string {
 	return manifest.URL
 }
 
-func (c *Client) getToken(token string) string {
-	resp := c.request("GET", "/key/"+token, nil)
+func (c *Client) resolveKey(key string) string {
+	resp := c.request("GET", "/key/"+key, nil)
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
