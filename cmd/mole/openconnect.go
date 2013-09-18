@@ -38,6 +38,10 @@ type OpenConnect struct {
 func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 	requireRoot("openconnect")
 
+	if ok := ensureTunModule(); !ok {
+		fatalln(msgErrNoTunModule)
+	}
+
 	script := writeVpncScript(cfg)
 
 	args := []string{"--non-inter", "--passwd-on-stdin", "--script", script}

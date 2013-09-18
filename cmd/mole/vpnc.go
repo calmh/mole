@@ -38,6 +38,10 @@ type Vpnc struct {
 func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 	requireRoot("vpnc")
 
+	if ok := ensureTunModule(); !ok {
+		fatalln(msgErrNoTunModule)
+	}
+
 	script := writeVpncScript(cfg)
 	cmd := exec.Command(p.vpncBinary, "--no-detach", "--non-inter", "--script", script, "-")
 

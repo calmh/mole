@@ -89,4 +89,6 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
 
 	msgFileNotInit = `File %q should have .ini extension`
 	msgOkPushed    = `Pushed %q`
+
+	msgErrNoTunModule = `Required tunnel module (kernel extension) not available and not loadable.`
 )
