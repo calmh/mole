@@ -12,7 +12,7 @@ func parse(i ini.File) (cp *Config, err error) {
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
 
-	var hostId int
+	var hostID int
 	for _, section := range i.SectionNames {
 		options := i.Sections[section]
 
@@ -40,7 +40,7 @@ func parse(i ini.File) (cp *Config, err error) {
 			name := section[6:]
 			host := Host{
 				Name: name,
-				Port: DefaultPort,
+				Port: defaultSSHPort,
 			}
 			host.Other = make(map[string]string)
 			for k, v := range options {
@@ -69,8 +69,8 @@ func parse(i ini.File) (cp *Config, err error) {
 				}
 			}
 			c.Hosts = append(c.Hosts, host)
-			c.HostsMap[name] = hostId
-			hostId++
+			c.HostsMap[name] = hostID
+			hostID++
 		} else if strings.HasPrefix(section, "forwards.") {
 			name := section[9:]
 			forw := Forward{Name: name}

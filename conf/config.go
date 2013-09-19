@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	DefaultPort = 22
+	defaultSSHPort = 22
 )
 
+// Config is a complete tunnel configuration
 type Config struct {
 	General struct {
 		Description string
@@ -29,6 +30,7 @@ type Config struct {
 	VpnRoutes   []string
 }
 
+// Host is an SSH host to bounce via
 type Host struct {
 	Name  string
 	Addr  string
@@ -41,6 +43,7 @@ type Host struct {
 	Other map[string]string
 }
 
+// Forward is a port forwarding directive
 type Forward struct {
 	Name    string
 	Lines   []ForwardLine
@@ -48,6 +51,7 @@ type Forward struct {
 	Comment string
 }
 
+// ForwardLine is a specific port or range or ports to forward
 type ForwardLine struct {
 	SrcIP   string
 	SrcPort int
@@ -56,6 +60,8 @@ type ForwardLine struct {
 	Repeat  int
 }
 
+// SrcString returns the source IP address and port as a string formatted for
+// use with Dial() and similar.
 func (line ForwardLine) SrcString(i int) string {
 	if i > line.Repeat {
 		panic("index > repeat")
@@ -63,6 +69,8 @@ func (line ForwardLine) SrcString(i int) string {
 	return fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
 }
 
+// DstString returns the destination IP address and port as a string formatted for
+// use with Dial() and similar.
 func (line ForwardLine) DstString(i int) string {
 	if i > line.Repeat {
 		panic("index > repeat")
@@ -70,18 +78,20 @@ func (line ForwardLine) DstString(i int) string {
 	return fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
 }
 
+// String returns a human readable representation of the port forward.
 func (line ForwardLine) String() string {
 	if line.Repeat == 0 {
 		src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort)
 		dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort)
 		return fmt.Sprintf("%s -> %s", src, dst)
-	} else {
-		src := fmt.Sprintf("%s:%d-%d", line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
-		dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
-		return fmt.Sprintf("%s -> %s", src, dst)
 	}
+	src := fmt.Sprintf("%s:%d-%d", line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
+	dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
+	return fmt.Sprintf("%s -> %s", src, dst)
 }
 
+// LoadFile loads and parses a named file as a tunnel config, returning a
+// Config pointer or an error.
 func LoadFile(fname string) (*Config, error) {
 	f, e := os.Open(fname)
 	if e != nil {
@@ -90,11 +100,15 @@ func LoadFile(fname string) (*Config, error) {
 	return parse(ini.Parse(f))
 }
 
+// LoadString parses the given string as a tunnel config, returning a Config
+// pointer or an error.
 func LoadString(data string) (*Config, error) {
 	f := bytes.NewBufferString(data)
 	return parse(ini.Parse(f))
 }
 
+// SourceAddresses returns all the source addresses used in forwarding
+// directives.
 func (c *Config) SourceAddresses() []string {
 	addrMap := make(map[string]bool)
 	for _, fwd := range c.Forwards {
@@ -112,11 +126,15 @@ func (c *Config) SourceAddresses() []string {
 	return addrs
 }
 
+// Remap changes all forwarding directives to use the default localhost
+// address 127.0.0.1 instead of their configured source, if it differs from
+// 127.0.0.1.
 func (c *Config) Remap() {
 	port := 10000
 	for fi := range c.Forwards {
 		for li := range c.Forwards[fi].Lines {
 			if c.Forwards[fi].Lines[li].SrcIP != "127.0.0.1" {
+				// BUG: Need to keep track of used ports and not try to use them twice.
 				c.Forwards[fi].Lines[li].SrcIP = "127.0.0.1"
 				c.Forwards[fi].Lines[li].SrcPort = port
 				port += c.Forwards[fi].Lines[li].Repeat + 1
