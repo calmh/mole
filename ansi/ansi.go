@@ -1,3 +1,4 @@
+// Package ansi provides trivial ANSI formatting of strings.
 package ansi
 
 import (
@@ -29,15 +30,19 @@ var (
 	ansiRe   = regexp.MustCompile("\033.+?[mKlh]")
 )
 
+// Disable disables ANSI formatting, effectively turning all formatting
+// functions into the identity transform.
 func Disable() {
 	disabled = true
 }
 
+// Strlen returns the length of a string, as it will be displayed, in runes.
 func Strlen(s string) int {
 	cleaned := ansiRe.ReplaceAllString(s, "")
 	return utf8.RuneCountInString(cleaned)
 }
 
+// Bold returns the string s with bold formatting.
 func Bold(s string) string {
 	if disabled {
 		return s
@@ -45,6 +50,7 @@ func Bold(s string) string {
 	return ansiBold + s + ansiBoldOff
 }
 
+// Faint returns the string s with faint formatting.
 func Faint(s string) string {
 	if disabled {
 		return s
@@ -52,6 +58,7 @@ func Faint(s string) string {
 	return ansiFaint + s + ansiBoldOff
 }
 
+// Black returns the string s with black foreground color.
 func Black(s string) string {
 	if disabled {
 		return s
@@ -59,6 +66,7 @@ func Black(s string) string {
 	return ansiFgBlack + s + ansiFgReset
 }
 
+// Red returns the string s with red foreground color.
 func Red(s string) string {
 	if disabled {
 		return s
@@ -66,6 +74,7 @@ func Red(s string) string {
 	return ansiFgRed + s + ansiFgReset
 }
 
+// Green returns the string s with green foreground color.
 func Green(s string) string {
 	if disabled {
 		return s
@@ -73,6 +82,7 @@ func Green(s string) string {
 	return ansiFgGreen + s + ansiFgReset
 }
 
+// Yellow returns the string s with yellow foreground color.
 func Yellow(s string) string {
 	if disabled {
 		return s
@@ -80,6 +90,7 @@ func Yellow(s string) string {
 	return ansiFgYellow + s + ansiFgReset
 }
 
+// Blue returns the string s with blue foreground color.
 func Blue(s string) string {
 	if disabled {
 		return s
@@ -87,6 +98,7 @@ func Blue(s string) string {
 	return ansiFgBlue + s + ansiFgReset
 }
 
+// Magenta returns the string s with magenta foreground color.
 func Magenta(s string) string {
 	if disabled {
 		return s
@@ -94,6 +106,7 @@ func Magenta(s string) string {
 	return ansiFgMagenta + s + ansiFgReset
 }
 
+// Cyan returns the string s with cyan foreground color.
 func Cyan(s string) string {
 	if disabled {
 		return s
@@ -101,6 +114,7 @@ func Cyan(s string) string {
 	return ansiFgCyan + s + ansiFgReset
 }
 
+// Underline returns the string s with underlined formatting.
 func Underline(s string) string {
 	if disabled {
 		return s
