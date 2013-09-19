@@ -10,7 +10,8 @@ import (
 )
 
 type cmdls struct {
-	Long bool `short:"l" description:"Long listing"`
+	Long  bool `short:"l" description:"Long listing"`
+	Short bool `short:"s" description:"Short listing (name only)"`
 }
 
 var lsParser *flags.Parser
@@ -49,35 +50,39 @@ func (c *cmdls) Execute(args []string) error {
 	for _, i := range l {
 		hosts := strings.Join(i.Hosts, ", ")
 		if re == nil || re.MatchString(i.Name) || re.MatchString(i.Description) || re.MatchString(hosts) {
-			matched++
+			if c.Short {
+				fmt.Println(i.Name)
+			} else {
+				matched++
+				descr := i.Description
+				if i.Vpnc {
+					descr = descr + ansi.Magenta(" (vpnc)")
+				} else if i.OpenConnect {
+					descr = descr + ansi.Green(" (opnc)")
+				} else if i.Socks {
+					descr = descr + ansi.Yellow(" (socks)")
+				}
 
-			descr := i.Description
-			if i.Vpnc {
-				descr = descr + ansi.Magenta(" (vpnc)")
-			} else if i.OpenConnect {
-				descr = descr + ansi.Green(" (opnc)")
-			} else if i.Socks {
-				descr = descr + ansi.Yellow(" (socks)")
-			}
+				if hosts == "" {
+					hosts = ansi.Faint("(local forward)")
+				}
 
-			if hosts == "" {
-				hosts = ansi.Faint("(local forward)")
+				row := []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts}
+				if c.Long {
+					row = append(row, fmt.Sprintf("%d", i.IntVersion))
+				}
+				rows = append(rows, row)
 			}
-
-			row := []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts}
-			if c.Long {
-				row = append(row, fmt.Sprintf("%d", i.IntVersion))
-			}
-			rows = append(rows, row)
 		}
 	}
 
-	// Never prefix table with log stuff
-	fmt.Printf(table.Fmt("lllr", rows))
+	if !c.Short {
+		// Never prefix table with log stuff
+		fmt.Printf(table.Fmt("lllr", rows))
 
-	if matched != len(l) {
-		fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
+		if matched != len(l) {
+			fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
+		}
 	}
-
 	return nil
 }
