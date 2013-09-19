@@ -39,10 +39,8 @@ func parse(i ini.File) (cp *Config, err error) {
 		} else if strings.HasPrefix(section, "hosts.") {
 			name := section[6:]
 			host := Host{
-				Name:   name,
-				Port:   DefaultPort,
-				Prompt: DefaultPrompt,
-				Unique: fmt.Sprintf("host%d", hostId),
+				Name: name,
+				Port: DefaultPort,
 			}
 			host.Other = make(map[string]string)
 			for k, v := range options {
@@ -62,8 +60,6 @@ func parse(i ini.File) (cp *Config, err error) {
 					host.User = v
 				case "password":
 					host.Pass = v
-				case "prompt":
-					host.Prompt = v
 				case "via":
 					host.Via = v
 				case "socks":

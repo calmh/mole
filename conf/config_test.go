@@ -62,9 +62,6 @@ func TestHosts(t *testing.T) {
 	if h.Pass != "" {
 		t.Errorf("Incorrect Pass %q", h.Pass)
 	}
-	if h.Prompt != `(%|\$|#|>)\s*$` {
-		t.Errorf("Incorrect Prompt %q", h.Prompt)
-	}
 	if h.Via != "tac2" {
 		t.Errorf("Incorrect Via %q", h.Via)
 	}
@@ -90,9 +87,6 @@ func TestHosts(t *testing.T) {
 	}
 	if h.Pass != "testpass" {
 		t.Errorf("Incorrect Pass %q", h.Pass)
-	}
-	if h.Prompt != "~>" {
-		t.Errorf("Incorrect Prompt %q", h.Prompt)
 	}
 	if h.Via != "" {
 		t.Errorf("Incorrect Via %q", h.Via)

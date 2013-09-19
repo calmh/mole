@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	DefaultPrompt = `(%|\$|#|>)\s*$`
-	DefaultPort   = 22
+	DefaultPort = 22
 )
 
 type Config struct {
@@ -31,17 +30,15 @@ type Config struct {
 }
 
 type Host struct {
-	Name   string
-	Addr   string
-	Port   int
-	User   string
-	Key    string
-	Pass   string
-	Prompt string
-	Via    string
-	Unique string
-	SOCKS  string
-	Other  map[string]string
+	Name  string
+	Addr  string
+	Port  int
+	User  string
+	Key   string
+	Pass  string
+	Via   string
+	SOCKS string
+	Other map[string]string
 }
 
 type Forward struct {
