@@ -1,19 +1,33 @@
 package conf_test
 
 import (
+	"bytes"
 	"github.com/calmh/mole/conf"
+	"os"
 	"testing"
 )
 
+func loadFile(f string) (*conf.Config, error) {
+	fd, err := os.Open(f)
+	if err != nil {
+		panic(err)
+	}
+	return conf.Load(fd)
+}
+
+func loadString(s string) (*conf.Config, error) {
+	return conf.Load(bytes.NewBufferString(s))
+}
+
 func TestLoadFileWithoutError(t *testing.T) {
-	_, err := conf.LoadFile("test.ini")
+	_, err := loadFile("test.ini")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestGeneralSection(t *testing.T) {
-	cfg, _ := conf.LoadFile("test.ini")
+	cfg, _ := loadFile("test.ini")
 
 	if cfg.General.Description != "Operator (One)" {
 		t.Errorf("Incorrect Description %q", cfg.General.Description)
@@ -37,7 +51,7 @@ func TestGeneralSection(t *testing.T) {
 }
 
 func TestHosts(t *testing.T) {
-	cfg, _ := conf.LoadFile("test.ini")
+	cfg, _ := loadFile("test.ini")
 
 	if l := len(cfg.Hosts); l != 2 {
 		t.Errorf("Incorrect len(Hosts) %d", l)
@@ -97,7 +111,7 @@ func TestHosts(t *testing.T) {
 }
 
 func TestForwards(t *testing.T) {
-	cfg, _ := conf.LoadFile("test.ini")
+	cfg, _ := loadFile("test.ini")
 
 	if l := len(cfg.Forwards); l != 2 {
 		t.Errorf("Incorrect len(Forwards) %d", l)
@@ -149,7 +163,7 @@ func TestForwards(t *testing.T) {
 }
 
 func TestSourceAddresses(t *testing.T) {
-	cfg, _ := conf.LoadString(`
+	cfg, _ := loadString(`
 [forwards.baz (quux)]
 127.22.0.17:3994 = 10.22.0.9
 127.22.0.17:8443 = 10.22.0.9
@@ -182,7 +196,7 @@ func TestSourceAddresses(t *testing.T) {
 }
 
 func TestVpnc(t *testing.T) {
-	cfg, _ := conf.LoadString(`
+	cfg, _ := loadString(`
 [vpnc]
 IPSec_gateway = 1.2.3.4
 IPSec_ID = groupID
@@ -222,7 +236,7 @@ Cisco_UDP_Encapsulation_Port = 0
 }
 
 func TestOpenConnect(t *testing.T) {
-	cfg, _ := conf.LoadString(`
+	cfg, _ := loadString(`
 [openconnect]
 server = foo.example.com
 user = procera
