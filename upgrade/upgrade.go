@@ -1,3 +1,4 @@
+// Package upgrade performs automatic upgrade of the running binary.
 package upgrade
 
 import (
@@ -16,6 +17,7 @@ import (
 	"time"
 )
 
+// Build is a versioned build of a binary.
 type Build struct {
 	URL        string
 	Hash       string
@@ -23,8 +25,11 @@ type Build struct {
 	Version    string
 }
 
+// The binary's SHA1 hash was incorrect after downloading.
 var ErrHashMismatch = errors.New("hash mismatch")
 
+// Newest checks for the newest build available for a given binary at a given
+// base URL and returns a Build on an error.
 func Newest(binary string, url string) (b Build, err error) {
 	archBin := binary + "-" + runtime.GOOS + "-" + runtime.GOARCH
 	binUrl := url + "/" + archBin
@@ -43,6 +48,11 @@ func Newest(binary string, url string) (b Build, err error) {
 	return
 }
 
+// UpgradeTo upgrades the currently exeuting binary to the specified Build and
+// returns an error or nil. The file is downloaded to <destination>.part and
+// atomically renamed to the destination after the hash check. The destination
+// is taken as the path of the currently executing binary, while following any
+// symbolic links to it's destination.
 func UpgradeTo(build Build) error {
 	path, err := osext.Executable()
 	if err != nil {

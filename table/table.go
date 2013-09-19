@@ -1,3 +1,4 @@
+// Package table formats an ASCII/ANSI table with dynamic column widths.
 package table
 
 import (
@@ -10,6 +11,15 @@ const (
 	intraColumnPadding = 2
 )
 
+// Fmt formats the given rows into a pretty table and returns the string ready
+// to be printed. The fmt parameter is a string of "l" and "r" characters
+// indicating the requested alignment of each column. Table cells can contain
+// ANSI formatting. The header row will be underlined. Example:
+//
+//   rows := [][]string{{"NAME", "VALUE"}, {"Test", "4.5"}, {"Other", "13.2"}}
+//   tab := table.Fmt("lr", rows)
+//   fmt.Println(tab)
+//
 func Fmt(fmt string, rows [][]string) string {
 	cols := len(rows[0])
 	width := make([]int, cols)
