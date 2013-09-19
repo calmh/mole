@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/calmh/mole/conf"
 	"github.com/jessevdk/go-flags"
@@ -40,7 +41,7 @@ func (c *cmdShow) Execute(args []string) error {
 		// No log function, since it must be possible to pipe to a valid file
 		fmt.Printf(tun)
 	} else {
-		cfg, err := conf.LoadString(tun)
+		cfg, err := conf.Load(bytes.NewBufferString(tun))
 		fatalErr(err)
 
 		if globalOpts.Remap {

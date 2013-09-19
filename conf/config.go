@@ -1,10 +1,9 @@
 package conf
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/calmh/mole/ini"
-	"os"
+	"io"
 	"sort"
 )
 
@@ -90,21 +89,10 @@ func (line ForwardLine) String() string {
 	return fmt.Sprintf("%s -> %s", src, dst)
 }
 
-// LoadFile loads and parses a named file as a tunnel config, returning a
+// Load loads and parses an io.Reader as a tunnel config, returning a
 // Config pointer or an error.
-func LoadFile(fname string) (*Config, error) {
-	f, e := os.Open(fname)
-	if e != nil {
-		return nil, e
-	}
-	return parse(ini.Parse(f))
-}
-
-// LoadString parses the given string as a tunnel config, returning a Config
-// pointer or an error.
-func LoadString(data string) (*Config, error) {
-	f := bytes.NewBufferString(data)
-	return parse(ini.Parse(f))
+func Load(r io.Reader) (*Config, error) {
+	return parse(ini.Parse(r))
 }
 
 // SourceAddresses returns all the source addresses used in forwarding

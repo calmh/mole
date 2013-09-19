@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"code.google.com/p/go.net/proxy"
 	"fmt"
 	"github.com/calmh/mole/ansi"
@@ -44,15 +45,15 @@ func (c *cmdDig) Execute(args []string) error {
 	var err error
 
 	if c.Local {
-		cfg, err = conf.LoadFile(args[0])
-		if err != nil {
-			fatalln(err)
-		}
+		fd, err := os.Open(args[0])
+		fatalErr(err)
+		cfg, err = conf.Load(fd)
+		fatalErr(err)
 	} else {
 		cert := certificate()
 		cl := NewClient(serverIni.address, cert)
 		tun := cl.Deobfuscate(cl.Get(args[0]))
-		cfg, err = conf.LoadString(tun)
+		cfg, err = conf.Load(bytes.NewBufferString(tun))
 		fatalErr(err)
 	}
 

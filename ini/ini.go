@@ -1,3 +1,4 @@
+// Package ini provides trivial parsing of .INI format files.
 package ini
 
 import (
@@ -7,17 +8,21 @@ import (
 	"strings"
 )
 
-type Section map[string]string
+// File is a parsed INI format file.
 type File struct {
 	Sections     map[string]Section
 	SectionNames []string
 }
+
+// Section is a named [section] within a File.
+type Section map[string]string
 
 var (
 	iniSectionRe = regexp.MustCompile(`^\[(.+)\]$`)
 	iniOptionRe  = regexp.MustCompile(`^\s*([^\s]+)\s*=\s*(.+)\s*$`)
 )
 
+// Parse reads the given io.Reader and returns a parsed File object.
 func Parse(stream io.Reader) File {
 	iniFile := File{Sections: make(map[string]Section)}
 	var curSection string

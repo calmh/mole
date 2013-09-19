@@ -1,3 +1,4 @@
+// Package hosts manages alterations to the /etc/hosts file.
 package hosts
 
 import (
@@ -7,12 +8,16 @@ import (
 	"strings"
 )
 
+// An Entry represents a line in /etc/hosts
 type Entry struct {
 	IP    string
 	Names []string
 	Tag   string
 }
 
+// ReplaceTagged removes all lines in /etc/hosts marked with the specified tag
+// and insert the given slice of entries instead. The slice may be nil or zero
+// length to remove all tagged entries.
 func ReplaceTagged(tag string, entries []Entry) error {
 	hostf, err := os.Open("/etc/hosts")
 	if err != nil {
