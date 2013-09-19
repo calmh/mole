@@ -1,17 +1,16 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/calmh/mole/conf"
 	"io"
 	"net"
-
-	"code.google.com/p/go.crypto/ssh"
-	"nym.se/mole/conf"
 )
 
 type password string

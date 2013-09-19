@@ -70,6 +70,11 @@ func caCert() *x509.Certificate {
 }
 
 func NewClient(host string, cert tls.Certificate) *Client {
+	if !strings.HasPrefix(clientVersion, "4.") {
+		// Built from go get, so no tag info
+		clientVersion = "4.0-unknown-dev"
+	}
+
 	crt := caCert()
 	if crt != nil {
 		pool := x509.NewCertPool()

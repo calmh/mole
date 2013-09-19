@@ -4,11 +4,10 @@ package main
 
 import (
 	"bufio"
+	"github.com/calmh/mole/conf"
 	"os"
 	"os/exec"
 	"strings"
-
-	"nym.se/mole/conf"
 )
 
 type OpenConnectProvider struct {

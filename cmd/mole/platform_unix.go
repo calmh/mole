@@ -3,13 +3,12 @@
 package main
 
 import (
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/hosts"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
-
-	"nym.se/mole/conf"
-	"nym.se/mole/hosts"
 )
 
 var hasRoot bool

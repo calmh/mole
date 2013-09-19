@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/calmh/mole/conf"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"nym.se/mole/conf"
 )
 
 var lenToMaskMap = map[string]string{

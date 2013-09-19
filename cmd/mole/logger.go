@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/calmh/mole/ansi"
 	"log"
 	"os"
-
-	"nym.se/mole/ansi"
 )
 
 var logger = log.New(os.Stdout, "", 0)

@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/table"
+	"github.com/jessevdk/go-flags"
 	"regexp"
 	"strings"
-
-	"github.com/jessevdk/go-flags"
-	"nym.se/mole/ansi"
-	"nym.se/mole/table"
 )
 
 type cmdls struct {

@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/calmh/mole/conf"
 	"net"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-
-	"nym.se/mole/conf"
 )
 
 var errNoLoopbackFound = errors.New("no loopback interface found")

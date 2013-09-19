@@ -2,22 +2,18 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/ini"
+	"github.com/calmh/mole/upgrade"
+	"github.com/jessevdk/go-flags"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jessevdk/go-flags"
-	"nym.se/mole/ansi"
-	"nym.se/mole/ini"
-	"nym.se/mole/upgrade"
 )
-
-var errParams = errors.New("incorrect command line parameters")
 
 var (
 	buildVersion string

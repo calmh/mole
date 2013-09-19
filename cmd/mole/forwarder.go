@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/calmh/mole/conf"
 	"net"
 	"sync/atomic"
-
-	"nym.se/mole/conf"
 )
 
 type trafficCounter struct {

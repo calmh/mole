@@ -53,12 +53,8 @@ ability to become root as necessary.
 	msgOpncConnected = `openconnect: Connected.`
 	msgOpncStopped   = `openconnect: Stopped.`
 
-	msgStatistics = ` -- %d bytes in, %d bytes out`
-
 	msgWarnNoCert = `No server CA certificate present, cannot authenticate server.`
 
-	msgNoUpgradeURL       = `Server contains no information about possible upgrades.`
-	msgCheckingUpgrade    = `Checking for upgrades (%s)`
 	msgDownloadingUpgrade = `Downloading upgrade...`
 	msgUpgraded           = `Upgraded your mole to %s.`
 	msgNoUpgrades         = `You are already running the latest version.`

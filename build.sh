@@ -5,7 +5,6 @@ buildver=$(git describe --always)
 builduser="$(whoami)@$(hostname)"
 ldflags="-X main.buildStamp '$buildstamp' -X main.buildVersion '$buildver' -X main.buildUser '$builduser'"
 
-export GOPATH=$(pwd):$GOPATH
 export GOBIN=$(pwd)/bin
 
 rm -rf auto
@@ -15,7 +14,7 @@ if [[ $1 == "all" ]] ; then
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo $arch
 		rm -rf bin
-		go-$arch install -ldflags "$ldflags" nym.se/mole/cmd/...
+		go-$arch install -ldflags "$ldflags" github.com/calmh/mole/cmd/...
 		tar zcf mole-$arch.tar.gz bin
 
 		mv bin/mole auto/mole-$arch
@@ -27,10 +26,10 @@ if [[ $1 == "all" ]] ; then
 	for arch in windows-386 windows-amd64 ; do
 		echo $arch
 		rm -rf bin
-		go-$arch install -ldflags "$ldflags" nym.se/mole/cmd/...
+		go-$arch install -ldflags "$ldflags" github.com/calmh/mole/cmd/...
 		zip -r mole-$arch.tar.zip bin
 	done
 else
-	go install -ldflags "$ldflags" nym.se/mole/cmd/...
+	go install -ldflags "$ldflags" github.com/calmh/mole/cmd/...
 fi
 

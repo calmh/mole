@@ -2,8 +2,7 @@ package table
 
 import (
 	"bytes"
-
-	"nym.se/mole/ansi"
+	"github.com/calmh/mole/ansi"
 )
 
 const (

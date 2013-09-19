@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
+	"github.com/calmh/mole/upgrade"
 	"github.com/jessevdk/go-flags"
-	"nym.se/mole/upgrade"
 	"time"
 )
 

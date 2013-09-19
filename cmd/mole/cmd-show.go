@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"nym.se/mole/conf"
+	"github.com/calmh/mole/conf"
+	"github.com/jessevdk/go-flags"
 	"os"
 	"strings"
-
-	"github.com/jessevdk/go-flags"
 )
 
 type cmdShow struct {

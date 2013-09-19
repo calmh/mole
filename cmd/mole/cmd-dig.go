@@ -1,15 +1,14 @@
 package main
 
 import (
+	"code.google.com/p/go.net/proxy"
 	"fmt"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
+	"github.com/jessevdk/go-flags"
 	"net"
 	"os"
 	"strings"
-
-	"code.google.com/p/go.net/proxy"
-	"github.com/jessevdk/go-flags"
-	"nym.se/mole/ansi"
-	"nym.se/mole/conf"
 )
 
 type cmdDig struct {

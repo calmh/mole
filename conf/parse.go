@@ -2,10 +2,9 @@ package conf
 
 import (
 	"fmt"
+	"github.com/calmh/mole/ini"
 	"strconv"
 	"strings"
-
-	"nym.se/mole/ini"
 )
 
 func parse(i ini.File) (cp *Config, err error) {

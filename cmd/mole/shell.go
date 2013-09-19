@@ -2,19 +2,18 @@ package main
 
 import (
 	"fmt"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/table"
+	"github.com/sbinet/liner"
 	"io"
 	"net"
-	"nym.se/mole/ansi"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/sbinet/liner"
-	"nym.se/mole/conf"
-	"nym.se/mole/table"
 )
 
 var errTimeout = fmt.Errorf("connection timeout")

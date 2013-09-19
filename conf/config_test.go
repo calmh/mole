@@ -1,9 +1,8 @@
 package conf_test
 
 import (
+	"github.com/calmh/mole/conf"
 	"testing"
-
-	"nym.se/mole/conf"
 )
 
 func TestLoadFileWithoutError(t *testing.T) {

@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"bitbucket.org/kardianos/osext"
 	"compress/gzip"
 	"crypto/sha1"
 	"encoding/json"
@@ -13,8 +14,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
-
-	"bitbucket.org/kardianos/osext"
 )
 
 type Build struct {

@@ -1,10 +1,9 @@
 package main
 
 import (
-	"nym.se/mole/conf"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
 	"os/user"
-
-	"nym.se/mole/ansi"
 )
 
 func init() {

@@ -3,10 +3,9 @@ package conf
 import (
 	"bytes"
 	"fmt"
+	"github.com/calmh/mole/ini"
 	"os"
 	"sort"
-
-	"nym.se/mole/ini"
 )
 
 const (

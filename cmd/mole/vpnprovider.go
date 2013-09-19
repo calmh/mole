@@ -1,7 +1,7 @@
 package main
 
 import (
-	"nym.se/mole/conf"
+	"github.com/calmh/mole/conf"
 )
 
 type VPN interface {
