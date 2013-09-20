@@ -70,21 +70,19 @@ func (c *cmdDig) Execute(args []string) error {
 		}
 	}
 
-	var vpn VPN
+	infoln(sshPathStr(cfg.General.Main, cfg), "...")
 
+	var vpn VPN
 	if cfg.Vpnc != nil {
-		infoln(msgVpncStarting)
 		vpn, err = startVpn("vpnc", cfg)
 		fatalErr(err)
 	} else if cfg.OpenConnect != nil {
-		infoln(msgOpncStarting)
 		vpn, err = startVpn("openconnect", cfg)
 		fatalErr(err)
 	}
 
 	var dialer Dialer = proxy.Direct
 	if mh := cfg.General.Main; mh != "" {
-		infoln("ssh:", sshPathStr(cfg.General.Main, cfg))
 		dialer, err = sshHost(mh, cfg)
 		fatalErr(err)
 	}
@@ -130,10 +128,37 @@ func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 }
 
 func sshPathStr(hostname string, cfg *conf.Config) string {
-	host := cfg.Hosts[cfg.HostsMap[hostname]]
-	var before string
-	if host.Via != "" {
-		before = sshPathStr(host.Via, cfg) + " -> "
+	var this string
+	if hostID, ok := cfg.HostsMap[hostname]; ok {
+		host := cfg.Hosts[hostID]
+		this = fmt.Sprintf("ssh://%s@%s", host.User, host.Name)
+
+		if host.Via != "" {
+			this = sshPathStr(host.Via, cfg) + " -> " + this
+		}
+
+		if host.SOCKS != "" {
+			this = "SOCKS://" + host.SOCKS + " -> " + this
+		}
 	}
-	return before + fmt.Sprintf("%s@%s", host.User, host.Name)
+
+	if hostname == cfg.General.Main || hostname == "" {
+		if cfg.Vpnc != nil {
+			vpnc := fmt.Sprintf("vpnc://%s", cfg.Vpnc["IPSec_gateway"])
+			if this == "" {
+				return vpnc
+			} else {
+				this = vpnc + " -> " + this
+			}
+		} else if cfg.OpenConnect != nil {
+			opnc := fmt.Sprintf("openconnect://%s", cfg.OpenConnect["server"])
+			if this == "" {
+				return opnc
+			} else {
+				this = opnc + " -> " + this
+			}
+		}
+	}
+
+	return this
 }
