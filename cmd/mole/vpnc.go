@@ -4,10 +4,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/calmh/mole/conf"
+	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -56,9 +59,8 @@ func (p VPNCProvider) Start(cfg *conf.Config) (VPN, error) {
 		return nil, err
 	}
 
-	if globalOpts.Debug {
-		cmd.Stderr = os.Stderr
-	}
+	var stderrbuf bytes.Buffer
+	cmd.Stderr = &stderrbuf
 
 	err = cmd.Start()
 	if err != nil {
@@ -88,6 +90,13 @@ func (p VPNCProvider) Start(cfg *conf.Config) (VPN, error) {
 		if line == "mole-vpnc-script-next" {
 			debugln(msgVpncConnected)
 			return &Vpnc{*cmd, script}, nil
+		}
+
+		if err == io.EOF {
+			spaces := regexp.MustCompile(`\s+`)
+			msg := strings.Replace(stderrbuf.String(), "\n", "; ", -1)
+			msg = spaces.ReplaceAllString(msg, " ")
+			return nil, fmt.Errorf(msg)
 		}
 
 		if err != nil {
