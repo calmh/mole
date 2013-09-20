@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -69,43 +70,41 @@ func caCert() *x509.Certificate {
 	return cert
 }
 
+func certFingerprint(conn *tls.Conn) string {
+	cert := conn.ConnectionState().PeerCertificates[0].Raw
+	sha := sha1.New()
+	sha.Write(cert)
+	hash := sha.Sum(nil)
+	return fmt.Sprintf("%x", hash)
+}
+
 func NewClient(host string, cert tls.Certificate) *Client {
 	if !strings.HasPrefix(clientVersion, "4.") {
 		// Built from go get, so no tag info
 		clientVersion = "4.0-unknown-dev"
 	}
 
-	crt := caCert()
-	if crt != nil {
-		pool := x509.NewCertPool()
-		pool.AddCert(crt)
-		transport := &http.Transport{
-			Dial: func(n, a string) (net.Conn, error) {
-				return net.Dial(n, host)
-			},
-			TLSClientConfig: &tls.Config{
-				ServerName:   ServerCertificateName,
-				RootCAs:      pool,
-				Certificates: []tls.Certificate{cert},
-			},
-		}
-		client := &http.Client{Transport: transport}
-		return &Client{ServerCertificateName, client}
-	} else {
-		debugln(msgWarnNoCert)
-		transport := &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-				Certificates:       []tls.Certificate{cert},
-			},
-		}
-		client := &http.Client{Transport: transport}
-		return &Client{host, client}
+	transport := &http.Transport{
+		Dial: func(n, a string) (net.Conn, error) {
+			tlsCfg := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+			conn, err := tls.Dial(n, host, tlsCfg)
+			if err != nil {
+				return nil, err
+			}
+
+			fp := certFingerprint(conn)
+			if fp != serverIni.fingerprint {
+				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, serverIni.fingerprint)
+			}
+			return conn, err
+		},
 	}
+	client := &http.Client{Transport: transport}
+	return &Client{ServerCertificateName, client}
 }
 
 func (c *Client) request(method, path string, content io.Reader) *http.Response {
-	url := "https://" + c.host + path
+	url := "http://" + c.host + path
 	debugln(method, url)
 
 	req, err := http.NewRequest(method, url, content)
@@ -168,7 +167,7 @@ func (c *Client) Deobfuscate(tunnel string) string {
 }
 
 func (c *Client) UpgradesURL() string {
-	url := "https://" + c.host + "/extra/upgrades.json"
+	url := "http://" + c.host + "/extra/upgrades.json"
 	debugln("GET", url)
 
 	req, err := http.NewRequest("GET", url, nil)

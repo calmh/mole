@@ -30,8 +30,9 @@ var globalOpts struct {
 }
 
 var serverIni struct {
-	address  string
-	upgrades bool
+	address     string
+	upgrades    bool
+	fingerprint string
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -119,6 +120,7 @@ func setup() {
 
 	config := ini.Parse(f)
 	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
+	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
 
 	displayUpgradeNotice := true
 	serverIni.upgrades = true
