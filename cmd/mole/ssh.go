@@ -38,7 +38,7 @@ func (k *keyring) Key(i int) (ssh.PublicKey, error) {
 	if i < 0 || i >= len(k.keys) {
 		return nil, nil
 	}
-	return ssh.NewRSAPublicKey(&k.keys[i].PublicKey), nil
+	return ssh.NewPublicKey(&k.keys[i].PublicKey)
 }
 
 func (k *keyring) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
