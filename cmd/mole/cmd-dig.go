@@ -7,7 +7,6 @@ import (
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/conf"
 	"github.com/jessevdk/go-flags"
-	"net"
 	"os"
 	"strings"
 )
@@ -74,14 +73,20 @@ func (c *cmdDig) Execute(args []string) error {
 	var vpn VPN
 
 	if cfg.Vpnc != nil {
-		vpn = startVpn("vpnc", cfg)
+		infoln(msgVpncStarting)
+		vpn, err = startVpn("vpnc", cfg)
+		fatalErr(err)
 	} else if cfg.OpenConnect != nil {
-		vpn = startVpn("openconnect", cfg)
+		infoln(msgOpncStarting)
+		vpn, err = startVpn("openconnect", cfg)
+		fatalErr(err)
 	}
 
 	var dialer Dialer = proxy.Direct
 	if mh := cfg.General.Main; mh != "" {
-		dialer = sshHost(mh, cfg)
+		infoln("ssh:", sshPathStr(cfg.General.Main, cfg))
+		dialer, err = sshHost(mh, cfg)
+		fatalErr(err)
 	}
 
 	fwdChan := startForwarder(dialer)
@@ -108,24 +113,6 @@ func (c *cmdDig) Execute(args []string) error {
 	return nil
 }
 
-func sshHost(host string, cfg *conf.Config) Dialer {
-	h := cfg.Hosts[cfg.HostsMap[host]]
-	var conn net.Conn
-	var err error
-	if h.Via != "" {
-		conn, err = sshHost(h.Via, cfg).Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
-	} else {
-		var dialer Dialer = proxy.Direct
-		if h.SOCKS != "" {
-			dialer, err = proxy.SOCKS5("tcp", h.SOCKS, nil, proxy.Direct)
-			fatalErr(err)
-		}
-		conn, err = dialer.Dial("tcp", fmt.Sprintf("%s:%d", h.Addr, h.Port))
-	}
-	fatalErr(err)
-	return sshOnConn(conn, h)
-}
-
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
 		infoln(ansi.Underline(fwd.Name))
@@ -140,4 +127,13 @@ func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 			fwdChan <- line
 		}
 	}
+}
+
+func sshPathStr(hostname string, cfg *conf.Config) string {
+	host := cfg.Hosts[cfg.HostsMap[hostname]]
+	var before string
+	if host.Via != "" {
+		before = sshPathStr(host.Via, cfg) + " -> "
+	}
+	return before + fmt.Sprintf("%s@%s", host.User, host.Name)
 }

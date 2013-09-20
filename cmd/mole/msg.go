@@ -5,6 +5,7 @@ const (
 	msgLsShort      = `List tunnels`
 	msgPushShort    = `Push tunnel`
 	msgShowShort    = `Show tunnel`
+	msgTestShort    = `Test tunnel`
 	msgUpgradeShort = `Upgrade mole`
 	msgVersionShort = `Show version`
 
@@ -12,6 +13,7 @@ const (
 	msgLsLong      = `"ls" lists tunnels, optionally filtering on a regular expression`
 	msgPushLong    = `"push" sends a new or updated tunnel file to the server`
 	msgShowLong    = `"show" show the tunnel configuration`
+	msgTestLong    = `"dig" connects the tunnel and tests forwards`
 	msgUpgradeLong = `"upgrade" upgrades mole to the latest version`
 	msgVersionLong = `"version" shows current mole version`
 
@@ -41,12 +43,14 @@ ability to become root as necessary.
 	msgSshFirst = `ssh: Dial %s@%s`
 	msgSshVia   = `ssh: Tunnel to %s@%s`
 
+	msgVpncStarting  = `vpnc: Starting.`
 	msgVpncStart     = `vpnc: Started (pid %d).`
 	msgVpncStopping  = `vpnc: Stopping (pid %d).`
 	msgVpncWait      = `vpnc: Waiting for connect...`
 	msgVpncConnected = `vpnc: Connected.`
 	msgVpncStopped   = `vpnc: Stopped.`
 
+	msgOpncStarting  = `openconnect: Starting.`
 	msgOpncStart     = `openconnect: Started (pid %d).`
 	msgOpncStopping  = `openconnect: Stopping (pid %d).`
 	msgOpncWait      = `openconnect: Waiting for connect...`

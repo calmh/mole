@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/calmh/mole/conf"
 	"os"
 	"os/exec"
@@ -35,11 +36,11 @@ type OpenConnect struct {
 	script string
 }
 
-func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
+func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 	requireRoot("openconnect")
 
 	if ok := ensureTunModule(); !ok {
-		fatalln(msgErrNoTunModule)
+		return nil, fmt.Errorf(msgErrNoTunModule)
 	}
 
 	script := writeVpncScript(cfg)
@@ -60,24 +61,34 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 	cmd := exec.Command(p.openconnectBinary, args...)
 
 	stdin, err := cmd.StdinPipe()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	stdout, err := cmd.StdoutPipe()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	if globalOpts.Debug {
 		cmd.Stderr = os.Stderr
 	}
 
 	err = cmd.Start()
-	fatalErr(err)
-	infof(msgOpncStart, cmd.Process.Pid)
-	infoln(msgOpncWait)
+	if err != nil {
+		return nil, err
+	}
+	debugf(msgOpncStart, cmd.Process.Pid)
+	debugln(msgOpncWait)
 
 	_, err = stdin.Write([]byte(cfg.OpenConnect["password"] + "\n"))
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 	err = stdin.Close()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	bufReader := bufio.NewReader(stdout)
 	for {
@@ -86,11 +97,13 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) VPN {
 		debugln("opnc:", line)
 
 		if strings.Contains(line, "Established DTLS connection") {
-			infoln(msgOpncConnected)
-			return &OpenConnect{*cmd, script}
+			debugln(msgOpncConnected)
+			return &OpenConnect{*cmd, script}, nil
 		}
 
-		fatalErr(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 }
 
@@ -103,7 +116,7 @@ func (v *OpenConnect) Stop() {
 		}
 	}()
 
-	infof(msgOpncStopping, v.cmd.Process.Pid)
+	debugf(msgOpncStopping, v.cmd.Process.Pid)
 	err := v.cmd.Process.Signal(os.Interrupt)
 	if err != nil {
 		warnln(err)
@@ -112,5 +125,5 @@ func (v *OpenConnect) Stop() {
 	if err != nil {
 		warnln(err)
 	}
-	infoln(msgOpncStopped)
+	debugln(msgOpncStopped)
 }

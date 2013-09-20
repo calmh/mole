@@ -7,7 +7,6 @@ import (
 	"github.com/calmh/mole/table"
 	"github.com/sbinet/liner"
 	"io"
-	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 
 var errTimeout = fmt.Errorf("connection timeout")
 
-func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, sshTun Dialer) {
+func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 	help := func() {
 		infoln("Available commands:")
 		infoln("  help, ?                          - show help")
@@ -86,7 +85,17 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, sshTun Dialer) {
 		case "stat":
 			printStats()
 		case "test":
-			test(sshTun, cfg)
+			results := testForwards(dialer, cfg)
+			for res := range results {
+				infof(ansi.Underline(res.name))
+				for _, line := range res.results {
+					if line.err == nil {
+						infof("%22s %s in %.02f ms", line.dst, ansi.Bold(ansi.Green("-ok-")), line.ms)
+					} else {
+						infof("%22s %s in %.02f ms (%s)", line.dst, ansi.Bold(ansi.Red("fail")), line.ms, line.err)
+					}
+				}
+			}
 		case "debug":
 			infoln(msgDebugEnabled)
 			globalOpts.Debug = true
@@ -187,66 +196,45 @@ type testResult struct {
 	err error
 }
 
-func test(sshTun Dialer, cfg *conf.Config) {
+func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 	results := make(chan forwardTest)
 
-	var printWg sync.WaitGroup
-	printWg.Add(1)
-	go func() {
-		for res := range results {
-			infof(ansi.Underline(res.name))
-			for _, line := range res.results {
-				if line.err == nil {
-					infof("%22s %s in %.02f ms", line.dst, ansi.Bold(ansi.Green("-ok-")), line.ms)
-				} else {
-					infof("%22s %s in %.02f ms (%s)", line.dst, ansi.Bold(ansi.Red("fail")), line.ms, line.err)
-				}
-			}
-		}
-		printWg.Done()
-	}()
-
 	var scanWg sync.WaitGroup
-	for _, fwd := range cfg.Forwards {
-		scanWg.Add(1)
-		go func(fwd conf.Forward) {
-			res := forwardTest{name: fwd.Name}
-			for _, line := range fwd.Lines {
-				for i := 0; i <= line.Repeat; i++ {
-					t0 := time.Now()
-					var conn net.Conn
-					var err error
-					if sshTun == nil {
-						conn, err = net.DialTimeout("tcp", line.DstString(i), 5*time.Second)
-						if conn != nil {
-							defer conn.Close()
-						}
-					} else {
-						res := make(chan error, 1)
+	scanWg.Add(len(cfg.Forwards))
+	go func() {
+		for _, fwd := range cfg.Forwards {
+			go func(fwd conf.Forward) {
+				res := forwardTest{name: fwd.Name}
+				for _, line := range fwd.Lines {
+					for i := 0; i <= line.Repeat; i++ {
+						subres := make(chan error, 1)
+
 						go func() {
 							time.Sleep(5 * time.Second)
-							res <- errTimeout
+							subres <- errTimeout
 						}()
+
+						t0 := time.Now()
 						go func() {
-							conn, err := sshTun.Dial("tcp", line.DstString(i))
+							conn, err := dialer.Dial("tcp", line.DstString(i))
 							if conn != nil {
 								defer conn.Close()
 							}
-							res <- err
+							subres <- err
 						}()
-						err = <-res
+						err := <-subres
+						ms := time.Since(t0).Seconds() * 1000
+
+						res.results = append(res.results, testResult{dst: line.DstString(i), ms: ms, err: err})
 					}
-
-					ms := time.Since(t0).Seconds() * 1000
-					res.results = append(res.results, testResult{dst: line.DstString(i), ms: ms, err: err})
 				}
-			}
-			results <- res
-			scanWg.Done()
-		}(fwd)
-	}
+				results <- res
+				scanWg.Done()
+			}(fwd)
+		}
+		scanWg.Wait()
+		close(results)
+	}()
 
-	scanWg.Wait()
-	close(results)
-	printWg.Wait()
+	return results
 }

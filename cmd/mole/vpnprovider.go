@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/calmh/mole/conf"
 )
 
@@ -9,15 +10,15 @@ type VPN interface {
 }
 
 type VPNProvider interface {
-	Start(*conf.Config) VPN
+	Start(*conf.Config) (VPN, error)
 }
 
 var vpnProviders = make(map[string]VPNProvider)
 
-func startVpn(provider string, cfg *conf.Config) VPN {
+func startVpn(provider string, cfg *conf.Config) (VPN, error) {
 	prov, ok := vpnProviders[provider]
 	if !ok {
-		fatalf(msgErrNoVPN, provider)
+		return nil, fmt.Errorf(msgErrNoVPN, provider)
 	}
 	return prov.Start(cfg)
 }

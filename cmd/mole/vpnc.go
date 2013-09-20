@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/calmh/mole/conf"
 	"os"
 	"os/exec"
@@ -35,38 +36,48 @@ type Vpnc struct {
 	script string
 }
 
-func (p VPNCProvider) Start(cfg *conf.Config) VPN {
+func (p VPNCProvider) Start(cfg *conf.Config) (VPN, error) {
 	requireRoot("vpnc")
 
 	if ok := ensureTunModule(); !ok {
-		fatalln(msgErrNoTunModule)
+		return nil, fmt.Errorf(msgErrNoTunModule)
 	}
 
 	script := writeVpncScript(cfg)
 	cmd := exec.Command(p.vpncBinary, "--no-detach", "--non-inter", "--script", script, "-")
 
 	stdin, err := cmd.StdinPipe()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	stdout, err := cmd.StdoutPipe()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	if globalOpts.Debug {
 		cmd.Stderr = os.Stderr
 	}
 
 	err = cmd.Start()
-	fatalErr(err)
-	infof(msgVpncStart, cmd.Process.Pid)
-	infoln(msgVpncWait)
+	if err != nil {
+		return nil, err
+	}
+	debugf(msgVpncStart, cmd.Process.Pid)
+	debugln(msgVpncWait)
 
 	for k, v := range cfg.Vpnc {
 		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
 		_, err := stdin.Write([]byte(line))
-		fatalErr(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 	err = stdin.Close()
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	bufReader := bufio.NewReader(stdout)
 	for {
@@ -75,11 +86,13 @@ func (p VPNCProvider) Start(cfg *conf.Config) VPN {
 		debugln("vpnc:", line)
 
 		if line == "mole-vpnc-script-next" {
-			infoln(msgVpncConnected)
-			return &Vpnc{*cmd, script}
+			debugln(msgVpncConnected)
+			return &Vpnc{*cmd, script}, nil
 		}
 
-		fatalErr(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 }
 
@@ -92,7 +105,7 @@ func (v *Vpnc) Stop() {
 		}
 	}()
 
-	infof(msgVpncStopping, v.cmd.Process.Pid)
+	debugln(msgVpncStopping, v.cmd.Process.Pid)
 	err := v.cmd.Process.Signal(os.Interrupt)
 	if err != nil {
 		warnln(err)
@@ -101,5 +114,5 @@ func (v *Vpnc) Stop() {
 	if err != nil {
 		warnln(err)
 	}
-	infoln(msgVpncStopped)
+	debugln(msgVpncStopped)
 }
