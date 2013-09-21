@@ -66,10 +66,14 @@ func setupHostsFile(tun string, cfg *conf.Config, qualify bool) {
 
 func restoreHostsFile(tun string, qualify bool) {
 	becomeRoot()
+	var err error
 	if qualify {
-		hosts.ReplaceTagged("mole."+tun, nil)
+		err = hosts.ReplaceTagged("mole."+tun, nil)
 	} else {
-		hosts.ReplaceTagged("mole", nil)
+		err = hosts.ReplaceTagged("mole", nil)
+	}
+	if err != nil {
+		warnln(err)
 	}
 	dropRoot()
 }

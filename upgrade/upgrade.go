@@ -122,7 +122,10 @@ func sha1file(fname string) (hash string, err error) {
 	defer f.Close()
 
 	h := sha1.New()
-	io.Copy(h, f)
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return
+	}
 	hb := h.Sum(nil)
 	hash = fmt.Sprintf("%x", hb)
 

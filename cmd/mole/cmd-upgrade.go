@@ -8,7 +8,7 @@ import (
 )
 
 type cmdUpgrade struct {
-	Force bool `long:"force" description:"Don't perform newness check, just upgrade to whatever the server has."`
+	Force bool `short:"f" long:"force" description:"Don't perform newness check, just upgrade to whatever the server has."`
 }
 
 var upgradeParser *flags.Parser

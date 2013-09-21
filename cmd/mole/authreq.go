@@ -38,13 +38,14 @@ func authenticate(c *Client) (string, error) {
 			f, e := os.Open(configFile)
 			fatalErr(e)
 			cfg := ini.Parse(f)
-			f.Close()
+			_ = f.Close()
 			cfg.Sections["server"]["ticket"] = ticket
 			f, e = os.Create(configFile)
 			fatalErr(e)
 			err = cfg.Write(f)
 			fatalErr(err)
-			f.Close()
+			err = f.Close()
+			fatalErr(err)
 
 			return user, nil
 		} else {

@@ -44,7 +44,7 @@ var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 func certFingerprint(conn *tls.Conn) string {
 	cert := conn.ConnectionState().PeerCertificates[0].Raw
 	sha := sha1.New()
-	sha.Write(cert)
+	_, _ = sha.Write(cert)
 	hash := sha.Sum(nil)
 	return fmt.Sprintf("%x", hash)
 }

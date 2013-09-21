@@ -40,7 +40,7 @@ func ReplaceTagged(tag string, entries []Entry) error {
 			lines = append(lines, line)
 		}
 	}
-	hostf.Close()
+	_ = hostf.Close()
 
 	for _, e := range entries {
 		lines = append(lines, e.IP+"\t"+strings.Join(e.Names, " ")+" #tag:"+tag)
