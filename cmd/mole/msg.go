@@ -1,21 +1,23 @@
 package main
 
 const (
-	msgDigShort     = `Dig tunnel`
-	msgLsShort      = `List tunnels`
-	msgPushShort    = `Push tunnel`
-	msgShowShort    = `Show tunnel`
-	msgTestShort    = `Test tunnel`
-	msgUpgradeShort = `Upgrade mole`
-	msgVersionShort = `Show version`
+	msgDigShort      = `Dig tunnel`
+	msgLsShort       = `List tunnels`
+	msgPushShort     = `Push tunnel`
+	msgShowShort     = `Show tunnel`
+	msgTestShort     = `Test tunnel`
+	msgUpgradeShort  = `Upgrade mole`
+	msgVersionShort  = `Show version`
+	msgRegisterShort = `Register with server`
 
-	msgDigLong     = `"dig" connects the tunnel and sets up forwards`
-	msgLsLong      = `"ls" lists tunnels, optionally filtering on a regular expression`
-	msgPushLong    = `"push" sends a new or updated tunnel file to the server`
-	msgShowLong    = `"show" show the tunnel configuration`
-	msgTestLong    = `"dig" connects the tunnel and tests forwards`
-	msgUpgradeLong = `"upgrade" upgrades mole to the latest version`
-	msgVersionLong = `"version" shows current mole version`
+	msgDigLong      = `"dig" connects the tunnel and sets up forwards`
+	msgLsLong       = `"ls" lists tunnels, optionally filtering on a regular expression`
+	msgPushLong     = `"push" sends a new or updated tunnel file to the server`
+	msgShowLong     = `"show" show the tunnel configuration`
+	msgTestLong     = `"dig" connects the tunnel and tests forwards`
+	msgUpgradeLong  = `"upgrade" upgrades mole to the latest version`
+	msgVersionLong  = `"version" shows current mole version`
+	msgRegisterLong = `"register" sets mole up to talk to a server`
 
 	msgDebugEnabled = `Debug output enabled.`
 
@@ -108,4 +110,6 @@ On Linux, do whatever your distribution recommends.`
 	msgUsername        = `Username: `
 	msgPassword        = `Password: `
 	msgPasswordVisible = `Password will be visible when typed.`
+
+	msgNoHost = `No server hostname is configured. Have you run "mole register"?`
 )

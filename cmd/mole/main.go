@@ -115,43 +115,45 @@ func setup() {
 	}
 	debugln("homeDir", globalOpts.Home)
 
+	os.MkdirAll(globalOpts.Home, 0700)
+
 	configFile := path.Join(globalOpts.Home, "mole.ini")
-	f, e := os.Open(configFile)
-	fatalErr(e)
 
-	config := ini.Parse(f)
-	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
-	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
-	serverIni.ticket = config.Sections["server"]["ticket"]
+	if f, e := os.Open(configFile); e == nil {
+		config := ini.Parse(f)
+		serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
+		serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
+		serverIni.ticket = config.Sections["server"]["ticket"]
 
-	displayUpgradeNotice := true
-	serverIni.upgrades = true
-	if upgSec, ok := config.Sections["upgrades"]; ok {
-		upgs, ok := upgSec["automatic"]
-		displayUpgradeNotice = !ok
-		serverIni.upgrades = !ok || upgs == "yes"
-	}
+		displayUpgradeNotice := true
+		serverIni.upgrades = true
+		if upgSec, ok := config.Sections["upgrades"]; ok {
+			upgs, ok := upgSec["automatic"]
+			displayUpgradeNotice = !ok
+			serverIni.upgrades = !ok || upgs == "yes"
+		}
 
-	if serverIni.upgrades {
-		go func() {
-			time.Sleep(10 * time.Second)
+		if serverIni.upgrades {
+			go func() {
+				time.Sleep(10 * time.Second)
 
-			build, err := latestBuild()
-			if err == nil {
-				bd := time.Unix(int64(build.BuildStamp), 0)
-				if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
-					err = upgrade.UpgradeTo(build)
-					if err == nil {
-						if displayUpgradeNotice {
-							infoln(msgAutoUpgrades)
+				build, err := latestBuild()
+				if err == nil {
+					bd := time.Unix(int64(build.BuildStamp), 0)
+					if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
+						err = upgrade.UpgradeTo(build)
+						if err == nil {
+							if displayUpgradeNotice {
+								infoln(msgAutoUpgrades)
+							}
+							okf(msgUpgraded, build.Version)
 						}
-						okf(msgUpgraded, build.Version)
 					}
 				}
-			}
-		}()
-	} else {
-		debugln("automatic upgrades disabled")
+			}()
+		} else {
+			debugln("automatic upgrades disabled")
+		}
 	}
 }
 

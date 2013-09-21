@@ -50,6 +50,10 @@ func certFingerprint(conn *tls.Conn) string {
 }
 
 func NewClient(host, fingerprint string) *Client {
+	if host == "" {
+		fatalln(msgNoHost)
+	}
+
 	if !strings.HasPrefix(clientVersion, "4.") {
 		// Built from go get, so no tag info
 		clientVersion = "4.0-unknown-dev"
