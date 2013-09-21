@@ -88,3 +88,20 @@ func copyData(dst net.Conn, src net.Conn, counter *uint64) {
 		}
 	}
 }
+
+func formatBytes(n uint64) string {
+	if n < 1024 {
+		return fmt.Sprintf("%d ", n)
+	}
+
+	prefixes := []string{" k", " M", " G", " T"}
+	divisor := 1024.0
+	for i := range prefixes {
+		rem := float64(n) / divisor
+		if rem < 1024.0 || i == len(prefixes)-1 {
+			return fmt.Sprintf("%.02f%s", rem, prefixes[i])
+		}
+		divisor *= 1024
+	}
+	return ""
+}

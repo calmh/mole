@@ -7,6 +7,7 @@ import (
 	"github.com/calmh/mole/ini"
 	"github.com/calmh/mole/upgrade"
 	"github.com/jessevdk/go-flags"
+	"io"
 	"os"
 	"path"
 	"runtime"
@@ -30,10 +31,11 @@ var globalOpts struct {
 }
 
 var serverIni struct {
-	address     string
-	upgrades    bool
-	fingerprint string
-	ticket      string
+	address       string
+	upgrades      bool
+	fingerprint   string
+	ticket        string
+	upgradeNotice bool
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -75,23 +77,6 @@ func main() {
 	printTotalStats()
 }
 
-func formatBytes(n uint64) string {
-	if n < 1024 {
-		return fmt.Sprintf("%d ", n)
-	}
-
-	prefixes := []string{" k", " M", " G", " T"}
-	divisor := 1024.0
-	for i := range prefixes {
-		rem := float64(n) / divisor
-		if rem < 1024.0 || i == len(prefixes)-1 {
-			return fmt.Sprintf("%.02f%s", rem, prefixes[i])
-		}
-		divisor *= 1024
-	}
-	return ""
-}
-
 var setupDone bool
 
 func setup() {
@@ -115,44 +100,48 @@ func setup() {
 	}
 	debugln("homeDir", globalOpts.Home)
 
-	os.MkdirAll(globalOpts.Home, 0700)
-
 	configFile := path.Join(globalOpts.Home, "mole.ini")
 
-	if f, e := os.Open(configFile); e == nil {
-		config := ini.Parse(f)
-		serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
-		serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
-		serverIni.ticket = config.Sections["server"]["ticket"]
-
-		displayUpgradeNotice := true
-		serverIni.upgrades = true
-		if upgSec, ok := config.Sections["upgrades"]; ok {
-			upgs, ok := upgSec["automatic"]
-			displayUpgradeNotice = !ok
-			serverIni.upgrades = !ok || upgs == "yes"
-		}
-
+	if fd, err := os.Open(configFile); err == nil {
+		loadGlobalIni(fd)
 		if serverIni.upgrades {
-			go func() {
-				time.Sleep(10 * time.Second)
-
-				build, err := latestBuild()
-				if err == nil {
-					bd := time.Unix(int64(build.BuildStamp), 0)
-					if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
-						err = upgrade.UpgradeTo(build)
-						if err == nil {
-							if displayUpgradeNotice {
-								infoln(msgAutoUpgrades)
-							}
-							okf(msgUpgraded, build.Version)
-						}
-					}
-				}
-			}()
+			go autoUpgrade()
 		} else {
 			debugln("automatic upgrades disabled")
+		}
+	}
+
+	os.MkdirAll(globalOpts.Home, 0700)
+}
+
+func loadGlobalIni(fd io.Reader) {
+	config := ini.Parse(fd)
+	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
+	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
+	serverIni.ticket = config.Sections["server"]["ticket"]
+
+	serverIni.upgrades = true
+	if upgSec, ok := config.Sections["upgrades"]; ok {
+		upgs, ok := upgSec["automatic"]
+		serverIni.upgradeNotice = !ok
+		serverIni.upgrades = !ok || upgs == "yes"
+	}
+}
+
+func autoUpgrade() {
+	build, err := latestBuild()
+	if err == nil {
+		bd := time.Unix(int64(build.BuildStamp), 0)
+		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
+			// Only do the actual upgrade once we've been running for a while
+			time.Sleep(10 * time.Second)
+			err = upgrade.UpgradeTo(build)
+			if err == nil {
+				if serverIni.upgradeNotice {
+					infoln(msgAutoUpgrades)
+				}
+				okf(msgUpgraded, build.Version)
+			}
 		}
 	}
 }
