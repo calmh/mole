@@ -46,9 +46,13 @@ func (c *cmdTest) Execute(args []string) error {
 		cfg, err = conf.Load(fd)
 		fatalErr(err)
 	} else {
-		cert := certificate()
-		cl := NewClient(serverIni.address, cert)
-		tun := cl.Deobfuscate(cl.Get(args[0]))
+		cl := NewClient(serverIni.address, serverIni.fingerprint)
+		_, err = authenticate(cl)
+		fatalErr(err)
+		tun, err := cl.Get(args[0])
+		fatalErr(err)
+		tun, err = cl.Deobfuscate(tun)
+		fatalErr(err)
 		cfg, err = conf.Load(bytes.NewBufferString(tun))
 		fatalErr(err)
 	}

@@ -1,30 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
-	"path"
 	"regexp"
 	"sort"
 	"strings"
 )
 
-const (
-	ServerCertificateName = "server"
-)
-
 var clientVersion = strings.Replace(buildVersion, "v", "", 1)
 
 type Client struct {
+	Ticket string
 	host   string
 	client *http.Client
 }
@@ -47,29 +41,6 @@ type upgradeManifest struct {
 
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 
-func caCert() *x509.Certificate {
-	file, err := os.Open(path.Join(globalOpts.Home, "ca-cert.pem"))
-	if err != nil {
-		return nil
-	}
-	pemdata, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil
-	}
-
-	block, _ := pem.Decode(pemdata)
-	if block.Type != "CERTIFICATE" {
-		return nil
-	}
-
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil
-	}
-
-	return cert
-}
-
 func certFingerprint(conn *tls.Conn) string {
 	cert := conn.ConnectionState().PeerCertificates[0].Raw
 	sha := sha1.New()
@@ -78,7 +49,7 @@ func certFingerprint(conn *tls.Conn) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-func NewClient(host string, cert tls.Certificate) *Client {
+func NewClient(host, fingerprint string) *Client {
 	if !strings.HasPrefix(clientVersion, "4.") {
 		// Built from go get, so no tag info
 		clientVersion = "4.0-unknown-dev"
@@ -86,127 +57,180 @@ func NewClient(host string, cert tls.Certificate) *Client {
 
 	transport := &http.Transport{
 		Dial: func(n, a string) (net.Conn, error) {
-			tlsCfg := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+			tlsCfg := &tls.Config{InsecureSkipVerify: true}
 			conn, err := tls.Dial(n, host, tlsCfg)
 			if err != nil {
 				return nil, err
 			}
 
 			fp := certFingerprint(conn)
-			if fp != serverIni.fingerprint {
+			if fingerprint != "" && fp != fingerprint {
 				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, serverIni.fingerprint)
 			}
 			return conn, err
 		},
 	}
 	client := &http.Client{Transport: transport}
-	return &Client{ServerCertificateName, client}
+	return &Client{host: host, client: client}
 }
 
-func (c *Client) request(method, path string, content io.Reader) *http.Response {
+func (c *Client) request(method, path string, content io.Reader) (*http.Response, error) {
 	url := "http://" + c.host + path
 	debugln(method, url)
 
 	req, err := http.NewRequest(method, url, content)
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Add("X-Mole-Version", clientVersion)
+	req.Header.Add("X-Mole-Ticket", c.Ticket)
 
 	resp, err := c.client.Do(req)
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
 		data, _ := ioutil.ReadAll(resp.Body)
-		warnln(resp.Status)
-		fatalln(string(data))
+		return nil, fmt.Errorf("%s: %s", resp.Status, data)
 	}
 
 	debugln(resp.Status, resp.Header.Get("Content-type"), resp.ContentLength)
 
-	return resp
+	return resp, nil
 }
 
-func (c *Client) List() []ListItem {
-	resp := c.request("GET", "/store", nil)
+func (c *Client) Ping() (string, error) {
+	resp, err := c.request("GET", "/ping", nil)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	return string(data), err
+}
+
+func (c *Client) List() ([]ListItem, error) {
+	resp, err := c.request("GET", "/store", nil)
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
+
 	var items []ListItem
 	err = json.Unmarshal(data, &items)
-	fatalErr(err)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range items {
 		items[i].IntVersion = int(100 * items[i].Version)
 	}
 	sort.Sort(listItems(items))
-	return items
+
+	return items, nil
 }
 
-func (c *Client) Get(tunnel string) string {
-	resp := c.request("GET", "/store/"+tunnel+".ini", nil)
+func (c *Client) Get(tunnel string) (string, error) {
+	resp, err := c.request("GET", "/store/"+tunnel+".ini", nil)
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
-	fatalErr(err)
+	if err != nil {
+		return "", err
+	}
 	res := string(data)
 
-	return res
+	return res, nil
 }
 
-func (c *Client) Put(tunnel string, data io.Reader) {
-	resp := c.request("PUT", "/store/"+tunnel+".ini", data)
+func (c *Client) Put(tunnel string, data io.Reader) error {
+	resp, err := c.request("PUT", "/store/"+tunnel+".ini", data)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
+	return nil
 }
 
-func (c *Client) Deobfuscate(tunnel string) string {
+func (c *Client) Deobfuscate(tunnel string) (string, error) {
 	matches := obfuscatedRe.FindAllString(tunnel, -1)
 	for _, o := range matches {
-		tunnel = strings.Replace(tunnel, o, c.resolveKey(o[6:]), -1)
+		s, err := c.resolveKey(o[6:])
+		if err != nil {
+			return "", err
+		}
+		tunnel = strings.Replace(tunnel, o, s, -1)
 	}
 
-	return tunnel
+	return tunnel, nil
 }
 
-func (c *Client) UpgradesURL() string {
-	url := "http://" + c.host + "/extra/upgrades.json"
-	debugln("GET", url)
-
-	req, err := http.NewRequest("GET", url, nil)
+func (c *Client) GetTicket(username, password string) (string, error) {
+	resp, err := c.request("POST", "/ticket/"+username, bytes.NewBufferString(password))
 	if err != nil {
-		return ""
+		return "", err
 	}
-	req.Header.Add("X-Mole-Version", clientVersion)
+	defer resp.Body.Close()
 
-	resp, err := c.client.Do(req)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ""
+		return "", err
+	}
+	res := string(data)
+
+	return res, nil
+}
+
+func (c *Client) UpgradesURL() (string, error) {
+	resp, err := c.request("GET", "/extra/upgrades.json", nil)
+	if err != nil {
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	var manifest upgradeManifest
 	err = json.Unmarshal(data, &manifest)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return manifest.URL
+
+	return manifest.URL, nil
 }
 
-func (c *Client) resolveKey(key string) string {
-	resp := c.request("GET", "/key/"+key, nil)
+func (c *Client) resolveKey(key string) (string, error) {
+	resp, err := c.request("GET", "/key/"+key, nil)
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
-	fatalErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	var res map[string]string
 	err = json.Unmarshal(data, &res)
-	fatalErr(err)
-	return fmt.Sprintf("%q", res["key"])
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%q", res["key"]), nil
 }
 
 type listItems []ListItem

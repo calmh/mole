@@ -28,10 +28,6 @@ func (c *cmdPush) Execute(args []string) error {
 		fatalln("push: missing required option <tunnelfile>")
 	}
 
-	cert := certificate()
-	cl := NewClient(serverIni.address, cert)
-	_ = cl
-
 	filename := filepath.Base(args[0])
 	if ext := filepath.Ext(filename); ext != ".ini" {
 		fatalf(msgFileNotInit, filename)
@@ -41,7 +37,12 @@ func (c *cmdPush) Execute(args []string) error {
 	file, err := os.Open(args[0])
 	fatalErr(err)
 
-	cl.Put(tunnelname, file)
+	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	_, err = authenticate(cl)
+	fatalErr(err)
+	err = cl.Put(tunnelname, file)
+	fatalErr(err)
+
 	okf(msgOkPushed, tunnelname)
 	return nil
 }

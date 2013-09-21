@@ -33,9 +33,11 @@ func (c *cmdShow) Execute(args []string) error {
 		fatalln("show: missing required option <tunnelname>")
 	}
 
-	cert := certificate()
-	cl := NewClient(serverIni.address, cert)
-	tun := cl.Get(args[0])
+	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	_, err := authenticate(cl)
+	fatalErr(err)
+	tun, err := cl.Get(args[0])
+	fatalErr(err)
 
 	if c.Raw {
 		// No log function, since it must be possible to pipe to a valid file

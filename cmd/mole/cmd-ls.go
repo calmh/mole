@@ -35,9 +35,11 @@ func (c *cmdls) Execute(args []string) error {
 		fatalErr(err)
 	}
 
-	cert := certificate()
-	cl := NewClient(serverIni.address, cert)
-	l := cl.List()
+	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	_, err = authenticate(cl)
+	fatalErr(err)
+	l, err := cl.List()
+	fatalErr(err)
 
 	var rows [][]string
 	header := []string{"TUNNEL", "DESCRIPTION", "HOSTS"}

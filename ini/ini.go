@@ -41,3 +41,23 @@ func Parse(stream io.Reader) File {
 	}
 	return iniFile
 }
+
+func (f *File) Write(out io.Writer) error {
+	for _, sectionName := range f.SectionNames {
+		_, err := out.Write([]byte("[" + sectionName + "]\n"))
+		if err != nil {
+			return err
+		}
+		for k, v := range f.Sections[sectionName] {
+			_, err = out.Write([]byte(k + " = " + v + "\n"))
+			if err != nil {
+				return err
+			}
+		}
+		_, err = out.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

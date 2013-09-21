@@ -33,6 +33,7 @@ var serverIni struct {
 	address     string
 	upgrades    bool
 	fingerprint string
+	ticket      string
 }
 
 var globalParser = flags.NewParser(&globalOpts, flags.Default)
@@ -121,6 +122,7 @@ func setup() {
 	config := ini.Parse(f)
 	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
 	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
+	serverIni.ticket = config.Sections["server"]["ticket"]
 
 	displayUpgradeNotice := true
 	serverIni.upgrades = true

@@ -103,4 +103,9 @@ Tunnels marked as requiring "(opnc)" will not work. Consider installing
 OpenConnect. On Mac OS X, the recommended  way is to use homebrew
 (http://brew.sh/) to install the "tuntap" and "openconnect" packages.
 On Linux, do whatever your distribution recommends.`
+
+	msgNeedsAuth       = `Authentication required. Enter your LDAP credentials.`
+	msgUsername        = `Username: `
+	msgPassword        = `Password: `
+	msgPasswordVisible = `Password will be visible when typed.`
 )

@@ -21,10 +21,12 @@ func init() {
 }
 
 func latestBuild() (build upgrade.Build, err error) {
-	cert := certificate()
-	cl := NewClient(serverIni.address, cert)
+	cl := NewClient(serverIni.address, serverIni.fingerprint)
 
-	upgradesURL := cl.UpgradesURL()
+	upgradesURL, err := cl.UpgradesURL()
+	if err != nil {
+		return
+	}
 	if upgradesURL == "" {
 		err = errNoUpgradeUrl
 		return
