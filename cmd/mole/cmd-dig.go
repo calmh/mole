@@ -7,6 +7,7 @@ import (
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/conf"
 	"github.com/jessevdk/go-flags"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -40,25 +41,29 @@ func (c *cmdDig) Execute(args []string) error {
 	// platforms where it matters
 	requireRoot("dig")
 
-	var cfg *conf.Config
 	var err error
 
+	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	_, err = authenticate(cl)
+	fatalErr(err)
+
+	var tun string
 	if c.Local {
 		fd, err := os.Open(args[0])
 		fatalErr(err)
-		cfg, err = conf.Load(fd)
+		bs, err := ioutil.ReadAll(fd)
+		fatalErr(err)
+		tun, err = cl.Deobfuscate(string(bs))
 		fatalErr(err)
 	} else {
-		cl := NewClient(serverIni.address, serverIni.fingerprint)
-		_, err := authenticate(cl)
-		fatalErr(err)
-		tun, err := cl.Get(args[0])
-		fatalErr(err)
-		tun, err = cl.Deobfuscate(tun)
-		fatalErr(err)
-		cfg, err = conf.Load(bytes.NewBufferString(tun))
+		tun, err = cl.Get(args[0])
 		fatalErr(err)
 	}
+
+	tun, err = cl.Deobfuscate(tun)
+	fatalErr(err)
+	cfg, err := conf.Load(bytes.NewBufferString(tun))
+	fatalErr(err)
 
 	if cfg == nil {
 		return fmt.Errorf("no tunnel loaded")
