@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/calmh/mole/randomart"
 	"github.com/jessevdk/go-flags"
 	"os"
 	"path"
@@ -43,10 +44,10 @@ func (c *cmdRegister) Execute(args []string) error {
 
 	fp := certFingerprint(conn)
 	twoDigits := regexp.MustCompile("([0-9a-f]{2})")
-	fp = twoDigits.ReplaceAllString(fp, "$1:")
-	fp = fp[:len(fp)-1] // trailing colon
+	fpstr := twoDigits.ReplaceAllString(fmt.Sprintf("%x", fp), "$1:")
+	fpstr = fpstr[:len(fpstr)-1] // trailing colon
 
-	ini := fmt.Sprintf("[server]\nhost = %s\nport = %d\nfingerprint = %s\n", args[0], c.Port, fp)
+	ini := fmt.Sprintf("[server]\nhost = %s\nport = %d\nfingerprint = %s\n", args[0], c.Port, fpstr)
 	fd, err := os.Create(path.Join(globalOpts.Home, "mole.ini"))
 	fatalErr(err)
 	_, err = fd.WriteString(ini)
@@ -54,6 +55,7 @@ func (c *cmdRegister) Execute(args []string) error {
 	err = fd.Close()
 	fatalErr(err)
 
-	okln(fp)
+	infof("%s", randomart.Generate(fp, "mole"))
+	okln(args[0])
 	return nil
 }

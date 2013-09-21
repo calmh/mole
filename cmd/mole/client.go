@@ -41,12 +41,11 @@ type upgradeManifest struct {
 
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
 
-func certFingerprint(conn *tls.Conn) string {
+func certFingerprint(conn *tls.Conn) []byte {
 	cert := conn.ConnectionState().PeerCertificates[0].Raw
 	sha := sha1.New()
 	_, _ = sha.Write(cert)
-	hash := sha.Sum(nil)
-	return fmt.Sprintf("%x", hash)
+	return sha.Sum(nil)
 }
 
 func NewClient(host, fingerprint string) *Client {
@@ -67,7 +66,7 @@ func NewClient(host, fingerprint string) *Client {
 				return nil, err
 			}
 
-			fp := certFingerprint(conn)
+			fp := fmt.Sprintf("%x", certFingerprint(conn))
 			if fingerprint != "" && fp != fingerprint {
 				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, serverIni.fingerprint)
 			}
