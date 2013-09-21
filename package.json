@@ -34,7 +34,8 @@
     "vpnc": "~1.4.10",
     "winston": "~0.6.2",
     "yacon": "~1.0.1",
-    "yatf": "~1.0.2"
+    "yatf": "~1.0.2",
+    "ldapjs": "~0.6.3"
   },
   "devDependencies": {
     "mocha": "~1.3.0",
