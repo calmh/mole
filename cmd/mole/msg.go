@@ -78,13 +78,13 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
 `
 
 	msgExamples = `Examples:
-  mole register mole.example.com  # register with mole.example.com
-  mole ls                         # show all available tunnels
-  mole ls foo                     # show all available tunnels matching the non-achored regexp "foo"
-  mole show foo                   # show the hosts and forwards set up by the tunnel "foo"
-  sudo mole dig foo               # dig the tunnel "foo"
-  sudo mole -d dig foo            # dig the tunnel "foo", while showing debug output
-  mole push foo.ini               # create or update the "foo" tunnel from a local file
+  mole register mole.example.com     # register with mole.example.com
+  mole ls                            # show all available tunnels
+  mole ls foo                        # show all available tunnels matching the non-achored regexp "foo"
+  mole show foo                      # show the hosts and forwards set up by the tunnel "foo"
+  sudo mole dig foo                  # dig the tunnel "foo"
+  sudo mole -d dig foo               # dig the tunnel "foo", while showing debug output
+  mole push foo.ini                  # create or update the "foo" tunnel from a local file
 `
 
 	msgFileNotInit = `File %q should have .ini extension`
