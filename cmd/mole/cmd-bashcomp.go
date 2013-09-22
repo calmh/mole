@@ -10,13 +10,14 @@ import (
 type cmdBashcomp struct{}
 
 var bashcompParser *flags.Parser
-
-var compTpl, _ = template.New("bashcomp").Parse(`_mole_tunnels() {
+var compTpl = template.Must(template.New("bashcomp").Parse(compTplStr))
+var compTplStr = `_mole_tunnels() {
 	compgen -W "$(cat {{.CacheFile}})" -- $cur
 }
 
 _mole() {
 	local cur
+	local prev
 
 	COMPREPLY=()
 	cur=${COMP_WORDS[COMP_CWORD]}
@@ -42,7 +43,7 @@ _mole() {
 }
 
 complete -F _mole mole
-`)
+`
 
 func init() {
 	cmd := cmdBashcomp{}
