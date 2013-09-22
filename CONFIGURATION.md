@@ -17,6 +17,7 @@ A tunnel definition consists of:
   - zero or more `hosts` sections,
   - zero or more `forwards` sections,
   - an optional `vpnc` section,
+  - an optional `openconnect` section,
   - an optional `vpn routes` section which must only be present in combination
     with a `vpnc section`.
 
@@ -61,13 +62,6 @@ contain spaces. The following elements can be set for each host:
   - `via` - Name of another host to bounce via in order to reach this host.
     Must be the name of host defined elsewhere in the same tunnel definition
     file.
-  - `prompt` - Override the regular expression that recognizes the destination
-    host prompt. The default is usually fine, but if there's some unusual stuff
-    on the other side an override might be necessary. This is only relevant for
-    the `main` host.
-  - `keepalive` - SSH keep alive interval (seconds). If the server is
-    unresponsive for longer than this time, the connection will be terminated.
-    Default is 180, minimum 15.
   - `socks` - Address and port of a SOCKS proxy to connect to this host
     via. Cannot be used together with `via` (although another host can
     of course connect via this one).
@@ -85,7 +79,6 @@ by `\n`. The key must not be protected by a password.
     user = admin
     password = 3x4mpl3
     port = 2222
-    prompt = "~>"
     socks = 192.168.56.101:1080
 
     [hosts.op1prod]
@@ -172,18 +165,33 @@ to hosts defined as above.
     Local_Port = 0
     Cisco_UDP_Encapsulation_Port = 0
 
+Section `openconnect`
+---------------------
+
+The `openconnect` section defines a configuration for the openconnect Cisco
+AnyConnect VPN client. The elements are any command line flags recognized by
+openconnect. The special value "yes" is interpreted to mean the flag is a
+boolean and only the flag is given to opencpnnect. The special option
+"password" is the cleartext password for the VPN.
+
+### Example
+
+    [openconnect]
+    server = connect.example.com
+    user = vpnuser
+    password = s3cr3tp4ssw0rd
+    no-cert-check = yes
+
 Section `vpn routes`
 --------------------
 
 The `vpn routes` section is optional and can be present when there is a `vpnc`
-section as above. If present, any "split VPN" routes sent by the VPN server
-will be discarded and the routes mentioned in this section will be used
-instead. Routes for specific local IP:s sent by the VPN server (such as a DNS
-server) will be allowed regardless. The format of elements in this section is
-`<network> = <mask bits>`, so to allow 192.0.2.0/24 add an element
-`192.0.2.0=24`. The purpose of this section is to avoid installing unwanted
-routes such as a default route or routes that may conflict with the local
-topology.
+or `openconnect` section as above. The purpose of this section is to avoid
+installing unwanted routes such as a default route or routes that may conflict
+with the local topology. If present, any "split VPN" routes sent by the VPN
+server will be discarded and the routes mentioned in this section will be used
+instead. The format of elements in this section is `<network> = <mask bits>`,
+so to allow 192.0.2.0/24 add an element `192.0.2.0=24`.
 
 ### Example
 
