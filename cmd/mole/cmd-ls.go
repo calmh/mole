@@ -5,6 +5,8 @@ import (
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/table"
 	"github.com/jessevdk/go-flags"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -47,10 +49,14 @@ func (c *cmdls) Execute(args []string) error {
 	}
 	rows = append(rows, header)
 
+	tunnelCache, _ := os.Create(path.Join(globalOpts.Home, "tunnels.cache"))
 	var matched int
 	for _, i := range l {
 		hosts := strings.Join(i.Hosts, ", ")
 		if re == nil || re.MatchString(i.Name) || re.MatchString(i.Description) || re.MatchString(hosts) {
+			if tunnelCache != nil {
+				fmt.Fprintln(tunnelCache, i.Name)
+			}
 			if c.Short {
 				fmt.Println(i.Name)
 			} else {
@@ -75,6 +81,9 @@ func (c *cmdls) Execute(args []string) error {
 				rows = append(rows, row)
 			}
 		}
+	}
+	if tunnelCache != nil {
+		tunnelCache.Close()
 	}
 
 	if !c.Short {

@@ -55,6 +55,9 @@ v3.2 to v4.0
 
 - `mole test <tunnel>` to automatically verify a tunnels connectivity.
 
+- Bash completion. Add `eval "$(mole bashcomp)"` to your `.bash_profile`
+  or similar to get tab completion of commands and tunnel names.
+
 ## Windows build
 
 - No support for vpnc or openconnect.

@@ -1,23 +1,25 @@
 package main
 
 const (
+	msgBashcompShort = `Bash completion`
 	msgDigShort      = `Dig tunnel`
 	msgLsShort       = `List tunnels`
 	msgPushShort     = `Push tunnel`
+	msgRegisterShort = `Register with server`
 	msgShowShort     = `Show tunnel`
 	msgTestShort     = `Test tunnel`
 	msgUpgradeShort  = `Upgrade mole`
 	msgVersionShort  = `Show version`
-	msgRegisterShort = `Register with server`
 
+	msgBashcompLong = `"bashcomp" outputs the bash completion script`
 	msgDigLong      = `"dig" connects the tunnel and sets up forwards`
 	msgLsLong       = `"ls" lists tunnels, optionally filtering on a regular expression`
 	msgPushLong     = `"push" sends a new or updated tunnel file to the server`
+	msgRegisterLong = `"register" sets mole up to talk to a server`
 	msgShowLong     = `"show" show the tunnel configuration`
 	msgTestLong     = `"dig" connects the tunnel and tests forwards`
 	msgUpgradeLong  = `"upgrade" upgrades mole to the latest version`
 	msgVersionLong  = `"version" shows current mole version`
-	msgRegisterLong = `"register" sets mole up to talk to a server`
 
 	msgDebugEnabled = `Debug output enabled.`
 
