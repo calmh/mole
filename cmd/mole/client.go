@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 var clientVersion = strings.Replace(buildVersion, "v", "", 1)
@@ -105,16 +106,22 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 }
 
 func (c *Client) Ping() (string, error) {
+	t0 := time.Now()
+
 	resp, err := c.request("GET", "/ping", nil)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
+
+	debugf("ping %.01f ms", time.Since(t0).Seconds()*1000)
 	return string(data), err
 }
 
 func (c *Client) List() ([]ListItem, error) {
+	t0 := time.Now()
+
 	resp, err := c.request("GET", "/store", nil)
 	if err != nil {
 		return nil, err
@@ -137,10 +144,13 @@ func (c *Client) List() ([]ListItem, error) {
 	}
 	sort.Sort(listItems(items))
 
+	debugf("list %.01f ms", time.Since(t0).Seconds()*1000)
 	return items, nil
 }
 
 func (c *Client) Get(tunnel string) (string, error) {
+	t0 := time.Now()
+
 	resp, err := c.request("GET", "/store/"+tunnel+".ini", nil)
 	if err != nil {
 		return "", err
@@ -153,19 +163,26 @@ func (c *Client) Get(tunnel string) (string, error) {
 	}
 	res := string(data)
 
+	debugf("get %.01f ms", time.Since(t0).Seconds()*1000)
 	return res, nil
 }
 
 func (c *Client) Put(tunnel string, data io.Reader) error {
+	t0 := time.Now()
+
 	resp, err := c.request("PUT", "/store/"+tunnel+".ini", data)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	debugf("put %.01f ms", time.Since(t0).Seconds()*1000)
 	return nil
 }
 
 func (c *Client) Deobfuscate(tunnel string) (string, error) {
+	t0 := time.Now()
+
 	matches := obfuscatedRe.FindAllString(tunnel, -1)
 	for _, o := range matches {
 		s, err := c.resolveKey(o[6:])
@@ -175,10 +192,13 @@ func (c *Client) Deobfuscate(tunnel string) (string, error) {
 		tunnel = strings.Replace(tunnel, o, s, -1)
 	}
 
+	debugf("deobfuscate %.01f ms", time.Since(t0).Seconds()*1000)
 	return tunnel, nil
 }
 
 func (c *Client) GetTicket(username, password string) (string, error) {
+	t0 := time.Now()
+
 	resp, err := c.request("POST", "/ticket/"+username, bytes.NewBufferString(password))
 	if err != nil {
 		return "", err
@@ -191,10 +211,13 @@ func (c *Client) GetTicket(username, password string) (string, error) {
 	}
 	res := string(data)
 
+	debugf("getticket %.01f ms", time.Since(t0).Seconds()*1000)
 	return res, nil
 }
 
 func (c *Client) UpgradesURL() (string, error) {
+	t0 := time.Now()
+
 	resp, err := c.request("GET", "/extra/upgrades.json", nil)
 	if err != nil {
 		return "", err
@@ -213,6 +236,7 @@ func (c *Client) UpgradesURL() (string, error) {
 		return "", err
 	}
 
+	debugf("upgradeurl %.01f ms", time.Since(t0).Seconds()*1000)
 	return manifest.URL, nil
 }
 

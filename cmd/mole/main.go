@@ -129,12 +129,12 @@ func loadGlobalIni(fd io.Reader) {
 }
 
 func autoUpgrade() {
+	// Only do the actual upgrade once we've been running for a while
+	time.Sleep(10 * time.Second)
 	build, err := latestBuild()
 	if err == nil {
 		bd := time.Unix(int64(build.BuildStamp), 0)
 		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
-			// Only do the actual upgrade once we've been running for a while
-			time.Sleep(10 * time.Second)
 			err = upgrade.UpgradeTo(build)
 			if err == nil {
 				if serverIni.upgradeNotice {
