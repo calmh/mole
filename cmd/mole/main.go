@@ -111,7 +111,16 @@ func setup() {
 		}
 	}
 
-	os.MkdirAll(globalOpts.Home, 0700)
+	fi, err := os.Stat(globalOpts.Home)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(globalOpts.Home, 0700)
+		fatalErr(err)
+		okln("Created", globalOpts.Home)
+	} else if fi.Mode()&0077 != 0 {
+		err := os.Chmod(globalOpts.Home, 0700)
+		fatalErr(err)
+		okln("Corrected permissions on", globalOpts.Home)
+	}
 }
 
 func loadGlobalIni(fd io.Reader) {
