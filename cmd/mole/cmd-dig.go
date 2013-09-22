@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 )
 
 type cmdDig struct {
@@ -92,8 +93,24 @@ func (c *cmdDig) Execute(args []string) error {
 
 	var dialer Dialer = proxy.Direct
 	if mh := cfg.General.Main; mh != "" {
-		dialer, err = sshHost(mh, cfg)
+		sshConn, err := sshHost(mh, cfg)
 		fatalErr(err)
+		dialer = sshConn
+
+		go func() {
+			// A dirty keepalive mechanism.
+			for {
+				time.Sleep(30 * time.Second)
+				debugln("acquire session")
+				sess, err := sshConn.NewSession()
+				fatalErr(err)
+
+				time.Sleep(30 * time.Second)
+				debugln("close session")
+				err = sess.Close()
+				fatalErr(err)
+			}
+		}()
 	}
 
 	fwdChan := startForwarder(dialer)

@@ -95,7 +95,7 @@ func sshOnConn(conn net.Conn, h conf.Host) (*ssh.ClientConn, error) {
 	return client, nil
 }
 
-func sshHost(host string, cfg *conf.Config) (Dialer, error) {
+func sshHost(host string, cfg *conf.Config) (*ssh.ClientConn, error) {
 	h := cfg.Hosts[cfg.HostsMap[host]]
 	var conn net.Conn
 	var err error
