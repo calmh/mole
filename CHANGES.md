@@ -35,11 +35,6 @@ v3.2 to v4.0
 
 - Does not attempt (and fail) to juggle sudo.
 
-## Simplified administration
-
-- Due to the LDAP authentication, there is no longer any need to
-  maintain a separate user database on the server.
-
 ## Other new features and improvemens
 
 - Add new port forwards on the fly using the mole shell (`fwd` command).
@@ -57,6 +52,9 @@ v3.2 to v4.0
 
 - Bash completion. Add `eval "$(mole bashcomp)"` to your `.bash_profile`
   or similar to get tab completion of commands and tunnel names.
+
+- Due to the LDAP authentication, there is no longer any need to
+  maintain a separate user database on the server.
 
 ## Windows build
 
