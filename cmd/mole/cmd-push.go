@@ -38,9 +38,7 @@ func (c *cmdPush) Execute(args []string) error {
 	fatalErr(err)
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
-	_, err = authenticate(cl)
-	fatalErr(err)
-	err = cl.Put(tunnelname, file)
+	_, err = authenticated(cl, func() (interface{}, error) { return nil, cl.Put(tunnelname, file) })
 	fatalErr(err)
 
 	okf(msgOkPushed, tunnelname)

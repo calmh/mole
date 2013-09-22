@@ -44,7 +44,7 @@ func (c *cmdDig) Execute(args []string) error {
 	var err error
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
-	_, err = authenticate(cl)
+	_, err = authenticated(cl, func() (interface{}, error) { return cl.Ping() })
 	fatalErr(err)
 
 	var tun string

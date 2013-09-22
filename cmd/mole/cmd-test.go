@@ -47,9 +47,9 @@ func (c *cmdTest) Execute(args []string) error {
 		fatalErr(err)
 	} else {
 		cl := NewClient(serverIni.address, serverIni.fingerprint)
-		_, err = authenticate(cl)
+		res, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
 		fatalErr(err)
-		tun, err := cl.Get(args[0])
+		tun := res.(string)
 		fatalErr(err)
 		tun, err = cl.Deobfuscate(tun)
 		fatalErr(err)

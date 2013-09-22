@@ -34,10 +34,9 @@ func (c *cmdShow) Execute(args []string) error {
 	}
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
-	_, err := authenticate(cl)
+	res, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
 	fatalErr(err)
-	tun, err := cl.Get(args[0])
-	fatalErr(err)
+	tun := res.(string)
 
 	if c.Raw {
 		// No log function, since it must be possible to pipe to a valid file

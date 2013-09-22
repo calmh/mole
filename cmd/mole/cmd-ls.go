@@ -36,10 +36,9 @@ func (c *cmdls) Execute(args []string) error {
 	}
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
-	_, err = authenticate(cl)
+	res, err := authenticated(cl, func() (interface{}, error) { return cl.List() })
 	fatalErr(err)
-	l, err := cl.List()
-	fatalErr(err)
+	l := res.([]ListItem)
 
 	var rows [][]string
 	header := []string{"TUNNEL", "DESCRIPTION", "HOSTS"}

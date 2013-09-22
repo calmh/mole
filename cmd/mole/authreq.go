@@ -11,23 +11,24 @@ import (
 
 const retries = 3
 
-func authenticate(c *Client) (string, error) {
+type authenticatedRequest func() (interface{}, error)
+
+// authenticated calls the request r and performs authentication if it fails
+// with a 403 Forbidden error. Any other error is returned to the caller.
+func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 	c.Ticket = serverIni.ticket
 	br := bufio.NewReader(os.Stdin)
 	for i := 0; i < retries; i++ {
-		user, err := c.Ping()
-		if err == nil {
-			return user, nil
-		}
-		if !strings.HasPrefix(err.Error(), "403 Forbidden") {
-			return "", err
+		result, err := r()
+		if err == nil || !strings.HasPrefix(err.Error(), "403 Forbidden") {
+			return result, err
 		}
 
 		infoln(msgNeedsAuth)
 		fmt.Printf(msgUsername)
 		bs, _, err := br.ReadLine()
 		fatalErr(err)
-		user = string(bs)
+		user := string(bs)
 		pass := readpass(msgPassword)
 
 		ticket, err := c.GetTicket(user, pass)
@@ -46,12 +47,10 @@ func authenticate(c *Client) (string, error) {
 			fatalErr(err)
 			err = f.Close()
 			fatalErr(err)
-
-			return user, nil
 		} else {
 			warnln(err.Error())
 		}
 	}
 
-	return "", nil
+	return nil, fmt.Errorf("Too many authentication failures")
 }
