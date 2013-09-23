@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/calmh/mole/conf"
 	"github.com/jessevdk/go-flags"
 	"os"
 	"path/filepath"
@@ -32,11 +33,16 @@ func (c *cmdPush) Execute(args []string) error {
 	if ext := filepath.Ext(filename); ext != ".ini" {
 		fatalf(msgFileNotInit, filename)
 	}
-	tunnelname := filename[:len(filename)-4]
 
+	// Verify file
 	file, err := os.Open(args[0])
 	fatalErr(err)
+	_, err = conf.Load(file)
+	fatalErr(err)
+	file.Close()
 
+	tunnelname := filename[:len(filename)-4]
+	file, _ = os.Open(args[0])
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
 	_, err = authenticated(cl, func() (interface{}, error) { return nil, cl.Put(tunnelname, file) })
 	fatalErr(err)

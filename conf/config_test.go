@@ -1,9 +1,10 @@
 package conf_test
 
 import (
-	"bytes"
 	"github.com/calmh/mole/conf"
 	"os"
+	"path/filepath"
+	"regexp"
 	"testing"
 )
 
@@ -15,19 +16,66 @@ func loadFile(f string) (*conf.Config, error) {
 	return conf.Load(fd)
 }
 
-func loadString(s string) (*conf.Config, error) {
-	return conf.Load(bytes.NewBufferString(s))
+type TestCase struct {
+	FileGlob   string
+	ErrorMatch string
 }
 
-func TestLoadFileWithoutError(t *testing.T) {
-	_, err := loadFile("test.ini")
-	if err != nil {
-		t.Error(err)
+var validationCases = []TestCase{
+	TestCase{"valid-*.ini", ""}, // All valid files are valid
+	TestCase{"inv-*.ini", "."},  // All invalid files are invalid; more specific checks below
+	TestCase{"inv-nover.ini", `missing required field "version"`},
+	TestCase{"inv-nodescr.ini", `missing required field "description"`},
+	TestCase{"inv-noauthor.ini", `missing required field "author"`},
+	TestCase{"inv-unknown.ini", `unrecognized field "unrecognized"`},
+	TestCase{"inv-nohosts-nofwds.ini", `either "hosts" or "forwards"`},
+	TestCase{"inv-nosuchmain.ini", `nonexistent host "foo"`},
+	TestCase{"inv-nosuchvia.ini", `nonexistent host "tac2"`},
+	TestCase{"inv-unknhostattrs.ini", `unrecognized field "foo"`},
+	TestCase{"inv-fwdcomment.ini", `forward comments`},
+	TestCase{"inv-duplfwd.ini", `duplicate forward source "127.0.0.1:8443"`},
+	TestCase{"inv-lowport.ini", `privileged source port 443`},
+	TestCase{"inv-nohostaddr.ini", `required field "addr"`},
+	TestCase{"inv-nohostuser.ini", `required field "user"`},
+	TestCase{"inv-nohostpasskey.ini", `required field "password" or "key"`},
+	TestCase{"inv-badfwd*.ini", `malformed forward`},
+	TestCase{"inv-socksvia.ini", `"socks" and "via"`},
+}
+
+func TestValidations(t *testing.T) {
+	for _, tc := range validationCases {
+		fs, err := filepath.Glob("test/" + tc.FileGlob)
+		if err != nil {
+			panic(err)
+		}
+		if len(fs) == 0 {
+			t.Errorf("test pattern %q matches no files", tc.FileGlob)
+		}
+		for _, f := range fs {
+			cfg, err := loadFile(f)
+			if tc.ErrorMatch == "" {
+				if cfg == nil {
+					t.Errorf("unexpected nil cfg for %s", f)
+				}
+				if err != nil {
+					t.Error(err)
+				}
+			} else {
+				if cfg != nil {
+					t.Errorf("unexpected non-nil cfg for %s", f)
+				}
+				if err == nil {
+					t.Errorf("unexpected nil error for %s", f)
+				} else if !regexp.MustCompile(tc.ErrorMatch).MatchString(err.Error()) {
+					t.Errorf("error %q for %s doesn't match %q", err.Error(), f, tc.ErrorMatch)
+				}
+			}
+		}
 	}
 }
 
 func TestGeneralSection(t *testing.T) {
-	cfg, _ := loadFile("test.ini")
+	cfg, _ := loadFile("test/valid-general.ini")
 
 	if cfg.General.Description != "Operator (One)" {
 		t.Errorf("Incorrect Description %q", cfg.General.Description)
@@ -35,7 +83,7 @@ func TestGeneralSection(t *testing.T) {
 	if cfg.General.Author != "Jakob Borg <jakob@nym.se>" {
 		t.Errorf("Incorrect Author %q", cfg.General.Author)
 	}
-	if cfg.General.Version != 320 {
+	if cfg.General.Version != 400 {
 		t.Errorf("Incorrect Version %d", cfg.General.Version)
 	}
 	if cfg.General.Main != "tac1" {
@@ -51,7 +99,7 @@ func TestGeneralSection(t *testing.T) {
 }
 
 func TestHosts(t *testing.T) {
-	cfg, _ := loadFile("test.ini")
+	cfg, _ := loadFile("test/valid-hosts.ini")
 
 	if l := len(cfg.Hosts); l != 2 {
 		t.Errorf("Incorrect len(Hosts) %d", l)
@@ -111,7 +159,7 @@ func TestHosts(t *testing.T) {
 }
 
 func TestForwards(t *testing.T) {
-	cfg, _ := loadFile("test.ini")
+	cfg, _ := loadFile("test/valid-forwards.ini")
 
 	if l := len(cfg.Forwards); l != 2 {
 		t.Errorf("Incorrect len(Forwards) %d", l)
@@ -163,62 +211,22 @@ func TestForwards(t *testing.T) {
 }
 
 func TestSourceAddresses(t *testing.T) {
-	cfg, _ := loadString(`
-[forwards.baz (quux)]
-127.22.0.17:3994 = 10.22.0.9
-127.22.0.17:8443 = 10.22.0.9
-127.22.0.16:42000 = 10.22.0.9
-127.22.0.16:42002 = 10.22.0.9
-
-[forwards.foo (bar))]
-127.0.0.12:3994 = 10.22.0.6
-127.0.0.12:8443 = 10.22.0.6
-127.0.0.13:42000 = 10.22.0.6
-127.0.0.13:42002 = 10.22.0.6
-		`)
+	cfg, _ := loadFile("test/valid-sourceaddr.ini")
 
 	addrs := cfg.SourceAddresses()
 	if l := len(addrs); l != 4 {
 		t.Errorf("incorrect len(addrs) %d", l)
 	}
-	if addrs[0] != "127.0.0.12" {
-		t.Errorf("incorrect addrs[0] %q", addrs[0])
-	}
-	if addrs[1] != "127.0.0.13" {
-		t.Errorf("incorrect addrs[0] %q", addrs[1])
-	}
-	if addrs[2] != "127.22.0.16" {
-		t.Errorf("incorrect addrs[0] %q", addrs[2])
-	}
-	if addrs[3] != "127.22.0.17" {
-		t.Errorf("incorrect addrs[0] %q", addrs[3])
+
+	for i, exp := range []string{"127.0.0.12", "127.0.0.13", "127.22.0.16", "127.22.0.17"} {
+		if addrs[i] != exp {
+			t.Errorf("incorrect addrs[%d] %q != %q", i, addrs[i], exp)
+		}
 	}
 }
 
 func TestVpnc(t *testing.T) {
-	cfg, _ := loadString(`
-[vpnc]
-IPSec_gateway = 1.2.3.4
-IPSec_ID = groupID
-IPSec_secret = s3cr3t
-Xauth_username = some.user.name
-Xauth_password = "3v3nm0r3s3cr3t"
-IKE_Authmode = psk
-DPD_idle_timeout = (our side) 0
-NAT_Traversal_Mode = force-natt
-Local_Port = 0
-Cisco_UDP_Encapsulation_Port = 0
-
-[vpn routes]
-192.168.10.0 = 24
-192.168.12.0 = 24
-192.168.64.0 = 24
-192.168.76.0 = 24
-192.168.140.0 = 24
-192.168.162.0 = 24
-192.168.209.0 = 24
-192.168.214.0 = 24
-		`)
+	cfg, _ := loadFile("test/valid-vpnc.ini")
 
 	if cfg.Vpnc["IPSec_secret"] != "s3cr3t" {
 		t.Error("incorrectly parsed vpnc IPSec_secret")
@@ -226,6 +234,10 @@ Cisco_UDP_Encapsulation_Port = 0
 	if cfg.Vpnc["Xauth_password"] != "3v3nm0r3s3cr3t" {
 		t.Error("incorrectly parsed vpnc Xauth_password")
 	}
+}
+
+func TestVpnRoutes(t *testing.T) {
+	cfg, _ := loadFile("test/valid-vpnc.ini")
 
 	if l := len(cfg.VpnRoutes); l != 8 {
 		t.Errorf("incorrect number of vpn routes %d", l)
@@ -236,13 +248,7 @@ Cisco_UDP_Encapsulation_Port = 0
 }
 
 func TestOpenConnect(t *testing.T) {
-	cfg, _ := loadString(`
-[openconnect]
-server = foo.example.com
-user = procera
-password = somepass
-no-cert-check = yes
-		`)
+	cfg, _ := loadFile("test/valid-openconnect.ini")
 
 	if cfg.OpenConnect["server"] != "foo.example.com" {
 		t.Error("incorrectly parsed openconnect server")
