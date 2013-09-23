@@ -11,7 +11,7 @@ export GOBIN=$(pwd)/bin
 rm -rf auto
 mkdir auto
 if [[ $1 == "all" ]] ; then
-	go get -d -u -v ./...
+	pak get
 
 	source /usr/local/golang-crosscompile/crosscompile.bash
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
