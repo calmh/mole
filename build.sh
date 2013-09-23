@@ -13,6 +13,8 @@ mkdir auto
 if [[ $1 == "all" ]] ; then
 	pak get
 
+	go test ./... || exit 1
+
 	source /usr/local/golang-crosscompile/crosscompile.bash
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo "$arch"
@@ -20,8 +22,8 @@ if [[ $1 == "all" ]] ; then
 		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/..."
 		tar zcf "mole-$arch.tar.gz" bin
 
-		mv bin/mole "auto/mole-$arch"
-		mv bin/*/mole "auto/mole-$arch"
+		[ -f bin/mole ] && mv bin/mole "auto/mole-$arch"
+		[ -f bin/*/mole ] && mv bin/*/mole "auto/mole-$arch"
 		hash=$(sha1sum auto/mole-$arch | awk '{print $1}')
 		echo "{\"buildstamp\":$buildstamp, \"version\":\"$buildver\", \"hash\":\"$hash\"}" >> "auto/mole-$arch.json"
 		gzip -9 "auto/mole-$arch"
