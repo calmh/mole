@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"github.com/calmh/mole/conf"
 	"github.com/jessevdk/go-flags"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -34,17 +36,24 @@ func (c *cmdPush) Execute(args []string) error {
 		fatalf(msgFileNotInit, filename)
 	}
 
-	// Verify file
+	// Read
 	file, err := os.Open(args[0])
 	fatalErr(err)
-	_, err = conf.Load(file)
+	bs, err := ioutil.ReadAll(file)
 	fatalErr(err)
 	file.Close()
 
+	// Verify
+	_, err = conf.Load(bytes.NewBuffer(bs))
+	fatalErr(err)
+	file.Close()
+
+	// Push
 	tunnelname := filename[:len(filename)-4]
-	file, _ = os.Open(args[0])
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
-	_, err = authenticated(cl, func() (interface{}, error) { return nil, cl.Put(tunnelname, file) })
+	_, err = authenticated(cl, func() (interface{}, error) {
+		return nil, cl.Put(tunnelname, bytes.NewBuffer(bs))
+	})
 	fatalErr(err)
 
 	okf(msgOkPushed, tunnelname)
