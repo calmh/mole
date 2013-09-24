@@ -10,6 +10,7 @@ const (
 	msgTestShort     = `Test tunnel`
 	msgUpgradeShort  = `Upgrade mole`
 	msgVersionShort  = `Show version`
+	msgInstallShort  = `Install package`
 
 	msgBashcompLong = `"bashcomp" outputs the bash completion script`
 	msgDigLong      = `"dig" connects the tunnel and sets up forwards`
@@ -20,6 +21,7 @@ const (
 	msgTestLong     = `"dig" connects the tunnel and tests forwards`
 	msgUpgradeLong  = `"upgrade" upgrades mole to the latest version`
 	msgVersionLong  = `"version" shows current mole version`
+	msgInstallLong  = `"install" installs a binary package fetched from the server`
 
 	msgDebugEnabled = `Debug output enabled.`
 
@@ -87,6 +89,8 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
   sudo mole dig foo                  # dig the tunnel "foo"
   sudo mole -d dig foo               # dig the tunnel "foo", while showing debug output
   mole push foo.ini                  # create or update the "foo" tunnel from a local file
+  mole install                       # list packages available for installation
+  mole install vpnc                  # install a package named vpnc
 `
 
 	msgFileNotInit = `File %q should have .ini extension`
@@ -113,5 +117,8 @@ On Linux, do whatever your distribution recommends.`
 	msgPassword        = `Password: `
 	msgPasswordVisible = `Password will be visible when typed.`
 
-	msgNoHost = `No server hostname is configured. Have you run "mole register"?`
+	msgNoHost     = `No server hostname is configured. Have you run "mole register"?`
+	msgNoPackages = `There are no packages available for installation on your OS/architecture.`
+	msgRunInstall = `
+Consider running "mole install" to see what extra packages, such as VPN providers, are available.`
 )

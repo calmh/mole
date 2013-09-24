@@ -240,6 +240,45 @@ func (c *Client) UpgradesURL() (string, error) {
 	return manifest.URL, nil
 }
 
+type Package struct {
+	Package     string
+	Description string
+}
+
+func (c *Client) Packages() (map[string][]Package, error) {
+	t0 := time.Now()
+
+	resp, err := c.request("GET", "/extra/packages.json", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string][]Package
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+
+	debugf("packages %.01f ms", time.Since(t0).Seconds()*1000)
+	return m, nil
+}
+
+func (c *Client) Package(file string) (io.ReadCloser, error) {
+	resp, err := c.request("GET", "/extra/"+file, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Body, nil
+}
+
 func (c *Client) resolveKey(key string) (string, error) {
 	resp, err := c.request("GET", "/key/"+key, nil)
 	if err != nil {
