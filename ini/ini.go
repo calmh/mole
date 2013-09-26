@@ -42,6 +42,7 @@ func Parse(stream io.Reader) File {
 	return iniFile
 }
 
+// Write writes the sections and options to the io.Writer in INI format.
 func (f *File) Write(out io.Writer) error {
 	for _, sectionName := range f.SectionNames {
 		_, err := out.Write([]byte("[" + sectionName + "]\n"))
@@ -60,4 +61,20 @@ func (f *File) Write(out io.Writer) error {
 		}
 	}
 	return nil
+}
+
+// Get gets the value from the specified section and key name, or the empty
+// string if either the section or the key is missing.
+func (f *File) Get(section, key string) string {
+	sect, ok := f.Sections[section]
+	if !ok {
+		return ""
+	}
+
+	val, ok := sect[key]
+	if !ok {
+		return ""
+	}
+
+	return val
 }

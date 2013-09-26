@@ -124,16 +124,11 @@ func setup() {
 
 func loadGlobalIni(fd io.Reader) {
 	config := ini.Parse(fd)
-	serverIni.address = config.Sections["server"]["host"] + ":" + config.Sections["server"]["port"]
-	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Sections["server"]["fingerprint"], ":", "", -1))
-	serverIni.ticket = config.Sections["server"]["ticket"]
-
-	serverIni.upgrades = true
-	if upgSec, ok := config.Sections["upgrades"]; ok {
-		upgs, ok := upgSec["automatic"]
-		serverIni.upgradeNotice = !ok
-		serverIni.upgrades = !ok || upgs == "yes"
-	}
+	serverIni.address = config.Get("server", "host") + ":" + config.Get("server", "port")
+	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Get("server", "fingerprint"), ":", "", -1))
+	serverIni.ticket = config.Get("server", "ticket")
+	serverIni.upgrades = config.Get("upgrades", "automatic") != "no"
+	serverIni.upgradeNotice = config.Get("upgrades", "automatic") != "yes"
 }
 
 func autoUpgrade() {
