@@ -65,6 +65,6 @@ func (c *cmdBashcomp) Execute(args []string) error {
 		[]string{"push"},
 	}
 
-	compTpl.Execute(os.Stdout, compData)
+	_ = compTpl.Execute(os.Stdout, compData)
 	return nil
 }

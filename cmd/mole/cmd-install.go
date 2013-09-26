@@ -54,9 +54,11 @@ func (c *cmdInstall) Execute(args []string) error {
 		rd, err := cl.Package(fullname)
 		fatalErr(err)
 
-		io.Copy(wr, rd)
-		wr.Close()
-		rd.Close()
+		_, err = io.Copy(wr, rd)
+		fatalErr(err)
+		err = wr.Close()
+		fatalErr(err)
+		_ = rd.Close()
 
 		td, err := ioutil.TempDir("", name)
 		fatalErr(err)

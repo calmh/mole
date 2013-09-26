@@ -83,7 +83,7 @@ func (c *cmdls) Execute(args []string) error {
 		}
 	}
 	if tunnelCache != nil {
-		tunnelCache.Close()
+		_ = tunnelCache.Close()
 	}
 
 	if !c.Short {

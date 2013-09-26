@@ -41,12 +41,11 @@ func (c *cmdPush) Execute(args []string) error {
 	fatalErr(err)
 	bs, err := ioutil.ReadAll(file)
 	fatalErr(err)
-	file.Close()
+	_ = file.Close()
 
 	// Verify
 	_, err = conf.Load(bytes.NewBuffer(bs))
 	fatalErr(err)
-	file.Close()
 
 	// Push
 	tunnelname := filename[:len(filename)-4]
