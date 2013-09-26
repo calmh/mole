@@ -10,22 +10,22 @@ import (
 	"regexp"
 )
 
-type cmdRegister struct {
+type registerCommand struct {
 	Port int `short:"p" long:"port" description:"Server port number" value-name:"PORT"`
 }
 
 var registerParser *flags.Parser
 
 func init() {
-	cmd := cmdRegister{}
+	cmd := registerCommand{}
 	registerParser = globalParser.AddCommand("register", msgRegisterShort, msgRegisterLong, &cmd)
 }
 
-func (c *cmdRegister) Usage() string {
+func (c *registerCommand) Usage() string {
 	return "<server> [register-OPTIONS]"
 }
 
-func (c *cmdRegister) Execute(args []string) error {
+func (c *registerCommand) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {

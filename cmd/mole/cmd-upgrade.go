@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type cmdUpgrade struct {
+type upgradeCommand struct {
 	Force bool `short:"f" long:"force" description:"Don't perform newness check, just upgrade to whatever the server has."`
 }
 
@@ -16,7 +16,7 @@ var upgradeParser *flags.Parser
 var errNoUpgradeUrl = errors.New("no upgrade URL")
 
 func init() {
-	cmd := cmdUpgrade{}
+	cmd := upgradeCommand{}
 	upgradeParser = globalParser.AddCommand("upgrade", msgUpgradeShort, msgUpgradeLong, &cmd)
 }
 
@@ -38,7 +38,7 @@ func latestBuild() (build upgrade.Build, err error) {
 	return
 }
 
-func (c *cmdUpgrade) Execute(args []string) error {
+func (c *upgradeCommand) Execute(args []string) error {
 	setup()
 
 	build, err := latestBuild()

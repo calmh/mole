@@ -4,16 +4,16 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-type cmdVersion struct{}
+type versionCommand struct{}
 
 var versionParser *flags.Parser
 
 func init() {
-	cmd := cmdVersion{}
+	cmd := versionCommand{}
 	versionParser = globalParser.AddCommand("version", msgVersionShort, msgVersionLong, &cmd)
 }
 
-func (c *cmdVersion) Execute(args []string) error {
+func (c *versionCommand) Execute(args []string) error {
 	setup()
 	printVersion()
 	return nil

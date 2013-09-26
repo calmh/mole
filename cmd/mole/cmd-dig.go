@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type cmdDig struct {
+type digCommand struct {
 	Local        bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
 	QualifyHosts bool `short:"q" long:"qualify-hosts" description:"Use <host>.<tunnel> for host aliases instead of just <host>"`
 }
@@ -21,15 +21,15 @@ type cmdDig struct {
 var digParser *flags.Parser
 
 func init() {
-	cmd := cmdDig{}
+	cmd := digCommand{}
 	digParser = globalParser.AddCommand("dig", msgDigShort, msgDigLong, &cmd)
 }
 
-func (c *cmdDig) Usage() string {
+func (c *digCommand) Usage() string {
 	return "<tunnelname> [dig-OPTIONS]"
 }
 
-func (c *cmdDig) Execute(args []string) error {
+func (c *digCommand) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {

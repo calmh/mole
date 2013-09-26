@@ -11,20 +11,20 @@ import (
 	"runtime"
 )
 
-type cmdInstall struct{}
+type installCommand struct{}
 
 var installParser *flags.Parser
 
 func init() {
-	cmd := cmdInstall{}
+	cmd := installCommand{}
 	installParser = globalParser.AddCommand("install", msgInstallShort, msgInstallLong, &cmd)
 }
 
-func (c *cmdInstall) Usage() string {
+func (c *installCommand) Usage() string {
 	return "[package] [install-OPTIONS]"
 }
 
-func (c *cmdInstall) Execute(args []string) error {
+func (c *installCommand) Execute(args []string) error {
 	setup()
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)

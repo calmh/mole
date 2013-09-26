@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-type cmdBashcomp struct{}
+type bashcompCommand struct{}
 
 var bashcompParser *flags.Parser
 var compTpl = template.Must(template.New("bashcomp").Parse(compTplStr))
@@ -46,11 +46,11 @@ complete -F _mole mole
 `
 
 func init() {
-	cmd := cmdBashcomp{}
+	cmd := bashcompCommand{}
 	bashcompParser = globalParser.AddCommand("bashcomp", msgBashcompShort, msgBashcompLong, &cmd)
 }
 
-func (c *cmdBashcomp) Execute(args []string) error {
+func (c *bashcompCommand) Execute(args []string) error {
 	setup()
 
 	compData := struct {

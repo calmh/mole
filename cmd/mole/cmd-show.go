@@ -9,22 +9,22 @@ import (
 	"strings"
 )
 
-type cmdShow struct {
+type showCommand struct {
 	Raw bool `short:"r" long:"raw" description:"Show raw, not parsed, tunnel file"`
 }
 
 var showParser *flags.Parser
 
 func init() {
-	cmd := cmdShow{}
+	cmd := showCommand{}
 	showParser = globalParser.AddCommand("show", msgShowShort, msgShowLong, &cmd)
 }
 
-func (c *cmdShow) Usage() string {
+func (c *showCommand) Usage() string {
 	return "<tunnelname> [show-OPTIONS]"
 }
 
-func (c *cmdShow) Execute(args []string) error {
+func (c *showCommand) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {

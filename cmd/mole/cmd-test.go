@@ -9,22 +9,22 @@ import (
 	"os"
 )
 
-type cmdTest struct {
+type testCommand struct {
 	Local bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
 }
 
 var testParser *flags.Parser
 
 func init() {
-	cmd := cmdTest{}
+	cmd := testCommand{}
 	testParser = globalParser.AddCommand("test", msgTestShort, msgTestLong, &cmd)
 }
 
-func (c *cmdTest) Usage() string {
+func (c *testCommand) Usage() string {
 	return "<tunnelname> [test-OPTIONS]"
 }
 
-func (c *cmdTest) Execute(args []string) error {
+func (c *testCommand) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {

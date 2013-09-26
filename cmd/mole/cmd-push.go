@@ -9,20 +9,20 @@ import (
 	"path/filepath"
 )
 
-type cmdPush struct{}
+type pushCommand struct{}
 
 var pushParser *flags.Parser
 
 func init() {
-	cmd := cmdPush{}
+	cmd := pushCommand{}
 	pushParser = globalParser.AddCommand("push", msgPushShort, msgPushLong, &cmd)
 }
 
-func (c *cmdPush) Usage() string {
+func (c *pushCommand) Usage() string {
 	return "<tunnelfile>"
 }
 
-func (c *cmdPush) Execute(args []string) error {
+func (c *pushCommand) Execute(args []string) error {
 	setup()
 
 	if len(args) != 1 {

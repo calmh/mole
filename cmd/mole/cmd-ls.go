@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type cmdls struct {
+type lsCommand struct {
 	Long  bool `short:"l" description:"Long listing"`
 	Short bool `short:"s" description:"Short listing (name only)"`
 }
@@ -19,15 +19,15 @@ type cmdls struct {
 var lsParser *flags.Parser
 
 func init() {
-	cmd := cmdls{}
+	cmd := lsCommand{}
 	lsParser = globalParser.AddCommand("ls", msgLsShort, msgLsLong, &cmd)
 }
 
-func (c *cmdls) Usage() string {
+func (c *lsCommand) Usage() string {
 	return "[regexp]"
 }
 
-func (c *cmdls) Execute(args []string) error {
+func (c *lsCommand) Execute(args []string) error {
 	setup()
 
 	var re *regexp.Regexp
