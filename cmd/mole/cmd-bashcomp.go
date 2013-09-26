@@ -60,8 +60,8 @@ func (c *bashcompCommand) Execute(args []string) error {
 		FileCommands   []string
 	}{
 		path.Join(globalOpts.Home, "tunnels.cache"),
-		[]string{"dig", "ls", "push", "register", "show", "test", "upgrade", "version"},
-		[]string{"dig", "show", "test"},
+		[]string{"dig", "ls", "push", "register", "show", "test", "upgrade", "version", "rm"},
+		[]string{"dig", "show", "test", "rm"},
 		[]string{"push"},
 	}
 

@@ -180,6 +180,19 @@ func (c *Client) Put(tunnel string, data io.Reader) error {
 	return nil
 }
 
+func (c *Client) Delete(tunnel string) error {
+	t0 := time.Now()
+
+	resp, err := c.request("DELETE", "/store/"+tunnel+".ini", nil)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	debugf("delete %.01f ms", time.Since(t0).Seconds()*1000)
+	return nil
+}
+
 func (c *Client) Deobfuscate(tunnel string) (string, error) {
 	t0 := time.Now()
 

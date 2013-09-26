@@ -3,25 +3,27 @@ package main
 const (
 	msgBashcompShort = `Bash completion`
 	msgDigShort      = `Dig tunnel`
+	msgInstallShort  = `Install package`
 	msgLsShort       = `List tunnels`
 	msgPushShort     = `Push tunnel`
 	msgRegisterShort = `Register with server`
+	msgRmShort       = `Delete tunnel`
 	msgShowShort     = `Show tunnel`
 	msgTestShort     = `Test tunnel`
 	msgUpgradeShort  = `Upgrade mole`
 	msgVersionShort  = `Show version`
-	msgInstallShort  = `Install package`
 
 	msgBashcompLong = `"bashcomp" outputs the bash completion script; use as «eval "$(mole bashcomp)"» in your .bash_profile`
 	msgDigLong      = `"dig" connects the tunnel and sets up forwards`
+	msgInstallLong  = `"install" installs a binary package fetched from the server`
 	msgLsLong       = `"ls" lists tunnels, optionally filtering on a regular expression`
 	msgPushLong     = `"push" sends a new or updated tunnel file to the server`
 	msgRegisterLong = `"register" sets mole up to talk to a server`
+	msgRmLong       = `"rm" deletes the specified tunnel from the server`
 	msgShowLong     = `"show" show the tunnel configuration`
 	msgTestLong     = `"dig" connects the tunnel and tests forwards`
 	msgUpgradeLong  = `"upgrade" upgrades mole to the latest version`
 	msgVersionLong  = `"version" shows current mole version`
-	msgInstallLong  = `"install" installs a binary package fetched from the server`
 
 	msgDebugEnabled = `Debug output enabled.`
 
@@ -113,4 +115,6 @@ On Linux, do whatever your distribution recommends.`
 	msgNoPackages = `There are no packages available for installation on your OS/architecture.`
 	msgRunInstall = `
 Consider running "mole install" to see what extra packages, such as VPN providers, are available.`
+
+	msgOkDeleted = `Deleted %q.`
 )
