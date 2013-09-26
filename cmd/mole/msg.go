@@ -46,24 +46,17 @@ ability to become root as necessary.
 
 	msgErrPEMNoKey = `No ssh key found after PEM decode.`
 
-	msgSshFirst = `ssh: Dial %s@%s`
-	msgSshVia   = `ssh: Tunnel to %s@%s`
-
-	msgVpncStarting  = `vpnc: Starting.`
 	msgVpncStart     = `vpnc: Started (pid %d).`
 	msgVpncStopping  = `vpnc: Stopping (pid %d).`
 	msgVpncWait      = `vpnc: Waiting for connect...`
 	msgVpncConnected = `vpnc: Connected.`
 	msgVpncStopped   = `vpnc: Stopped.`
 
-	msgOpncStarting  = `openconnect: Starting.`
 	msgOpncStart     = `openconnect: Started (pid %d).`
 	msgOpncStopping  = `openconnect: Stopping (pid %d).`
 	msgOpncWait      = `openconnect: Waiting for connect...`
 	msgOpncConnected = `openconnect: Connected.`
 	msgOpncStopped   = `openconnect: Stopped.`
-
-	msgWarnNoCert = `No server CA certificate present, cannot authenticate server.`
 
 	msgDownloadingUpgrade = `Downloading upgrade...`
 	msgUpgraded           = `Upgraded your mole to %s.`

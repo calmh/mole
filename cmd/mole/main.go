@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/ini"
@@ -163,10 +162,4 @@ func printVersion() {
 	if !buildDate.IsZero() {
 		infof("  %v by %s", buildDate, buildUser)
 	}
-}
-
-func certificate() tls.Certificate {
-	cert, err := tls.LoadX509KeyPair(path.Join(globalOpts.Home, "mole.crt"), path.Join(globalOpts.Home, "mole.key"))
-	fatalErr(err)
-	return cert
 }
