@@ -12,7 +12,7 @@ const (
 	msgVersionShort  = `Show version`
 	msgInstallShort  = `Install package`
 
-	msgBashcompLong = `"bashcomp" outputs the bash completion script`
+	msgBashcompLong = `"bashcomp" outputs the bash completion script; use as «eval "$(mole bashcomp)"» in your .bash_profile`
 	msgDigLong      = `"dig" connects the tunnel and sets up forwards`
 	msgLsLong       = `"ls" lists tunnels, optionally filtering on a regular expression`
 	msgPushLong     = `"push" sends a new or updated tunnel file to the server`
@@ -75,15 +75,14 @@ to your ~/.mole/mole.ini file. To silence this message, you can instead add:
 `
 
 	msgExamples = `Examples:
-  mole register mole.example.com     # register with mole.example.com
-  mole ls                            # show all available tunnels
-  mole ls foo                        # show all available tunnels matching the non-achored regexp "foo"
-  mole show foo                      # show the hosts and forwards set up by the tunnel "foo"
-  sudo mole dig foo                  # dig the tunnel "foo"
-  sudo mole -d dig foo               # dig the tunnel "foo", while showing debug output
-  mole push foo.ini                  # create or update the "foo" tunnel from a local file
-  mole install                       # list packages available for installation
-  mole install vpnc                  # install a package named vpnc
+  mole ls                # show all available tunnels
+  mole ls foo            # show all available tunnels matching the regexp "foo"
+  mole show foo          # show the hosts and forwards in the tunnel "foo"
+  sudo mole dig foo      # dig the tunnel "foo"
+  sudo mole -d dig foo   # dig the tunnel "foo", while showing debug output
+  mole push foo.ini      # create or update the "foo" tunnel from a local file
+  mole install           # list packages available for installation
+  mole install vpnc      # install a package named vpnc
 `
 
 	msgFileNotInit = `File %q should have .ini extension`
