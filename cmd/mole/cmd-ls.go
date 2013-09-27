@@ -72,6 +72,8 @@ func (c *lsCommand) Execute(args []string) error {
 
 				if hosts == "" {
 					hosts = ansi.Faint("(local forward)")
+				} else if len(hosts) > 20 {
+					hosts = hosts[:17] + ansi.Faint("...")
 				}
 
 				row := []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts}

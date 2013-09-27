@@ -4,6 +4,7 @@ package table
 import (
 	"bytes"
 	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/termsize"
 )
 
 const (
@@ -31,9 +32,23 @@ func Fmt(fmt string, rows [][]string) string {
 		}
 	}
 
+	tw := termsize.Columns()
+	cw := 0
+	maxCols := 0
+	for _, w := range width {
+		cw += w
+		if cw > tw {
+			break
+		}
+		maxCols++
+	}
+
 	var buf bytes.Buffer
 	for r, row := range rows {
 		for c, cell := range row {
+			if c >= maxCols {
+				break
+			}
 			if r == 0 {
 				cell = ansi.Underline(cell)
 			}
