@@ -45,14 +45,6 @@ func main() {
 		buildDate = time.Unix(epoch, 0)
 	}
 
-	// TIME LIMITED BETA
-	// 30 days self destruct
-	if !buildDate.IsZero() && time.Since(buildDate) > 30*24*time.Hour {
-		fatalln("This is an expired beta version.\nPlease grab a new build from http://ps-build1.vbg.se.prnw.net/job/mole")
-	}
-	// TIME LIMITED BETA
-	// 30 days self destruct
-
 	if runtime.GOOS == "windows" {
 		globalOpts.Remap = true
 	}
