@@ -56,7 +56,6 @@ func (c *registerCommand) Execute(args []string) error {
 	fatalErr(err)
 
 	infof("%s", randomart.Generate(fp, "mole"))
-	okln(args[0], fpstr)
-	infoln(msgRunInstall)
+	okf(msgRegistered, args[0])
 	return nil
 }

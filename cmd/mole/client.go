@@ -94,6 +94,11 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 		return nil, err
 	}
 
+	if resp.StatusCode == 530 {
+		defer resp.Body.Close()
+		return nil, fmt.Errorf(msg530)
+	}
+
 	if resp.StatusCode != 200 {
 		defer resp.Body.Close()
 		data, _ := ioutil.ReadAll(resp.Body)
