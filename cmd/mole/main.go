@@ -166,13 +166,3 @@ func autoUpgrade() {
 		}
 	}
 }
-
-func printVersion() {
-	infof("mole (%s-%s)", runtime.GOOS, runtime.GOARCH)
-	if buildVersion != "" {
-		infof("  %s", buildVersion)
-	}
-	if !buildDate.IsZero() {
-		infof("  %v by %s", buildDate, buildUser)
-	}
-}

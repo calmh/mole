@@ -53,7 +53,7 @@ func upgradeCommand(args []string) error {
 			okf(msgUpgraded, build.Version)
 		}
 	} else {
-		okln(msgNoUpgrades)
+		okln(msgLatest)
 	}
 
 	return nil
