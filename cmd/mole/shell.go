@@ -87,7 +87,7 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 		case "test":
 			results := testForwards(dialer, cfg)
 			for res := range results {
-				infof(ansi.Underline(res.name))
+				infof(ansi.Bold(ansi.Cyan(res.name)))
 				for _, line := range res.results {
 					if line.err == nil {
 						infof("%22s %s in %.02f ms", line.dst, ansi.Bold(ansi.Green("-ok-")), line.ms)
