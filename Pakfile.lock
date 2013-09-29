@@ -1,5 +1,4 @@
 bitbucket.org/kardianos/osext: 84d8cbacbe137d1c00cdc0762b3ad585a4d64418
 code.google.com/p/go.crypto/ssh: 3a49c11addedb2659f4ec11422d5cecd522c45e4
 code.google.com/p/go.net/proxy: d6167d29456ccb4d1ac0e774631589202a411c8a
-github.com/jessevdk/go-flags: 3562483bf3b9d1a8731ebae5794bdb0938161f7f
 github.com/sbinet/liner: 151c305780927f4465e60ee245f5d17800addafd

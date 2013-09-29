@@ -1,0 +1,90 @@
+package main
+
+import (
+	"bytes"
+	"flag"
+	"fmt"
+	"github.com/calmh/mole/ansi"
+	"io"
+	"sort"
+	"text/tabwriter"
+)
+
+func optionTable(w io.Writer, rows [][]string) {
+	tw := tabwriter.NewWriter(w, 2, 4, 2, ' ', 0)
+	for _, row := range rows {
+		for i, cell := range row {
+			if i > 0 {
+				tw.Write([]byte("\t"))
+			}
+			tw.Write([]byte(cell))
+		}
+		tw.Write([]byte("\n"))
+	}
+	tw.Flush()
+}
+
+func usageFor(fs *flag.FlagSet, usage string) func() {
+	return func() {
+		var b bytes.Buffer
+		b.WriteString(ansi.Bold("Usage:") + "\n  " + usage + "\n")
+
+		var options [][]string
+		fs.VisitAll(func(f *flag.Flag) {
+			var opt string
+			if len(f.Name) > 1 {
+				opt = "  --"
+			} else {
+				opt = "   -"
+			}
+			opt += f.Name
+
+			if f.DefValue != "false" {
+				opt += "=" + f.DefValue
+			}
+
+			options = append(options, []string{opt, f.Usage})
+		})
+
+		if len(options) > 0 {
+			b.WriteString("\n" + ansi.Bold("Options:") + "\n")
+			optionTable(&b, options)
+		}
+
+		fmt.Println(b.String())
+
+	}
+}
+
+func mainUsage(w io.Writer) {
+	tw := tabwriter.NewWriter(w, 2, 4, 2, ' ', 0)
+
+	fmt.Fprintln(w, ansi.Bold("Commands:"))
+	var cmds []string
+	for name := range commands {
+		cmds = append(cmds, name)
+	}
+	sort.Strings(cmds)
+	for _, name := range cmds {
+		if sn := commands[name].descr; sn != "" {
+			// Ignore undocumented commands
+			tw.Write([]byte(fmt.Sprintf("  %s\t%s\n", ansi.Bold(ansi.Cyan(name)), sn)))
+		}
+	}
+	tw.Flush()
+	w.Write([]byte("\n"))
+
+	fmt.Fprintln(w, ansi.Bold("Examples:"))
+	examples := [][]string{
+		{"  mole ls", "# show all available tunnels"},
+		{"  mole ls foo", "# show all available tunnels matching the regexp \"foo\""},
+		{"  mole show foo", "# show the hosts and forwards in the tunnel \"foo\""},
+		{"  sudo mole dig foo", "# dig the tunnel \"foo\""},
+		{"  sudo mole -d dig foo", "# dig the tunnel \"foo\", while showing debug output"},
+		{"  mole push foo.ini", "# create or update the \"foo\" tunnel from a local file"},
+		{"  mole install", "# list packages available for installation"},
+		{"  mole install vpnc", "# install a package named vpnc"},
+	}
+	optionTable(w, examples)
+	w.Write([]byte("\n"))
+}

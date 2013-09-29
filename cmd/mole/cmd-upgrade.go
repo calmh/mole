@@ -2,22 +2,15 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"github.com/calmh/mole/upgrade"
-	"github.com/jessevdk/go-flags"
 	"time"
 )
-
-type upgradeCommand struct {
-	Force bool `short:"f" long:"force" description:"Don't perform newness check, just upgrade to whatever the server has."`
-}
-
-var upgradeParser *flags.Parser
 
 var errNoUpgradeUrl = errors.New("no upgrade URL")
 
 func init() {
-	cmd := upgradeCommand{}
-	upgradeParser = globalParser.AddCommand("upgrade", msgUpgradeShort, msgUpgradeLong, &cmd)
+	commands["upgrade"] = command{upgradeCommand, msgUpgradeShort}
 }
 
 func latestBuild() (build upgrade.Build, err error) {
@@ -38,15 +31,19 @@ func latestBuild() (build upgrade.Build, err error) {
 	return
 }
 
-func (c *upgradeCommand) Execute(args []string) error {
-	setup()
+func upgradeCommand(args []string) error {
+	fs := flag.NewFlagSet("upgrade", flag.ExitOnError)
+	force := fs.Bool("force", false, "Perform upgrade to same or older version")
+	fs.Usage = usageFor(fs, msgUpgradeUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	build, err := latestBuild()
 	fatalErr(err)
 
 	bd := time.Unix(int64(build.BuildStamp), 0)
 	isNewer := bd.Sub(buildDate).Seconds() > 0
-	if c.Force || isNewer {
+	if *force || isNewer {
 		infoln(msgDownloadingUpgrade)
 
 		err = upgrade.UpgradeTo(build)

@@ -1,15 +1,11 @@
 package main
 
 import (
-	"github.com/jessevdk/go-flags"
 	"os"
 	"path"
 	"text/template"
 )
 
-type bashcompCommand struct{}
-
-var bashcompParser *flags.Parser
 var compTpl = template.Must(template.New("bashcomp").Parse(compTplStr))
 var compTplStr = `_mole_tunnels() {
 	compgen -W "$(cat {{.CacheFile}})" -- $cur
@@ -46,13 +42,10 @@ complete -F _mole mole
 `
 
 func init() {
-	cmd := bashcompCommand{}
-	bashcompParser = globalParser.AddCommand("bashcomp", msgBashcompShort, msgBashcompLong, &cmd)
+	commands["bashcomp"] = command{bashcompCommand, ""}
 }
 
-func (c *bashcompCommand) Execute(args []string) error {
-	setup()
-
+func bashcompCommand(args []string) error {
 	compData := struct {
 		CacheFile      string
 		AllCommands    []string

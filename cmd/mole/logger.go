@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-var debugConfig bool
 var space = regexp.MustCompile(`\s`)
 
 var prefix = map[string]string{

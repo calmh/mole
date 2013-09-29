@@ -1,30 +1,23 @@
 package main
 
 import (
-	"github.com/jessevdk/go-flags"
+	"flag"
 	"os"
 )
 
-type rmCommand struct{}
-
-var rmParser *flags.Parser
-
 func init() {
-	cmd := rmCommand{}
-	rmParser = globalParser.AddCommand("rm", msgRmShort, msgRmLong, &cmd)
+	commands["rm"] = command{rmCommand, msgRmShort}
 }
 
-func (c *rmCommand) Usage() string {
-	return "<tunnel>"
-}
-
-func (c *rmCommand) Execute(args []string) error {
-	setup()
+func rmCommand(args []string) error {
+	fs := flag.NewFlagSet("rm", flag.ExitOnError)
+	fs.Usage = usageFor(fs, msgPushUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	if len(args) != 1 {
-		digParser.WriteHelp(os.Stdout)
-		infoln()
-		fatalln("rm: missing required option <tunnel>")
+		fs.Usage()
+		os.Exit(3)
 	}
 
 	tunnelname := args[0]

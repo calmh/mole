@@ -3,34 +3,26 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/go.net/proxy"
+	"flag"
 	"fmt"
 	"github.com/calmh/mole/conf"
-	"github.com/jessevdk/go-flags"
 	"os"
 )
 
-type testCommand struct {
-	Local bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
-}
-
-var testParser *flags.Parser
-
 func init() {
-	cmd := testCommand{}
-	testParser = globalParser.AddCommand("test", msgTestShort, msgTestLong, &cmd)
+	commands["test"] = command{testCommand, msgTestShort}
 }
 
-func (c *testCommand) Usage() string {
-	return "<tunnelname> [test-OPTIONS]"
-}
-
-func (c *testCommand) Execute(args []string) error {
-	setup()
+func testCommand(args []string) error {
+	fs := flag.NewFlagSet("test", flag.ExitOnError)
+	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
+	fs.Usage = usageFor(fs, msgTestUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	if len(args) != 1 {
-		testParser.WriteHelp(os.Stdout)
-		infoln()
-		fatalln("test: missing required option <tunnelname>")
+		fs.Usage()
+		os.Exit(3)
 	}
 
 	// Fail early in case we don't have root since it's always required on
@@ -40,7 +32,7 @@ func (c *testCommand) Execute(args []string) error {
 	var cfg *conf.Config
 	var err error
 
-	if c.Local {
+	if *local {
 		fd, err := os.Open(args[0])
 		fatalErr(err)
 		cfg, err = conf.Load(fd)

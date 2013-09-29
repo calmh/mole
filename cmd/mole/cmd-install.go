@@ -3,29 +3,24 @@
 package main
 
 import (
+	"flag"
+	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/table"
-	"github.com/jessevdk/go-flags"
 	"io"
 	"io/ioutil"
 	"os/exec"
 	"runtime"
 )
 
-type installCommand struct{}
-
-var installParser *flags.Parser
-
 func init() {
-	cmd := installCommand{}
-	installParser = globalParser.AddCommand("install", msgInstallShort, msgInstallLong, &cmd)
+	commands["install"] = command{installCommand, msgInstallShort}
 }
 
-func (c *installCommand) Usage() string {
-	return "[package] [install-OPTIONS]"
-}
-
-func (c *installCommand) Execute(args []string) error {
-	setup()
+func installCommand(args []string) error {
+	fs := flag.NewFlagSet("install", flag.ExitOnError)
+	fs.Usage = usageFor(fs, msgInstallUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
 	if len(args) == 0 {
@@ -35,7 +30,7 @@ func (c *installCommand) Execute(args []string) error {
 		arch := runtime.GOOS + "-" + runtime.GOARCH
 		var rows [][]string
 		for _, pkg := range pkgMap[arch] {
-			rows = append(rows, []string{pkg.Package, pkg.Description})
+			rows = append(rows, []string{ansi.Bold(ansi.Cyan(pkg.Package)), pkg.Description})
 		}
 
 		if len(rows) > 0 {

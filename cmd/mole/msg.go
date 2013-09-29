@@ -1,7 +1,16 @@
 package main
 
 const (
-	msgBashcompShort = "Bash completion"
+	msgMainUsage     = "mole [options] <command> [command-options]"
+	msgDigUsage      = "mole [global-options] dig [options] <tunnel>"
+	msgInstallUsage  = "mole [global-options] install [package]"
+	msgLsUsage       = "mole [global-options] ls [options] [regexp]"
+	msgPushUsage     = "mole [global-options] push <tunnelfile>"
+	msgRegisterUsage = "mole [global-options] register [options] <server>"
+	msgShowUsage     = "mole [global-options] show [options] <tunnel>"
+	msgTestUsage     = "mole [global-options] test [options] <tunnel>"
+	msgUpgradeUsage  = "mole [global-options] upgrade [options]"
+
 	msgDigShort      = "Dig tunnel"
 	msgInstallShort  = "Install package"
 	msgLsShort       = "List tunnels"
@@ -12,18 +21,6 @@ const (
 	msgTestShort     = "Test tunnel"
 	msgUpgradeShort  = "Upgrade mole"
 	msgVersionShort  = "Show version"
-
-	msgBashcompLong = "'mole bashcomp' outputs the bash completion script; use as 'eval \"$(mole bashcomp)\"' in your .bash_profile"
-	msgDigLong      = "'mole dig' connects the tunnel and sets up forwards"
-	msgInstallLong  = "'mole install' installs a binary package fetched from the server"
-	msgLsLong       = "'mole ls' lists tunnels, optionally filtering on a regular expression"
-	msgPushLong     = "'mole push' sends a new or updated tunnel file to the server"
-	msgRegisterLong = "'mole register' sets mole up to talk to a server"
-	msgRmLong       = "'mole rm' deletes the specified tunnel from the server"
-	msgShowLong     = "'mole show' shows the tunnel configuration"
-	msgTestLong     = "'mole dig' connects the tunnel and tests forwards"
-	msgUpgradeLong  = "'mole upgrade' upgrades mole to the latest version"
-	msgVersionLong  = "'mole version' shows current mole version"
 
 	msgDebugEnabled = "Debug output enabled."
 
@@ -84,16 +81,5 @@ const (
 
       [upgrades]
       automatic = yes
-`
-
-	msgExamples = `Examples:
-  mole ls                # show all available tunnels
-  mole ls foo            # show all available tunnels matching the regexp "foo"
-  mole show foo          # show the hosts and forwards in the tunnel "foo"
-  sudo mole dig foo      # dig the tunnel "foo"
-  sudo mole -d dig foo   # dig the tunnel "foo", while showing debug output
-  mole push foo.ini      # create or update the "foo" tunnel from a local file
-  mole install           # list packages available for installation
-  mole install vpnc      # install a package named vpnc
 `
 )

@@ -6,9 +6,6 @@ packages:
 - name: code.google.com/p/go.crypto/ssh
   pakname: pak
   targetbranch: tip
-- name: github.com/jessevdk/go-flags
-  pakname: pak
-  targetbranch: origin/master
 - name: github.com/sbinet/liner
   pakname: pak
   targetbranch: origin/master

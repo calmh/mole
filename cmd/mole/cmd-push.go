@@ -2,33 +2,26 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"github.com/calmh/mole/conf"
-	"github.com/jessevdk/go-flags"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-type pushCommand struct{}
-
-var pushParser *flags.Parser
-
 func init() {
-	cmd := pushCommand{}
-	pushParser = globalParser.AddCommand("push", msgPushShort, msgPushLong, &cmd)
+	commands["push"] = command{pushCommand, msgPushShort}
 }
 
-func (c *pushCommand) Usage() string {
-	return "<tunnelfile>"
-}
-
-func (c *pushCommand) Execute(args []string) error {
-	setup()
+func pushCommand(args []string) error {
+	fs := flag.NewFlagSet("push", flag.ExitOnError)
+	fs.Usage = usageFor(fs, msgPushUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	if len(args) != 1 {
-		digParser.WriteHelp(os.Stdout)
-		infoln()
-		fatalln("push: missing required option <tunnelfile>")
+		fs.Usage()
+		os.Exit(3)
 	}
 
 	filename := filepath.Base(args[0])

@@ -2,35 +2,27 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"github.com/calmh/mole/conf"
-	"github.com/jessevdk/go-flags"
 	"os"
 	"strings"
 )
 
-type showCommand struct {
-	Raw bool `short:"r" long:"raw" description:"Show raw, not parsed, tunnel file"`
-}
-
-var showParser *flags.Parser
-
 func init() {
-	cmd := showCommand{}
-	showParser = globalParser.AddCommand("show", msgShowShort, msgShowLong, &cmd)
+	commands["show"] = command{showCommand, msgShowShort}
 }
 
-func (c *showCommand) Usage() string {
-	return "<tunnelname> [show-OPTIONS]"
-}
-
-func (c *showCommand) Execute(args []string) error {
-	setup()
+func showCommand(args []string) error {
+	fs := flag.NewFlagSet("show", flag.ExitOnError)
+	raw := fs.Bool("r", false, "Show raw tunnel file")
+	fs.Usage = usageFor(fs, msgShowUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	if len(args) != 1 {
-		showParser.WriteHelp(os.Stdout)
-		infoln()
-		fatalln("show: missing required option <tunnelname>")
+		fs.Usage()
+		os.Exit(3)
 	}
 
 	cl := NewClient(serverIni.address, serverIni.fingerprint)
@@ -38,7 +30,7 @@ func (c *showCommand) Execute(args []string) error {
 	fatalErr(err)
 	tun := res.(string)
 
-	if c.Raw {
+	if *raw {
 		// No log function, since it must be possible to pipe to a valid file
 		fmt.Printf(tun)
 	} else {

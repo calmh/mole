@@ -1,20 +1,10 @@
 package main
 
-import (
-	"github.com/jessevdk/go-flags"
-)
-
-type versionCommand struct{}
-
-var versionParser *flags.Parser
-
 func init() {
-	cmd := versionCommand{}
-	versionParser = globalParser.AddCommand("version", msgVersionShort, msgVersionLong, &cmd)
+	commands["version"] = command{versionCommand, msgVersionShort}
 }
 
-func (c *versionCommand) Execute(args []string) error {
-	setup()
+func versionCommand(args []string) error {
 	printVersion()
 	return nil
 }

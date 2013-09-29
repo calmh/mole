@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/ini"
 	"github.com/calmh/mole/upgrade"
-	"github.com/jessevdk/go-flags"
 	"io"
 	"os"
 	"path"
@@ -37,7 +36,12 @@ var serverIni struct {
 	upgradeNotice bool
 }
 
-var globalParser = flags.NewParser(&globalOpts, flags.Default)
+type command struct {
+	fn    func([]string) error
+	descr string
+}
+
+var commands = make(map[string]command)
 
 func main() {
 	epoch, e := strconv.ParseInt(buildStamp, 10, 64)
@@ -49,34 +53,39 @@ func main() {
 		globalOpts.Remap = true
 	}
 
-	globalParser.ApplicationName = "mole"
-	if _, e := globalParser.Parse(); e != nil {
-		if e, ok := e.(*flags.Error); ok {
-			switch e.Type {
-			case flags.ErrRequired:
-				fmt.Println()
-				globalParser.WriteHelp(os.Stdout)
-				fmt.Println()
-				fallthrough
-			case flags.ErrHelp:
-				fmt.Printf(msgExamples)
-			}
-		}
-		os.Exit(1)
+	fs := flag.NewFlagSet("mole", flag.ContinueOnError)
+	fs.StringVar(&globalOpts.Home, "home", "~/.mole", "Set mole's home directory")
+	fs.BoolVar(&globalOpts.Debug, "d", false, "Enable debug output")
+	fs.BoolVar(&globalOpts.NoAnsi, "no-ansi", false, "Disable ANSI formatting")
+	fs.BoolVar(&globalOpts.Remap, "remap", globalOpts.Remap, "Use port remapping for extended lo addresses")
+	fs.Usage = usageFor(fs, msgMainUsage)
+	err := fs.Parse(os.Args[1:])
+
+	if err != nil {
+		mainUsage(os.Stdout)
+		os.Exit(2)
+	}
+
+	args := fs.Args()
+	if len(args) == 0 {
+		fs.Usage()
+		mainUsage(os.Stdout)
+		os.Exit(3)
+	}
+
+	if cmd, ok := commands[args[0]]; ok {
+		setup()
+		cmd.fn(args[1:])
+	} else {
+		fs.Usage()
+		mainUsage(os.Stdout)
+		os.Exit(4)
 	}
 
 	printTotalStats()
 }
 
-var setupDone bool
-
 func setup() {
-	if setupDone {
-		return
-	} else {
-		setupDone = true
-	}
-
 	if globalOpts.NoAnsi {
 		ansi.Disable()
 	}

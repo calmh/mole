@@ -3,39 +3,31 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/go.net/proxy"
+	"flag"
 	"fmt"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/conf"
-	"github.com/jessevdk/go-flags"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 )
 
-type digCommand struct {
-	Local        bool `short:"l" long:"local" description:"Local file, not remote tunnel definition"`
-	QualifyHosts bool `short:"q" long:"qualify-hosts" description:"Use <host>.<tunnel> for host aliases instead of just <host>"`
-}
-
-var digParser *flags.Parser
-
 func init() {
-	cmd := digCommand{}
-	digParser = globalParser.AddCommand("dig", msgDigShort, msgDigLong, &cmd)
+	commands["dig"] = command{commandDig, msgDigShort}
 }
 
-func (c *digCommand) Usage() string {
-	return "<tunnelname> [dig-OPTIONS]"
-}
-
-func (c *digCommand) Execute(args []string) error {
-	setup()
+func commandDig(args []string) error {
+	fs := flag.NewFlagSet("dig", flag.ExitOnError)
+	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
+	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
+	fs.Usage = usageFor(fs, msgDigUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	if len(args) != 1 {
-		digParser.WriteHelp(os.Stdout)
-		infoln()
-		fatalln("dig: missing required option <tunnelname>")
+		fs.Usage()
+		os.Exit(3)
 	}
 
 	// Fail early in case we don't have root since it's always required on
@@ -49,7 +41,7 @@ func (c *digCommand) Execute(args []string) error {
 	fatalErr(err)
 
 	var tun string
-	if c.Local {
+	if *local {
 		fd, err := os.Open(args[0])
 		fatalErr(err)
 		bs, err := ioutil.ReadAll(fd)
@@ -116,11 +108,11 @@ func (c *digCommand) Execute(args []string) error {
 	fwdChan := startForwarder(dialer)
 	sendForwards(fwdChan, cfg)
 
-	setupHostsFile(args[0], cfg, c.QualifyHosts)
+	setupHostsFile(args[0], cfg, *qualify)
 
 	shell(fwdChan, cfg, dialer)
 
-	restoreHostsFile(args[0], c.QualifyHosts)
+	restoreHostsFile(args[0], *qualify)
 
 	if vpn != nil {
 		vpn.Stop()

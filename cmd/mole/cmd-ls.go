@@ -1,34 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/table"
-	"github.com/jessevdk/go-flags"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 )
 
-type lsCommand struct {
-	Long  bool `short:"l" description:"Long listing"`
-	Short bool `short:"s" description:"Short listing (name only)"`
-}
-
-var lsParser *flags.Parser
-
 func init() {
-	cmd := lsCommand{}
-	lsParser = globalParser.AddCommand("ls", msgLsShort, msgLsLong, &cmd)
+	commands["ls"] = command{commandLs, msgLsShort}
 }
 
-func (c *lsCommand) Usage() string {
-	return "[regexp]"
-}
-
-func (c *lsCommand) Execute(args []string) error {
-	setup()
+func commandLs(args []string) error {
+	fs := flag.NewFlagSet("ls", flag.ExitOnError)
+	short := fs.Bool("s", false, "Short listing")
+	long := fs.Bool("l", false, "Long listing")
+	fs.Usage = usageFor(fs, msgLsUsage)
+	fs.Parse(args)
+	args = fs.Args()
 
 	var re *regexp.Regexp
 	var err error
@@ -44,7 +37,7 @@ func (c *lsCommand) Execute(args []string) error {
 
 	var rows [][]string
 	header := []string{"TUNNEL", "DESCRIPTION", "HOSTS"}
-	if c.Long {
+	if *long {
 		header = append(header, "VER")
 	}
 	rows = append(rows, header)
@@ -57,7 +50,7 @@ func (c *lsCommand) Execute(args []string) error {
 			if tunnelCache != nil {
 				fmt.Fprintln(tunnelCache, i.Name)
 			}
-			if c.Short {
+			if *short {
 				fmt.Println(i.Name)
 			} else {
 				matched++
@@ -76,8 +69,8 @@ func (c *lsCommand) Execute(args []string) error {
 					hosts = hosts[:17] + ansi.Faint("...")
 				}
 
-				row := []string{ansi.Bold(ansi.Blue(i.Name)), descr, hosts}
-				if c.Long {
+				row := []string{ansi.Bold(ansi.Cyan(i.Name)), descr, hosts}
+				if *long {
 					row = append(row, fmt.Sprintf("%d", i.IntVersion))
 				}
 				rows = append(rows, row)
@@ -88,7 +81,7 @@ func (c *lsCommand) Execute(args []string) error {
 		_ = tunnelCache.Close()
 	}
 
-	if !c.Short {
+	if !*short {
 		// Never prefix table with log stuff
 		fmt.Printf(table.Fmt("lllr", rows))
 
