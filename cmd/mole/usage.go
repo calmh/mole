@@ -31,13 +31,7 @@ func usageFor(fs *flag.FlagSet, usage string) func() {
 
 		var options [][]string
 		fs.VisitAll(func(f *flag.Flag) {
-			var opt string
-			if len(f.Name) > 1 {
-				opt = "  --"
-			} else {
-				opt = "   -"
-			}
-			opt += f.Name
+			var opt = "  -" + f.Name
 
 			if f.DefValue != "false" {
 				opt += "=" + f.DefValue
@@ -72,18 +66,19 @@ func mainUsage(w io.Writer) {
 		}
 	}
 	tw.Flush()
-	w.Write([]byte("\n"))
+	fmt.Fprintln(w, "\n  Commands can be abbreviated to their unique prefix.\n")
 
 	fmt.Fprintln(w, ansi.Bold("Examples:"))
 	examples := [][]string{
 		{"  mole ls", "# show all available tunnels"},
-		{"  mole ls foo", "# show all available tunnels matching the regexp \"foo\""},
+		{"  mole l foo", "# show all available tunnels matching the regexp \"foo\""},
 		{"  mole show foo", "# show the hosts and forwards in the tunnel \"foo\""},
 		{"  sudo mole dig foo", "# dig the tunnel \"foo\""},
-		{"  sudo mole -d dig foo", "# dig the tunnel \"foo\", while showing debug output"},
+		{"  sudo mole -d d foo", "# dig the tunnel \"foo\", while showing debug output"},
 		{"  mole push foo.ini", "# create or update the \"foo\" tunnel from a local file"},
 		{"  mole install", "# list packages available for installation"},
-		{"  mole install vpnc", "# install a package named vpnc"},
+		{"  mole ins vpnc", "# install a package named vpnc"},
+		{"  mole up -force", "# perform a forced up/downgrade to the server version"},
 	}
 	optionTable(w, examples)
 	w.Write([]byte("\n"))

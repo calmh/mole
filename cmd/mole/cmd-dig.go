@@ -126,6 +126,8 @@ func commandDig(args []string) error {
 	}
 
 	okln("Done")
+	printTotalStats()
+
 	return nil
 }
 

@@ -62,9 +62,12 @@ func main() {
 	err := fs.Parse(os.Args[1:])
 
 	if err != nil {
+		// fs.Usage() has already been printed
 		mainUsage(os.Stdout)
-		os.Exit(2)
+		os.Exit(3)
 	}
+
+	setup()
 
 	args := fs.Args()
 	if len(args) == 0 {
@@ -73,16 +76,30 @@ func main() {
 		os.Exit(3)
 	}
 
+	// Direct match on command
 	if cmd, ok := commands[args[0]]; ok {
-		setup()
 		cmd.fn(args[1:])
-	} else {
-		fs.Usage()
-		mainUsage(os.Stdout)
-		os.Exit(4)
+		os.Exit(0)
 	}
 
-	printTotalStats()
+	// Unique prefix match
+	var found string
+	for n := range commands {
+		if strings.HasPrefix(n, args[0]) {
+			if found != "" {
+				fatalf("ambigous command: %q (could be %q or %q)", args[0], n, found)
+			}
+			found = n
+		}
+	}
+	if found != "" {
+		cmd := commands[found]
+		cmd.fn(args[1:])
+		os.Exit(0)
+	}
+
+	// No command found
+	fatalf("no such command: %q", args[0])
 }
 
 func setup() {
