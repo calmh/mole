@@ -36,9 +36,9 @@ func commandLs(args []string) error {
 	l := res.([]ListItem)
 
 	var rows [][]string
-	header := []string{"TUNNEL", "DESCRIPTION", "HOSTS"}
+	header := []string{"TUNNEL", "FLAGS", "DESCRIPTION"}
 	if *long {
-		header = append(header, "VER")
+		header = append(header, "HOSTS", "VER")
 	}
 	rows = append(rows, header)
 
@@ -54,24 +54,34 @@ func commandLs(args []string) error {
 				fmt.Println(i.Name)
 			} else {
 				matched++
-				descr := i.Description
+
+				flags := ""
 				if i.Vpnc {
-					descr = descr + ansi.Magenta(" (vpnc)")
-				} else if i.OpenConnect {
-					descr = descr + ansi.Green(" (opnc)")
-				} else if i.Socks {
-					descr = descr + ansi.Yellow(" (socks)")
+					flags += "v"
+				} else {
+					flags += "·"
+				}
+				if i.OpenConnect {
+					flags += "o"
+				} else {
+					flags += "·"
+				}
+				if i.Socks {
+					flags += "s"
+				} else {
+					flags += "·"
 				}
 
 				if hosts == "" {
-					hosts = ansi.Faint("(local forward)")
-				} else if len(hosts) > 20 {
-					hosts = hosts[:17] + ansi.Faint("...")
+					hosts = "-"
+					flags += "l"
+				} else {
+					flags += "·"
 				}
 
-				row := []string{ansi.Bold(ansi.Cyan(i.Name)), descr, hosts}
+				row := []string{i.Name, flags, i.Description}
 				if *long {
-					row = append(row, fmt.Sprintf("%d", i.IntVersion))
+					row = append(row, hosts, fmt.Sprintf("%.01f", float64(i.IntVersion)/100))
 				}
 				rows = append(rows, row)
 			}
@@ -83,11 +93,21 @@ func commandLs(args []string) error {
 
 	if !*short {
 		// Never prefix table with log stuff
-		fmt.Printf(table.Fmt("lllr", rows))
-
+		fmt.Printf(table.FmtFunc("llllr", rows, tableFormatter))
 		if matched != len(l) {
 			fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
 		}
 	}
 	return nil
+}
+
+func tableFormatter(cell string, row, col, flags int) string {
+	if row == 0 {
+		return ansi.Underline(cell)
+	} else if col == 0 {
+		return ansi.Bold(ansi.Cyan(cell))
+	} else if flags&table.Truncated != 0 {
+		return cell[:len(cell)-1] + ansi.Red(">")
+	}
+	return cell
 }

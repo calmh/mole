@@ -53,8 +53,8 @@ const (
 	msgFileNotInit     = "File %q should have .ini extension"
 	msgOkPushed        = "Pushed %q"
 	msgErrNoTunModule  = "Required tunnel module (kernel extension) not available and not loadable."
-	msgVpncUnavailable = "I cant't find a working vpnc on your system. Tunnels marked as requiring \"(vpnc)\" will not work. Consider installing vpnc. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
-	msgOpncUnavailable = "I cant't find a working OpenConnect on your system. Tunnels marked as requiring \"(opnc)\" will not work. Consider installing OpenConnect. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
+	msgVpncUnavailable = "I cant't find a working vpnc on your system. Tunnels having the \"v\" flag will not work. Consider installing vpnc. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
+	msgOpncUnavailable = "I cant't find a working OpenConnect on your system. Tunnels having the \"o\" flag will not work. Consider installing OpenConnect. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
 
 	msgNeedsAuth       = "Authentication required. Enter your LDAP credentials."
 	msgUsername        = "Username: "

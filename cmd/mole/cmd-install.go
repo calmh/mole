@@ -4,7 +4,6 @@ package main
 
 import (
 	"flag"
-	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/table"
 	"io"
 	"io/ioutil"
@@ -30,12 +29,12 @@ func installCommand(args []string) error {
 		arch := runtime.GOOS + "-" + runtime.GOARCH
 		var rows [][]string
 		for _, pkg := range pkgMap[arch] {
-			rows = append(rows, []string{ansi.Bold(ansi.Cyan(pkg.Package)), pkg.Description})
+			rows = append(rows, []string{pkg.Package, pkg.Description})
 		}
 
 		if len(rows) > 0 {
 			rows = append([][]string{{"PKG", "DESCRIPTION"}}, rows...)
-			infoln(table.Fmt("ll", rows))
+			infoln(table.FmtFunc("ll", rows, tableFormatter))
 		} else {
 			infoln(msgNoPackages)
 		}
