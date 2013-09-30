@@ -41,7 +41,7 @@ func currentAddresses() []string {
 		cur[i] = ps[0]
 	}
 
-	debugln("current interface addresses: %v", cur)
+	debugf("current interface addresses: %v", cur)
 	return cur
 }
 

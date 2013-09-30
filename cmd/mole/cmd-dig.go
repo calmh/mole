@@ -89,17 +89,41 @@ func commandDig(args []string) error {
 		fatalErr(err)
 		dialer = sshConn
 
+		// A REALY dirty keepalive mechanism.
+		sess, err := sshConn.NewSession()
+		fatalErr(err)
+		stdout, err := sess.StdoutPipe()
+		fatalErr(err)
+		stderr, err := sess.StderrPipe()
+		fatalErr(err)
+		stdin, err := sess.StdinPipe()
+		fatalErr(err)
+		err = sess.Shell()
+		fatalErr(err)
+
 		go func() {
-			// A dirty keepalive mechanism.
+			bs := make([]byte, 1024)
+			for {
+				debugln("shell read stdout")
+				_, err := stdout.Read(bs)
+				fatalErr(err)
+			}
+		}()
+
+		go func() {
+			bs := make([]byte, 1024)
+			for {
+				debugln("shell read stderr")
+				_, err := stderr.Read(bs)
+				fatalErr(err)
+			}
+		}()
+
+		go func() {
 			for {
 				time.Sleep(30 * time.Second)
-				debugln("acquire session")
-				sess, err := sshConn.NewSession()
-				fatalErr(err)
-
-				time.Sleep(30 * time.Second)
-				debugln("close session")
-				err = sess.Close()
+				debugln("shell write")
+				_, err := stdin.Write([]byte("\n"))
 				fatalErr(err)
 			}
 		}()
