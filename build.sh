@@ -19,7 +19,7 @@ if [[ $1 == "all" ]] ; then
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo "$arch"
 		rm -rf bin
-		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/..."
+		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
 		tar zcf "mole-$arch.tar.gz" bin
 
 		[ -f bin/mole ] && mv bin/mole "auto/mole-$arch"
@@ -31,7 +31,7 @@ if [[ $1 == "all" ]] ; then
 	for arch in windows-386 windows-amd64 ; do
 		echo "$arch"
 		rm -rf bin
-		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/..."
+		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
 		zip -r "mole-$arch.tar.zip" bin
 	done
 else
