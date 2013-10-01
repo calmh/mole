@@ -11,6 +11,17 @@ const (
 	defaultSSHPort = 22
 )
 
+// Features that are required to correctly handle a tunnel configuration
+const (
+	FeatureError uint32 = 1 << iota
+	FeatureSshPassword
+	FeatureSshKey
+	FeatureVpnc
+	FeatureOpenConnect
+	FeatureLocalOnly
+	FeatureSocks
+)
+
 // Config is a complete tunnel configuration
 type Config struct {
 	General struct {
@@ -129,4 +140,33 @@ func (c *Config) Remap() {
 			}
 		}
 	}
+}
+
+// FeatureFlags returns the set of features required to handle a tunnel
+// configuration.
+func (c *Config) FeatureFlags() uint32 {
+	var flags uint32
+
+	for _, h := range c.Hosts {
+		if h.Key != "" {
+			flags |= FeatureSshKey
+		} else if h.Pass != "" {
+			flags |= FeatureSshPassword
+		}
+	}
+
+	if c.Vpnc != nil {
+		flags |= FeatureVpnc
+	}
+	if c.OpenConnect != nil {
+		flags |= FeatureOpenConnect
+	}
+	if c.General.Main != "" && c.Hosts[c.HostsMap[c.General.Main]].SOCKS != "" {
+		flags |= FeatureSocks
+	}
+	if len(c.Hosts) == 0 {
+		flags |= FeatureLocalOnly
+	}
+
+	return flags
 }

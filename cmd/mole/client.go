@@ -27,12 +27,9 @@ type Client struct {
 type ListItem struct {
 	Name        string
 	Description string
-	Vpnc        bool
-	OpenConnect bool
-	Socks       bool
 	Hosts       []string
-	LocalOnly   bool
 	Version     float64
+	Features    uint32
 	IntVersion  int
 }
 
@@ -40,7 +37,7 @@ type upgradeManifest struct {
 	URL string
 }
 
-var obfuscatedRe = regexp.MustCompile(`\$mole\$.+?\b`)
+var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-zA-Z+/-]+`)
 
 func certFingerprint(conn *tls.Conn) []byte {
 	cert := conn.ConnectionState().PeerCertificates[0].Raw

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
 	"github.com/calmh/mole/table"
 	"os"
 	"path"
@@ -56,27 +57,44 @@ func commandLs(args []string) error {
 				matched++
 
 				flags := ""
-				if i.Vpnc {
-					flags += "v"
+				var spacer = "·"
+				if i.Features&conf.FeatureError != 0 {
+					flags = strings.Repeat(spacer, 4) + "E"
 				} else {
-					flags += "·"
-				}
-				if i.OpenConnect {
-					flags += "o"
-				} else {
-					flags += "·"
-				}
-				if i.Socks {
-					flags += "s"
-				} else {
-					flags += "·"
-				}
+					if i.Features&conf.FeatureVpnc != 0 {
+						flags += "v"
+					} else if i.Features&conf.FeatureOpenConnect != 0 {
+						flags += "o"
+					} else {
+						flags += spacer
+					}
 
-				if hosts == "" {
-					hosts = "-"
-					flags += "l"
-				} else {
-					flags += "·"
+					if i.Features&conf.FeatureSshKey != 0 {
+						flags += "k"
+					} else {
+						flags += spacer
+					}
+
+					if i.Features&conf.FeatureSshPassword != 0 {
+						flags += "p"
+					} else {
+						flags += spacer
+					}
+
+					if i.Features&conf.FeatureSocks != 0 {
+						flags += "s"
+					} else if i.Features&conf.FeatureLocalOnly != 0 {
+						flags += "l"
+						hosts = "-"
+					} else {
+						flags += spacer
+					}
+
+					if i.Features & ^(conf.FeatureError|conf.FeatureSshKey|conf.FeatureSshPassword|conf.FeatureLocalOnly|conf.FeatureVpnc|conf.FeatureOpenConnect|conf.FeatureSocks) != 0 {
+						flags += "U"
+					} else {
+						flags += spacer
+					}
 				}
 
 				row := []string{i.Name, flags, i.Description}

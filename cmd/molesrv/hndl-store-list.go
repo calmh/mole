@@ -19,12 +19,9 @@ var listCache []byte
 type listItem struct {
 	Name        string
 	Description string
-	Vpnc        bool
-	OpenConnect bool
-	Socks       bool
 	Hosts       []string
-	LocalOnly   bool
 	Version     float64
+	Features    uint32
 }
 
 func storeList(rw http.ResponseWriter, req *http.Request) {
@@ -38,16 +35,26 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 
 		var items []listItem
 		for _, file := range files {
+			item := listItem{
+				Name: path.Base(file[:len(file)-4]),
+			}
+
 			f, err := os.Open(file)
 			if err != nil {
-				log.Printf("Warning: skipping %q: %s", file, err)
+				log.Printf("Warning: %q: %s", file, err)
+				item.Features = conf.FeatureError
+				item.Description = "- unreadable -"
+				items = append(items, item)
 				continue
 			}
 
 			cfg, err := conf.Load(f)
 			f.Close()
 			if err != nil {
-				log.Printf("Warning: skipping %q: %s", file, err)
+				log.Printf("Warning: %q: %s", file, err)
+				item.Features = conf.FeatureError
+				item.Description = "- parse error -"
+				items = append(items, item)
 				continue
 			}
 
@@ -56,16 +63,10 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 				hosts = append(hosts, h.Name)
 			}
 
-			item := listItem{
-				Name:        path.Base(file[:len(file)-4]),
-				Description: cfg.General.Description,
-				Vpnc:        cfg.Vpnc != nil,
-				OpenConnect: cfg.OpenConnect != nil,
-				Socks:       cfg.General.Main != "" && cfg.Hosts[cfg.HostsMap[cfg.General.Main]].SOCKS != "",
-				Hosts:       hosts,
-				LocalOnly:   len(hosts) == 0,
-				Version:     float64(cfg.General.Version) / 100,
-			}
+			item.Features = cfg.FeatureFlags()
+			item.Description = cfg.General.Description
+			item.Hosts = hosts
+			item.Version = float64(cfg.General.Version) / 100
 			items = append(items, item)
 		}
 
