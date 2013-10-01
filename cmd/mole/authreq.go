@@ -40,7 +40,7 @@ func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 			fatalErr(e)
 			cfg := ini.Parse(f)
 			_ = f.Close()
-			cfg.Sections["server"]["ticket"] = ticket
+			cfg.Set("server", "ticket", ticket)
 			f, e = os.Create(configFile)
 			fatalErr(e)
 			err = cfg.Write(f)

@@ -40,7 +40,7 @@ type upgradeManifest struct {
 	URL string
 }
 
-var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-f-]{36}`)
+var obfuscatedRe = regexp.MustCompile(`\$mole\$.+?\b`)
 
 func certFingerprint(conn *tls.Conn) []byte {
 	cert := conn.ConnectionState().PeerCertificates[0].Raw
