@@ -37,13 +37,33 @@ func commandLs(args []string) error {
 	l := res.([]ListItem)
 
 	var rows [][]string
-	header := []string{"TUNNEL", "FLAGS", "DESCRIPTION"}
+	var header []string
+	var format string
+	var hasFeatureFlags bool
+
+	for _, i := range l {
+		if i.Features != 0 {
+			hasFeatureFlags = true
+			break
+		}
+	}
+
+	if hasFeatureFlags {
+		header = []string{"TUNNEL", "FLAGS", "DESCRIPTION"}
+		format = "lll"
+	} else {
+		header = []string{"TUNNEL", "DESCRIPTION"}
+		format = "ll"
+	}
 	if *long {
 		header = append(header, "HOSTS", "VER")
+		format += "lr"
 	}
-	rows = append(rows, header)
+
+	rows = [][]string{header}
 
 	tunnelCache, _ := os.Create(path.Join(globalOpts.Home, "tunnels.cache"))
+
 	var matched int
 	for _, i := range l {
 		hosts := strings.Join(i.Hosts, ", ")
@@ -51,67 +71,79 @@ func commandLs(args []string) error {
 			if tunnelCache != nil {
 				fmt.Fprintln(tunnelCache, i.Name)
 			}
+
 			if *short {
 				fmt.Println(i.Name)
 			} else {
 				matched++
 
-				flags := ""
-				var spacer = "·"
-				if i.Features&conf.FeatureError != 0 {
-					flags = strings.Repeat(spacer, 4) + "E"
-				} else {
-					if i.Features&conf.FeatureVpnc != 0 {
-						flags += "v"
-					} else if i.Features&conf.FeatureOpenConnect != 0 {
-						flags += "o"
-					} else {
-						flags += spacer
-					}
+				row := []string{i.Name}
 
-					if i.Features&conf.FeatureSshKey != 0 {
-						flags += "k"
+				if hasFeatureFlags {
+					flags := ""
+					var spacer = "·"
+					if i.Features&conf.FeatureError != 0 {
+						flags = strings.Repeat(spacer, 4) + "E"
 					} else {
-						flags += spacer
-					}
+						if i.Features&conf.FeatureVpnc != 0 {
+							flags += "v"
+						} else if i.Features&conf.FeatureOpenConnect != 0 {
+							flags += "o"
+						} else {
+							flags += spacer
+						}
 
-					if i.Features&conf.FeatureSshPassword != 0 {
-						flags += "p"
-					} else {
-						flags += spacer
-					}
+						if i.Features&conf.FeatureSshKey != 0 {
+							flags += "k"
+						} else {
+							flags += spacer
+						}
 
-					if i.Features&conf.FeatureSocks != 0 {
-						flags += "s"
-					} else if i.Features&conf.FeatureLocalOnly != 0 {
-						flags += "l"
-						hosts = "-"
-					} else {
-						flags += spacer
-					}
+						if i.Features&conf.FeatureSshPassword != 0 {
+							flags += "p"
+						} else {
+							flags += spacer
+						}
 
-					if i.Features & ^(conf.FeatureError|conf.FeatureSshKey|conf.FeatureSshPassword|conf.FeatureLocalOnly|conf.FeatureVpnc|conf.FeatureOpenConnect|conf.FeatureSocks) != 0 {
-						flags += "U"
-					} else {
-						flags += spacer
+						if i.Features&conf.FeatureSocks != 0 {
+							flags += "s"
+						} else if i.Features&conf.FeatureLocalOnly != 0 {
+							flags += "l"
+						} else {
+							flags += spacer
+						}
+
+						if i.Features & ^(conf.FeatureError|conf.FeatureSshKey|conf.FeatureSshPassword|conf.FeatureLocalOnly|conf.FeatureVpnc|conf.FeatureOpenConnect|conf.FeatureSocks) != 0 {
+							flags += "U"
+						} else {
+							flags += spacer
+						}
 					}
+					row = append(row, flags)
 				}
 
-				row := []string{i.Name, flags, i.Description}
+				row = append(row, i.Description)
+
 				if *long {
-					row = append(row, hosts, fmt.Sprintf("%.01f", float64(i.IntVersion)/100))
+					ver := fmt.Sprintf("%.01f", float64(i.IntVersion)/100)
+					if hosts == "" {
+						hosts = "-"
+					}
+					row = append(row, hosts, ver)
 				}
+
 				rows = append(rows, row)
 			}
 		}
 	}
+
 	if tunnelCache != nil {
 		_ = tunnelCache.Close()
 	}
 
 	if !*short {
 		// Never prefix table with log stuff
-		fmt.Printf(table.FmtFunc("llllr", rows, tableFormatter))
+		fmt.Printf(table.FmtFunc(format, rows, tableFormatter))
 		if matched != len(l) {
 			fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
 		}
