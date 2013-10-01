@@ -15,8 +15,8 @@ func parse(i ini.File) (cp *Config, err error) {
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
 
-	for _, section := range i.SectionNames {
-		options := i.Sections[section]
+	for _, section := range i.Sections() {
+		options := i.OptionMap(section)
 
 		if section == "general" {
 			err := parseGeneral(&c, options)
