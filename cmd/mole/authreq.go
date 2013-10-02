@@ -18,10 +18,15 @@ type authenticatedRequest func() (interface{}, error)
 func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 	c.Ticket = serverIni.ticket
 	br := bufio.NewReader(os.Stdin)
-	for i := 0; i < retries; i++ {
+	i := 0
+	for {
 		result, err := r()
 		if err == nil || !strings.HasPrefix(err.Error(), "401 Unauthorized") {
 			return result, err
+		}
+
+		if i >= retries {
+			return nil, fmt.Errorf("Too many authentication failures")
 		}
 
 		infoln(msgNeedsAuth)
@@ -50,7 +55,7 @@ func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 		} else {
 			warnln(err.Error())
 		}
-	}
 
-	return nil, fmt.Errorf("Too many authentication failures")
+		i++
+	}
 }
