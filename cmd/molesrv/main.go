@@ -33,6 +33,9 @@ var (
 	readOnly          = false
 	disableGit        = false
 	canonicalHostname = ""
+	ldapServer        = "localhost"
+	ldapPort          = 389
+	bindTemplate      = "uid=%s,cn=users"
 )
 
 var buildVersion string
@@ -55,6 +58,9 @@ func main() {
 	fs.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
 	fs.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
 	fs.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
+	fs.StringVar(&ldapServer, "ldap-host", ldapServer, "LDAP host")
+	fs.IntVar(&ldapPort, "ldap-port", ldapPort, "LDAP port")
+	fs.StringVar(&bindTemplate, "ldap-bind", bindTemplate, "LDAP bind template")
 	fs.Parse(os.Args[1:])
 
 	if buildVersion == "" {

@@ -1,13 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"github.com/calmh/mole/ticket"
+	"github.com/mavricknz/ldap"
+	"log"
 	"net"
 	"net/http"
 	"time"
 )
 
 func backendAuthenticate(user, password string) bool {
+	c := ldap.NewLDAPConnection(ldapServer, uint16(ldapPort))
+	err := c.Connect()
+	if err != nil {
+		log.Println("ldap:", err)
+		return false
+	}
+
+	err = c.Bind(fmt.Sprintf(bindTemplate, user), password)
+	if err != nil {
+		log.Printf("ldap: %q: %s", user, err)
+		return false
+	}
+
 	return true
 }
 
