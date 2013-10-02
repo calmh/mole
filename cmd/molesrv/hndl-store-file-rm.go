@@ -23,8 +23,16 @@ func rmFile(rw http.ResponseWriter, req *http.Request) {
 		listCache = nil
 	}()
 
-	iniFile := path.Join(storeDir, "data", req.URL.Path[7:])
+	tun := req.URL.Path[7:]
+	iniFile := path.Join(storeDir, "data", tun)
 	if err := os.Rename(iniFile, iniFile+".deleted"); err != nil {
 		rw.WriteHeader(404)
+	}
+
+	if !disableGit {
+		// Commit
+		dir := path.Join(storeDir, "data")
+		user := req.Header.Get("X-Mole-Authenticated")
+		commit(dir, "rm "+tun, user)
 	}
 }

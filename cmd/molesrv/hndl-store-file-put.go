@@ -10,13 +10,6 @@ import (
 	"path"
 )
 
-var obfuscateKeys = []string{
-	"key",
-	"password",
-	"IPSec_secret",
-	"Xauth_password",
-}
-
 func init() {
 	addHandler(handler{
 		pattern: "/store/",
@@ -27,6 +20,13 @@ func init() {
 	})
 }
 
+var obfuscateKeys = []string{
+	"key",
+	"password",
+	"IPSec_secret",
+	"Xauth_password",
+}
+
 func putFile(rw http.ResponseWriter, req *http.Request) {
 	defer func() {
 		defer listCacheLock.Unlock()
@@ -34,7 +34,8 @@ func putFile(rw http.ResponseWriter, req *http.Request) {
 		listCache = nil
 	}()
 
-	iniFile := path.Join(storeDir, "data", req.URL.Path[7:])
+	tun := req.URL.Path[7:]
+	iniFile := path.Join(storeDir, "data", tun)
 	// Read pushed data
 	data, err := ioutil.ReadAll(req.Body)
 	req.Body.Close()
@@ -84,4 +85,11 @@ func putFile(rw http.ResponseWriter, req *http.Request) {
 	}
 	inf.Write(outf)
 	outf.Close()
+
+	if !disableGit {
+		// Commit
+		dir := path.Join(storeDir, "data")
+		user := req.Header.Get("X-Mole-Authenticated")
+		commit(dir, "push "+tun, user)
+	}
 }

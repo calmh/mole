@@ -13,7 +13,7 @@ import (
 var keys map[string]string
 
 func loadKeys() error {
-	file := path.Join(storeDir, "keys.json")
+	file := path.Join(storeDir, "data", "keys.json")
 
 	fd, err := os.Open(file)
 	if err != nil {
@@ -26,7 +26,7 @@ func loadKeys() error {
 }
 
 func saveKeys() error {
-	file := path.Join(storeDir, "keys.json")
+	file := path.Join(storeDir, "data", "keys.json")
 
 	bs, err := json.Marshal(keys)
 	if err != nil {

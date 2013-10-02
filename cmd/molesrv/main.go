@@ -31,6 +31,7 @@ var (
 	auditIntv  = 86400 * time.Second
 	noAuth     = false
 	readOnly   = false
+	disableGit = false
 )
 
 func addHandler(hnd handler) {
@@ -47,8 +48,9 @@ func main() {
 	fs.StringVar(&keyFile, "key-file", keyFile, "Key file (relative to store directory)")
 	fs.StringVar(&auditFile, "audit-file", auditFile, "Audit file (relative to store directory)")
 	fs.DurationVar(&auditIntv, "audit-intv", auditIntv, "Audit file creation interval")
-	fs.BoolVar(&noAuth, "disable-auth", noAuth, "Disable authentication")
-	fs.BoolVar(&readOnly, "read-only", readOnly, "Disallow writable client operations (push, rm, etc)")
+	fs.BoolVar(&noAuth, "no-auth", noAuth, "Do not perform authentication")
+	fs.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
+	fs.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
 	fs.Parse(os.Args[1:])
 
 	if strings.HasPrefix(storeDir, "~/") {
