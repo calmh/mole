@@ -83,8 +83,10 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("X-Mole-Version", clientVersion)
-	req.Header.Add("X-Mole-Ticket", c.Ticket)
+
+	req.Header.Set("User-Agent", "mole/"+clientVersion)
+	req.Header.Set("X-Mole-Version", clientVersion)
+	req.Header.Set("X-Mole-Ticket", c.Ticket)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

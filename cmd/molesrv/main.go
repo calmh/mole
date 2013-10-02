@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 type handler struct {
@@ -23,6 +24,8 @@ var (
 	storeDir   = "~/mole-store"
 	certFile   = "crt/server-cert.pem"
 	keyFile    = "crt/server-key.pem"
+	auditFile  = "audit.log"
+	auditIntv  = 86400 * time.Second
 	noAuth     = false
 )
 
@@ -31,6 +34,8 @@ func main() {
 	flag.StringVar(&storeDir, "store", storeDir, "Mole store directory")
 	flag.StringVar(&certFile, "cert", certFile, "Certificate file, relative to store directory")
 	flag.StringVar(&keyFile, "key", keyFile, "Key file, relative to store directory")
+	flag.StringVar(&auditFile, "auditfile", auditFile, "Audit file, relative to store directory")
+	flag.DurationVar(&auditIntv, "auditintv", auditIntv, "Audit file rotation interval")
 	flag.BoolVar(&noAuth, "no-auth", noAuth, "Disable authentication requirements")
 	flag.Parse()
 
@@ -60,10 +65,12 @@ func setupHandler(p string, h handler) {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
 		if h.auth && !noAuth {
 			if !authenticate(rw, req) {
+				audit(req, "rejected")
 				rw.WriteHeader(403)
 				return
 			}
 		}
+		audit(req, "accepted")
 		h.fn(rw, req)
 	}
 	http.HandleFunc(p, fn)
