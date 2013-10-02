@@ -12,4 +12,7 @@ packages:
 - name: bitbucket.org/kardianos/osext
   pakname: pak
   targetbranch: tip
+- name: github.com/mavricknz/ldap
+  pakname: pak
+  targetbranch: origin/master
 #
