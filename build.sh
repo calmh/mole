@@ -8,13 +8,9 @@ ldflags="-w -X main.buildStamp '$buildstamp' -X main.buildVersion '$buildver' -X
 
 export GOBIN=$(pwd)/bin
 
-rm -rf auto
-mkdir auto
-if [[ $1 == "all" ]] ; then
-	pak get
-
-	go test ./... || exit 1
-
+buildClient() {
+	rm -rf auto
+	mkdir auto
 	source /usr/local/golang-crosscompile/crosscompile.bash
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo "$arch"
@@ -32,9 +28,36 @@ if [[ $1 == "all" ]] ; then
 		echo "$arch"
 		rm -rf bin
 		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
-		zip -r "mole-$arch.tar.zip" bin
+		zip -qr "mole-$arch.tar.zip" bin
 	done
-else
-	go install -ldflags "$ldflags" "$pkg/cmd/..."
-fi
+	rm -rf bin
+}
 
+buildServer() {
+	rm -rf srv bin
+	mkdir srv
+	source /usr/local/golang-crosscompile/crosscompile.bash
+	for arch in linux-386 linux-amd64 darwin-amd64 ; do
+		echo "$arch"
+		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/molesrv"
+		[ -f bin/molesrv ] && mv bin/molesrv "srv/molesrv-$arch"
+		[ -f bin/*/molesrv ] && mv bin/*/molesrv "srv/molesrv-$arch"
+	done
+	rm -rf bin
+}
+
+case $1 in
+	all)
+		pak get
+		go test ./... || exit 1
+		buildClient
+		;;
+	srv)
+		pak get
+		go test ./... || exit 1
+		buildServer
+		;;
+	*)
+		go install -ldflags "$ldflags" "$pkg/cmd/..."
+		;;
+esac
