@@ -5,7 +5,13 @@ import (
 )
 
 func init() {
-	handlers["/extra/"] = handler{extraFile, false}
+	addHandler(handler{
+		pattern: "/extra/",
+		method:  "GET",
+		fn:      extraFile,
+		auth:    false,
+		ro:      true,
+	})
 }
 
 func extraFile(rw http.ResponseWriter, req *http.Request) {

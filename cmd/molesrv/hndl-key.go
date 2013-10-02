@@ -6,7 +6,13 @@ import (
 )
 
 func init() {
-	handlers["/key/"] = handler{getKey, true}
+	addHandler(handler{
+		pattern: "/key/",
+		method:  "GET",
+		fn:      getKey,
+		auth:    true,
+		ro:      true,
+	})
 }
 
 func getKey(rw http.ResponseWriter, req *http.Request) {

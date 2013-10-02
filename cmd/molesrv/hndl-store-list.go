@@ -8,13 +8,21 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 )
 
 func init() {
-	handlers["/store"] = handler{storeList, true}
+	addHandler(handler{
+		pattern: "/store",
+		method:  "GET",
+		fn:      storeList,
+		auth:    true,
+		ro:      true,
+	})
 }
 
 var listCache []byte
+var listCacheLock sync.Mutex
 
 type listItem struct {
 	Name        string
@@ -25,6 +33,9 @@ type listItem struct {
 }
 
 func storeList(rw http.ResponseWriter, req *http.Request) {
+	defer listCacheLock.Unlock()
+	listCacheLock.Lock()
+
 	if listCache == nil {
 		files, err := filepath.Glob(storeDir + "/data/*.ini")
 		if err != nil {

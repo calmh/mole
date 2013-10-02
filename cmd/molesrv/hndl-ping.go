@@ -5,7 +5,13 @@ import (
 )
 
 func init() {
-	handlers["/ping"] = handler{ping, true}
+	addHandler(handler{
+		pattern: "/ping",
+		method:  "GET",
+		fn:      ping,
+		auth:    true,
+		ro:      true,
+	})
 }
 
 func ping(rw http.ResponseWriter, req *http.Request) {

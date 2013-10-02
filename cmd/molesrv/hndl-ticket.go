@@ -13,7 +13,13 @@ const (
 )
 
 func init() {
-	handlers["/ticket/"] = handler{grantTicket, false}
+	addHandler(handler{
+		pattern: "/ticket/",
+		method:  "POST",
+		fn:      grantTicket,
+		auth:    false,
+		ro:      true,
+	})
 }
 
 func grantTicket(rw http.ResponseWriter, req *http.Request) {
@@ -25,7 +31,7 @@ func grantTicket(rw http.ResponseWriter, req *http.Request) {
 	user := req.URL.Path[8:]
 	if user == "" {
 		// Empty username is not permitted
-		rw.WriteHeader(403)
+		rw.WriteHeader(401)
 		return
 	}
 
@@ -39,7 +45,7 @@ func grantTicket(rw http.ResponseWriter, req *http.Request) {
 	password := string(bs)
 	if password == "" {
 		// Empty password is not permitted
-		rw.WriteHeader(403)
+		rw.WriteHeader(401)
 		return
 	}
 
@@ -56,7 +62,7 @@ func grantTicket(rw http.ResponseWriter, req *http.Request) {
 
 	if !backendAuthenticate(user, password) {
 		// Authentication failed
-		rw.WriteHeader(403)
+		rw.WriteHeader(401)
 		return
 	}
 

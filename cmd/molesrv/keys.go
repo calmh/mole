@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -73,7 +72,6 @@ func obfuscate(val string) string {
 		}
 
 		keys[key] = val
-		fmt.Printf("%#v", keys)
 
 		return "$mole$" + key
 	}

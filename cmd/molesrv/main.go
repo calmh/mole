@@ -11,33 +11,45 @@ import (
 )
 
 type handler struct {
-	fn   func(http.ResponseWriter, *http.Request)
-	auth bool
+	method  string
+	pattern string
+	fn      func(http.ResponseWriter, *http.Request)
+	auth    bool
+	ro      bool
 }
 
 var (
 	// Pattern to handleFunc
-	handlers = map[string]handler{}
+	handlers = map[string][]handler{}
 
 	// CLI options
 	listenAddr = ":9443"
 	storeDir   = "~/mole-store"
-	certFile   = "crt/server-cert.pem"
-	keyFile    = "crt/server-key.pem"
+	certFile   = "cert.pem"
+	keyFile    = "key.pem"
 	auditFile  = "audit.log"
 	auditIntv  = 86400 * time.Second
 	noAuth     = false
+	readOnly   = false
 )
 
+func addHandler(hnd handler) {
+	handlers[hnd.pattern] = append(handlers[hnd.pattern], hnd)
+	log.Printf("Added %s handler for %q (auth=%v, ro=%v)", hnd.method, hnd.pattern, hnd.auth, hnd.ro)
+}
+
 func main() {
-	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTPS listen address")
-	flag.StringVar(&storeDir, "store", storeDir, "Mole store directory")
-	flag.StringVar(&certFile, "cert", certFile, "Certificate file, relative to store directory")
-	flag.StringVar(&keyFile, "key", keyFile, "Key file, relative to store directory")
-	flag.StringVar(&auditFile, "auditfile", auditFile, "Audit file, relative to store directory")
-	flag.DurationVar(&auditIntv, "auditintv", auditIntv, "Audit file rotation interval")
-	flag.BoolVar(&noAuth, "no-auth", noAuth, "Disable authentication requirements")
-	flag.Parse()
+	fs := flag.NewFlagSet("molesrv", flag.ExitOnError)
+	fs.Usage = usageFor(fs, "molesrv [options]")
+	fs.StringVar(&listenAddr, "listen", listenAddr, "HTTPS listen address")
+	fs.StringVar(&storeDir, "store-dir", storeDir, "Mole store directory")
+	fs.StringVar(&certFile, "cert-file", certFile, "Certificate file (relative to store directory)")
+	fs.StringVar(&keyFile, "key-file", keyFile, "Key file (relative to store directory)")
+	fs.StringVar(&auditFile, "audit-file", auditFile, "Audit file (relative to store directory)")
+	fs.DurationVar(&auditIntv, "audit-intv", auditIntv, "Audit file creation interval")
+	fs.BoolVar(&noAuth, "disable-auth", noAuth, "Disable authentication")
+	fs.BoolVar(&readOnly, "read-only", readOnly, "Disallow writable client operations (push, rm, etc)")
+	fs.Parse(os.Args[1:])
 
 	if strings.HasPrefix(storeDir, "~/") {
 		home := getHomeDir()
@@ -53,26 +65,46 @@ func main() {
 		log.Println("Initialized new key store")
 	}
 
-	for pattern, handler := range handlers {
-		setupHandler(pattern, handler)
-		log.Printf("Registered handler for %q", pattern)
+	for pattern, handlerList := range handlers {
+		setupHandler(pattern, handlerList)
 	}
 
-	http.ListenAndServeTLS(listenAddr, path.Join(storeDir, certFile), path.Join(storeDir, keyFile), nil)
+	err = http.ListenAndServeTLS(listenAddr, path.Join(storeDir, certFile), path.Join(storeDir, keyFile), nil)
+	if err != nil {
+		log.Println("Error:", err)
+	}
 }
 
-func setupHandler(p string, h handler) {
+func setupHandler(p string, hs []handler) {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
-		if h.auth && !noAuth {
-			if !authenticate(rw, req) {
-				audit(req, "rejected")
+		for _, h := range hs {
+			if h.method != req.Method {
+				continue
+			}
+
+			if !h.ro && readOnly {
+				audit(req, p+"; rejected (ro)")
 				rw.WriteHeader(403)
+				rw.Write([]byte("Server is in read-only mode"))
 				return
 			}
+
+			if h.auth && !noAuth {
+				if !authenticate(rw, req) {
+					audit(req, p+"; rejected")
+					rw.WriteHeader(401)
+					return
+				}
+			}
+
+			audit(req, p+"; accepted")
+			h.fn(rw, req)
+			return
 		}
-		audit(req, "accepted")
-		h.fn(rw, req)
+
+		rw.WriteHeader(405)
 	}
+
 	http.HandleFunc(p, fn)
 }
 
