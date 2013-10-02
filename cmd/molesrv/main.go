@@ -23,20 +23,23 @@ var (
 	handlers = map[string][]handler{}
 
 	// CLI options
-	listenAddr = ":9443"
-	storeDir   = "~/mole-store"
-	certFile   = "cert.pem"
-	keyFile    = "key.pem"
-	auditFile  = "audit.log"
-	auditIntv  = 86400 * time.Second
-	noAuth     = false
-	readOnly   = false
-	disableGit = false
+	listenAddr        = ":9443"
+	storeDir          = "~/mole-store"
+	certFile          = "cert.pem"
+	keyFile           = "key.pem"
+	auditFile         = "audit.log"
+	auditIntv         = 86400 * time.Second
+	noAuth            = false
+	readOnly          = false
+	disableGit        = false
+	canonicalHostname = ""
 )
+
+var buildVersion string
 
 func addHandler(hnd handler) {
 	handlers[hnd.pattern] = append(handlers[hnd.pattern], hnd)
-	log.Printf("Added %s handler for %q (auth=%v, ro=%v)", hnd.method, hnd.pattern, hnd.auth, hnd.ro)
+	//log.Printf("Added %s handler for %q (auth=%v, ro=%v)", hnd.method, hnd.pattern, hnd.auth, hnd.ro)
 }
 
 func main() {
@@ -51,7 +54,12 @@ func main() {
 	fs.BoolVar(&noAuth, "no-auth", noAuth, "Do not perform authentication")
 	fs.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
 	fs.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
+	fs.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
 	fs.Parse(os.Args[1:])
+
+	if buildVersion == "" {
+		buildVersion = "4.0-dev-unknown"
+	}
 
 	if strings.HasPrefix(storeDir, "~/") {
 		home := getHomeDir()
@@ -79,6 +87,9 @@ func main() {
 
 func setupHandler(p string, hs []handler) {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
+		rw.Header().Set("X-Mole-Version", buildVersion)
+		rw.Header().Set("X-Mole-Canonical-Hostname", canonicalHostname)
+
 		for _, h := range hs {
 			if h.method != req.Method {
 				continue
