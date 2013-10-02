@@ -101,7 +101,11 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 	if resp.StatusCode != 200 {
 		defer resp.Body.Close()
 		data, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("%s: %s", resp.Status, data)
+		if len(data) > 0 {
+			return nil, fmt.Errorf("%s: %s", resp.Status, data)
+		} else {
+			return nil, fmt.Errorf(resp.Status)
+		}
 	}
 
 	debugln(resp.Status, resp.Header.Get("Content-type"), resp.ContentLength)

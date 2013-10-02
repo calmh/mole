@@ -14,13 +14,13 @@ const retries = 3
 type authenticatedRequest func() (interface{}, error)
 
 // authenticated calls the request r and performs authentication if it fails
-// with a 403 Forbidden error. Any other error is returned to the caller.
+// with a 401 Unauthorized error. Any other error is returned to the caller.
 func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 	c.Ticket = serverIni.ticket
 	br := bufio.NewReader(os.Stdin)
 	for i := 0; i < retries; i++ {
 		result, err := r()
-		if err == nil || !strings.HasPrefix(err.Error(), "403 Forbidden") {
+		if err == nil || !strings.HasPrefix(err.Error(), "401 Unauthorized") {
 			return result, err
 		}
 

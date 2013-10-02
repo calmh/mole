@@ -22,10 +22,11 @@ var (
 )
 
 var globalOpts struct {
-	Home   string `short:"h" long:"home" description:"Mole home directory" default:"~/.mole" value-name:"DIR"`
-	Debug  bool   `short:"d" long:"debug" description:"Show debug output"`
-	NoAnsi bool   `long:"no-ansi" description:"Disable ANSI formatting sequences"`
-	Remap  bool   `long:"remap-lo" description:"Use port remapping for extended lo addresses (required/default on Windows)"`
+	Home       string
+	Debug      bool
+	NoAnsi     bool
+	Remap      bool
+	PortOffset int
 }
 
 var serverIni struct {
@@ -58,6 +59,7 @@ func main() {
 	fs.BoolVar(&globalOpts.Debug, "d", false, "Enable debug output")
 	fs.BoolVar(&globalOpts.NoAnsi, "no-ansi", false, "Disable ANSI formatting")
 	fs.BoolVar(&globalOpts.Remap, "remap", globalOpts.Remap, "Use port remapping for extended lo addresses")
+	fs.IntVar(&globalOpts.PortOffset, "port-offset", 1000, "**Temp** v3/v4 server compatibility (port shift)")
 	fs.Usage = usageFor(fs, msgMainUsage)
 	err := fs.Parse(os.Args[1:])
 
@@ -142,7 +144,9 @@ func setup() {
 
 func loadGlobalIni(fd io.Reader) {
 	config := ini.Parse(fd)
-	serverIni.address = config.Get("server", "host") + ":" + config.Get("server", "port")
+	port, _ := strconv.Atoi(config.Get("server", "port"))
+	port += globalOpts.PortOffset
+	serverIni.address = config.Get("server", "host") + ":" + strconv.Itoa(port)
 	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Get("server", "fingerprint"), ":", "", -1))
 	serverIni.ticket = config.Get("server", "ticket")
 	serverIni.upgrades = config.Get("upgrades", "automatic") != "no"
