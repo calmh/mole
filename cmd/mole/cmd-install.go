@@ -21,7 +21,7 @@ func installCommand(args []string) error {
 	fs.Parse(args)
 	args = fs.Args()
 
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	if len(args) == 0 {
 		pkgMap, err := cl.Packages()
 		fatalErr(err)

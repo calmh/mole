@@ -16,7 +16,7 @@ type authenticatedRequest func() (interface{}, error)
 // authenticated calls the request r and performs authentication if it fails
 // with a 401 Unauthorized error. Any other error is returned to the caller.
 func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
-	c.Ticket = serverIni.ticket
+	c.Ticket = moleIni.Get("server", "ticket")
 	br := bufio.NewReader(os.Stdin)
 	i := 0
 	for {

@@ -22,7 +22,7 @@ func rmCommand(args []string) error {
 
 	tunnelname := args[0]
 
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	_, err := authenticated(cl, func() (interface{}, error) {
 		return nil, cl.Delete(tunnelname)
 	})

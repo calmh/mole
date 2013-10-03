@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/calmh/mole/randomart"
 	"os"
-	"path"
 	"regexp"
+	"strconv"
 )
 
 func init() {
@@ -41,13 +41,10 @@ func registerCommand(args []string) error {
 	fp := certFingerprint(conn)
 	fpstr := hexBytes(fp)
 
-	ini := fmt.Sprintf("[server]\nhost = %s\nport = %d\nfingerprint = %s\n", args[0], *port, fpstr)
-	fd, err := os.Create(path.Join(globalOpts.Home, "mole.ini"))
-	fatalErr(err)
-	_, err = fd.WriteString(ini)
-	fatalErr(err)
-	err = fd.Close()
-	fatalErr(err)
+	moleIni.Set("server", "host", args[0])
+	moleIni.Set("server", "port", strconv.Itoa(*port))
+	moleIni.Set("server", "fingerprint", fpstr)
+	saveMoleIni()
 
 	infof("%s", randomart.Generate(fp, "mole"))
 	infoln(fpstr)

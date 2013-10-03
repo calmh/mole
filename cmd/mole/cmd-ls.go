@@ -31,7 +31,7 @@ func commandLs(args []string) error {
 		fatalErr(err)
 	}
 
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	res, err := authenticated(cl, func() (interface{}, error) { return cl.List() })
 	fatalErr(err)
 	l := res.([]ListItem)

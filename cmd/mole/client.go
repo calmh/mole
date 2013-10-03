@@ -66,7 +66,7 @@ func NewClient(host, fingerprint string) *Client {
 
 			fp := hexBytes(certFingerprint(conn))
 			if fingerprint != "" && fp != fingerprint {
-				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, serverIni.fingerprint)
+				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, fingerprint)
 			}
 			return conn, err
 		},
@@ -109,6 +109,12 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 	}
 
 	debugln(resp.Status, resp.Header.Get("Content-type"), resp.ContentLength)
+
+	if ch := resp.Header.Get("X-Mole-Canonical-Hostname"); ch != "" && ch != moleIni.Get("server", "host") {
+		moleIni.Set("server", "host", ch)
+		saveMoleIni()
+		okf(msgUpdatedHost, ch)
+	}
 
 	return resp, nil
 }

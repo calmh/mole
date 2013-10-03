@@ -36,7 +36,7 @@ func commandDig(args []string) error {
 
 	var err error
 
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	_, err = authenticated(cl, func() (interface{}, error) { return cl.Ping() })
 	fatalErr(err)
 

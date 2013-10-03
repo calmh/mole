@@ -42,7 +42,7 @@ func pushCommand(args []string) error {
 
 	// Push
 	tunnelname := filename[:len(filename)-4]
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	_, err = authenticated(cl, func() (interface{}, error) {
 		return nil, cl.Put(tunnelname, bytes.NewBuffer(bs))
 	})

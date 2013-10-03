@@ -5,7 +5,6 @@ import (
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/ini"
 	"github.com/calmh/mole/upgrade"
-	"io"
 	"os"
 	"path"
 	"runtime"
@@ -29,13 +28,7 @@ var globalOpts struct {
 	PortOffset int
 }
 
-var serverIni struct {
-	address       string
-	upgrades      bool
-	fingerprint   string
-	ticket        string
-	upgradeNotice bool
-}
+var moleIni ini.File
 
 type command struct {
 	fn    func([]string) error
@@ -121,15 +114,6 @@ func setup() {
 
 	configFile := path.Join(globalOpts.Home, "mole.ini")
 
-	if fd, err := os.Open(configFile); err == nil {
-		loadGlobalIni(fd)
-		if serverIni.upgrades {
-			go autoUpgrade()
-		} else {
-			debugln("automatic upgrades disabled")
-		}
-	}
-
 	fi, err := os.Stat(globalOpts.Home)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(globalOpts.Home, 0700)
@@ -140,17 +124,15 @@ func setup() {
 		fatalErr(err)
 		okln("Corrected permissions on", globalOpts.Home)
 	}
-}
 
-func loadGlobalIni(fd io.Reader) {
-	config := ini.Parse(fd)
-	port, _ := strconv.Atoi(config.Get("server", "port"))
-	port += globalOpts.PortOffset
-	serverIni.address = config.Get("server", "host") + ":" + strconv.Itoa(port)
-	serverIni.fingerprint = config.Get("server", "fingerprint")
-	serverIni.ticket = config.Get("server", "ticket")
-	serverIni.upgrades = config.Get("upgrades", "automatic") != "no"
-	serverIni.upgradeNotice = config.Get("upgrades", "automatic") != "yes"
+	if fd, err := os.Open(configFile); err == nil {
+		moleIni = ini.Parse(fd)
+		if moleIni.Get("upgrades", "automatic") != "no" {
+			go autoUpgrade()
+		} else {
+			debugln("automatic upgrades disabled")
+		}
+	}
 }
 
 func autoUpgrade() {
@@ -162,11 +144,26 @@ func autoUpgrade() {
 		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
 			err = upgrade.UpgradeTo(build)
 			if err == nil {
-				if serverIni.upgradeNotice {
+				if moleIni.Get("upgrades", "automatic") != "yes" {
 					infoln(msgAutoUpgrades)
 				}
 				okf(msgUpgraded, build.Version)
 			}
 		}
 	}
+}
+
+func serverAddress() string {
+	port, _ := strconv.Atoi(moleIni.Get("server", "port"))
+	port += globalOpts.PortOffset
+	return moleIni.Get("server", "host") + ":" + strconv.Itoa(port)
+}
+
+func saveMoleIni() {
+	fd, err := os.Create(path.Join(globalOpts.Home, "mole.ini"))
+	fatalErr(err)
+	err = moleIni.Write(fd)
+	fatalErr(err)
+	err = fd.Close()
+	fatalErr(err)
 }

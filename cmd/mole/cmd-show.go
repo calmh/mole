@@ -25,7 +25,7 @@ func showCommand(args []string) error {
 		os.Exit(3)
 	}
 
-	cl := NewClient(serverIni.address, serverIni.fingerprint)
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
 	res, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
 	fatalErr(err)
 	tun := res.(string)
