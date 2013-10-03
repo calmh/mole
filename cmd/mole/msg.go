@@ -72,6 +72,6 @@ const (
 	msg530 = "530 Version Unacceptable\nYour client is either too new or too old to talk to this server. Make sure you are in fact registered with the correct server and try 'mole upgrade' to get the newest client."
 
 	msgLatest       = "You are running the latest version."
-	msgAutoUpgrades = "Mole uses automatic upgrades to keep your client up to date. To disable these automatic upgrades (which is a bad idea for most users) or silence this message, see 'mole upgrade --help'."
+	msgAutoUpgrades = "Mole uses automatic upgrades to keep your client up to date. To disable these automatic upgrades (which is a bad idea for most users) or silence this message, see 'mole upgrade -help'."
 	msgUpdatedHost  = "Updated configured server name to %q."
 )
