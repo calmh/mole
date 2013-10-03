@@ -14,6 +14,14 @@ func init() {
 	commands["register"] = command{registerCommand, msgRegisterShort}
 }
 
+func hexBytes(bs []byte) string {
+	twoDigits := regexp.MustCompile("([0-9A-F]{2})")
+	str := fmt.Sprintf("%X", bs)
+	str = twoDigits.ReplaceAllString(str, "$1:")
+	str = str[:len(str)-1] // trailing colon
+	return str
+}
+
 func registerCommand(args []string) error {
 	fs := flag.NewFlagSet("register", flag.ExitOnError)
 	port := fs.Int("port", 9443, "Server port number")
@@ -31,9 +39,7 @@ func registerCommand(args []string) error {
 	fatalErr(err)
 
 	fp := certFingerprint(conn)
-	twoDigits := regexp.MustCompile("([0-9a-f]{2})")
-	fpstr := twoDigits.ReplaceAllString(fmt.Sprintf("%x", fp), "$1:")
-	fpstr = fpstr[:len(fpstr)-1] // trailing colon
+	fpstr := hexBytes(fp)
 
 	ini := fmt.Sprintf("[server]\nhost = %s\nport = %d\nfingerprint = %s\n", args[0], *port, fpstr)
 	fd, err := os.Create(path.Join(globalOpts.Home, "mole.ini"))

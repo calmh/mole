@@ -64,7 +64,7 @@ func NewClient(host, fingerprint string) *Client {
 				return nil, err
 			}
 
-			fp := fmt.Sprintf("%x", certFingerprint(conn))
+			fp := hexBytes(certFingerprint(conn))
 			if fingerprint != "" && fp != fingerprint {
 				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, serverIni.fingerprint)
 			}

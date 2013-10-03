@@ -147,7 +147,7 @@ func loadGlobalIni(fd io.Reader) {
 	port, _ := strconv.Atoi(config.Get("server", "port"))
 	port += globalOpts.PortOffset
 	serverIni.address = config.Get("server", "host") + ":" + strconv.Itoa(port)
-	serverIni.fingerprint = strings.ToLower(strings.Replace(config.Get("server", "fingerprint"), ":", "", -1))
+	serverIni.fingerprint = config.Get("server", "fingerprint")
 	serverIni.ticket = config.Get("server", "ticket")
 	serverIni.upgrades = config.Get("upgrades", "automatic") != "no"
 	serverIni.upgradeNotice = config.Get("upgrades", "automatic") != "yes"
