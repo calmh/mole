@@ -133,6 +133,14 @@ func setup() {
 			debugln("automatic upgrades disabled")
 		}
 	}
+
+	// Early beta versions of mole4 write the fingerprint in lower case, which
+	// is incompatible with both mole 3 and current 4+. Rewrite the fingerprint
+	// to upper case if necessary.
+	if fp := moleIni.Get("server", "fingerprint"); fp != strings.ToUpper(fp) {
+		moleIni.Set("server", "fingerprint", strings.ToUpper(fp))
+		saveMoleIni()
+	}
 }
 
 func autoUpgrade() {
