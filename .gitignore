@@ -6,3 +6,4 @@ auto/
 srv
 cmd/mole/mole
 cmd/molesrv/molesrv
+cmd/molevers/molevers
