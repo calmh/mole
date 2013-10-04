@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 )
 
 func init() {
@@ -27,6 +28,8 @@ var obfuscateKeys = []string{
 	"Xauth_password",
 }
 
+var filenamePattern = regexp.MustCompile(`^[a-z0-9_-]+\.ini$`)
+
 func putFile(rw http.ResponseWriter, req *http.Request) {
 	defer func() {
 		defer listCacheLock.Unlock()
@@ -35,6 +38,12 @@ func putFile(rw http.ResponseWriter, req *http.Request) {
 	}()
 
 	tun := req.URL.Path[7:]
+	if !filenamePattern.MatchString(tun) {
+		rw.WriteHeader(403)
+		rw.Write([]byte("filename not conformant to " + filenamePattern.String()))
+		return
+	}
+
 	iniFile := path.Join(storeDir, "data", tun)
 	// Read pushed data
 	data, err := ioutil.ReadAll(req.Body)
