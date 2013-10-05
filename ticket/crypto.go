@@ -6,13 +6,13 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha1"
-	"encoding/binary"
 	"errors"
 )
 
 const (
-	keySize = 32
-	ivSize  = 16
+	keySize  = 32
+	ivSize   = 16
+	hashSize = 20
 )
 
 var (
@@ -65,24 +65,13 @@ func hashAndFrame(blob []byte) []byte {
 	hash := h.Sum(nil)
 
 	var b bytes.Buffer
-	var t uint32
 
-	t = uint32(len(blob))
-	err = binary.Write(&b, binary.BigEndian, &t)
-	if err != nil {
-		panic(err)
-	}
-	_, err = b.Write(blob)
-	if err != nil {
-		panic(err)
-	}
-
-	t = uint32(len(hash))
-	err = binary.Write(&b, binary.BigEndian, &t)
-	if err != nil {
-		panic(err)
-	}
 	_, err = b.Write(hash)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = b.Write(blob)
 	if err != nil {
 		panic(err)
 	}
@@ -98,34 +87,18 @@ func hashAndEncrypt(blob []byte) []byte {
 
 func unframe(blob []byte) ([]byte, []byte, error) {
 	b := bytes.NewBuffer(blob)
-	var t uint32
+	var err error
 
-	err := binary.Read(b, binary.BigEndian, &t)
-	if err != nil {
-		return nil, nil, err
-	}
-	if t > uint32(b.Len()) {
+	if hashSize > uint32(b.Len()) {
 		return nil, nil, errors.New("corrupt packet")
 	}
-	msg := make([]byte, t)
-	_, err = b.Read(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	err = binary.Read(b, binary.BigEndian, &t)
-	if err != nil {
-		return nil, nil, err
-	}
-	if t > uint32(b.Len()) {
-		return nil, nil, errors.New("corrupt packet")
-	}
-	hash := make([]byte, t)
+	hash := make([]byte, hashSize)
 	_, err = b.Read(hash)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	msg := b.Bytes()
 	return msg, hash, nil
 }
 

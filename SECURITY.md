@@ -13,7 +13,7 @@ stable storage. They are sent encrypted from the server, decrypted
 locally and used to authenticate for example SSH sessions. This means
 accidental disclosure of sensitive information is unlikely. If your
 laptop is stolen and unlocked, it should not be possible for the thief
-to access information from the mole system[1].
+to access information from the mole system.
 
 This doesn't mean that a determined attacker with access to the system
 can't extract sensitive information. The credentials must, due to the
@@ -21,10 +21,6 @@ nature of things, be available on the local computer to perform
 authentication towards remote parties. This means it's possible to
 extract the keys from memory or subvert the code that uses them. It's an
 open source project, so the latter isn't even particularly difficult.
-
-[1] Unless there is an active session ticket and they can get the
-computer online on the same IP (from the mole server's point of view) it
-had before.  In that situation convenience trumps security and we lose.
 
 Communication
 -------------
@@ -46,31 +42,14 @@ request is authenticated by sending an opaque ticket in the
 it checks out the request is permitted. If it does not, a `403
 Forbidden` is returned and the client will have to request a new ticket.
 
-The ticket itself is a string composed of the authenticated username,
-the IP the client came from and a validity time in the form of epoch
-seconds. This string is hashed (SHA1) and encrypted (AES256) by the
-server with a session key. To verify a ticket, the following steps are
-performed;
+The ticket is a hashed (SHA1) and encrypted (AES256) blob containing the
+authenticated username, the IP the client came from and a validity time
+in the form of epoch seconds.
 
- - Decrypt the ticket with the current session key and split into the
-   component parts `username;ip;validity;hash`.
-
- - If the number of `;`-separated parts was incorrect, the key was not
-   encrypted by the current session key. Authentication denied.
-
- - Verify that `SHA1(username;ip;validity)` == `hash`. If not, something
-   has tamperered with the ticket or it was not encrypted by the current
-   session key. Authentication denied.
-
- - Verify that the `validity` time is greater than the current timestamp.
-   If not, it has expired. Authentication denied.
-
- - Verify that the client IP is the one given in the ticket. If it is
-   not, the client has changed network connections and needs to
-   reauthenticate. Authentication denied.
-
- - If everything checks out so far, consider the client authenticated as
-   the `username` in the ticket and permit the request to proceed.
+The ticket is considered valid by the server if it decrypts and hashes
+correctly, the validity time is in the future and the client IP is as
+set in the ticket. If any of these checks fail, authentication based on
+the ticket is denied.
 
 The session key used to encrypt the ticket is generated on server
 startup and not saved. Restarting the server will generate a new session

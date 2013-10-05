@@ -8,9 +8,10 @@ import (
 )
 
 type ticket struct {
-	User     string
-	IP       string
-	Validity int64
+	// Short JSON keys keep the ticket size down
+	User     string `json:"u"`
+	IP       string `json:"i"`
+	Validity int64  `json:"v"`
 }
 
 // Init (re)initializes the session that tickets are based on. Init is called
