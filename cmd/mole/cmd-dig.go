@@ -63,7 +63,7 @@ func commandDig(args []string) error {
 	}
 
 	var addrs []string
-	if globalOpts.Remap {
+	if remapIntfs {
 		cfg.Remap()
 	} else {
 		addrs = missingAddresses(cfg)
@@ -142,7 +142,7 @@ func commandDig(args []string) error {
 		vpn.Stop()
 	}
 
-	if !globalOpts.Remap {
+	if !remapIntfs {
 		addrs = extraneousAddresses(cfg)
 		if len(addrs) > 0 {
 			removeAddresses(addrs)

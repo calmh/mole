@@ -37,7 +37,7 @@ func showCommand(args []string) error {
 		cfg, err := conf.Load(bytes.NewBufferString(tun))
 		fatalErr(err)
 
-		if globalOpts.Remap {
+		if remapIntfs {
 			cfg.Remap()
 		}
 

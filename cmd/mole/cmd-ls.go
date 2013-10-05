@@ -62,7 +62,7 @@ func commandLs(args []string) error {
 
 	rows = [][]string{header}
 
-	tunnelCache, _ := os.Create(path.Join(globalOpts.Home, "tunnels.cache"))
+	tunnelCache, _ := os.Create(path.Join(homeDir, "tunnels.cache"))
 
 	var matched int
 	for _, i := range l {

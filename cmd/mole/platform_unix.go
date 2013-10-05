@@ -49,7 +49,6 @@ func dropRoot() {
 
 func getHomeDir() string {
 	home := os.Getenv("HOME")
-	debugln("HOME", home)
 	if home == "" {
 		fatalln(msgErrNoHome)
 	}

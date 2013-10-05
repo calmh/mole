@@ -40,7 +40,7 @@ func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 		if err == nil {
 			c.Ticket = ticket
 
-			configFile := path.Join(globalOpts.Home, "mole.ini")
+			configFile := path.Join(homeDir, "mole.ini")
 			f, e := os.Open(configFile)
 			fatalErr(e)
 			cfg := ini.Parse(f)

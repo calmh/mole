@@ -14,19 +14,34 @@ import (
 
 var space = regexp.MustCompile(`\s`)
 
-var prefix = map[string]string{
-	"debug": ansi.Magenta("debug "),
-	// info has no prefix
-	"ok":      ansi.Bold(ansi.Green("ok ")),
-	"warning": ansi.Bold(ansi.Yellow("warning ")),
-	"fatal":   ansi.Bold(ansi.Red("fatal ")),
-}
+var prefix map[string]string
+var loggingEnabled bool
 
 const (
 	indent    = 2   // Indent continuation lines by this many spaces
 	maxLength = 128 // Infinitely long lines of text are ugly
 	minLength = 50  // There are limits to what sort of shenanigans we put up with
 )
+
+func enableLogging() {
+	fatalErr = logFatalErr
+	loggingEnabled = true
+}
+
+func lazySetupPrefixes() {
+	if prefix == nil {
+		if !loggingEnabled {
+			panic("attempting setup before logging enabled")
+		}
+		prefix = map[string]string{
+			"debug": ansi.Magenta("debug "),
+			// info has no prefix
+			"ok":      ansi.Bold(ansi.Green("ok ")),
+			"warning": ansi.Bold(ansi.Yellow("warning ")),
+			"fatal":   ansi.Bold(ansi.Red("fatal ")),
+		}
+	}
+}
 
 func writeWrapped(s string, p string) {
 	w := termsize.Columns()
@@ -37,7 +52,7 @@ func writeWrapped(s string, p string) {
 	}
 
 	debugPrefix := ""
-	if globalOpts.Debug {
+	if debugEnabled {
 		_, file, line, ok := runtime.Caller(2)
 		if ok {
 			ts := time.Now().Format("15:04:05.000")
@@ -75,64 +90,83 @@ func writeWrappedLine(l string, w int) {
 }
 
 func debugln(vals ...interface{}) {
-	if globalOpts.Debug {
+	lazySetupPrefixes()
+	if debugEnabled {
 		s := fmt.Sprintln(vals...)
 		writeWrapped(s, prefix["debug"])
 	}
 }
 
 func debugf(format string, vals ...interface{}) {
-	if globalOpts.Debug {
+	lazySetupPrefixes()
+	if debugEnabled {
 		s := fmt.Sprintf(format, vals...)
 		writeWrapped(s, prefix["debug"])
 	}
 }
 
 func infoln(vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintln(vals...)
 	writeWrapped(s, prefix["info"])
 }
 
 func infof(format string, vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintf(format, vals...)
 	writeWrapped(s, prefix["info"])
 }
 
 func okln(vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintln(vals...)
 	writeWrapped(s, prefix["ok"])
 }
 
 func okf(format string, vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintf(format, vals...)
 	writeWrapped(s, prefix["ok"])
 }
 
 func warnln(vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintln(vals...)
 	writeWrapped(s, prefix["warning"])
 }
 
 func warnf(format string, vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintf(format, vals...)
 	writeWrapped(s, prefix["warning"])
 }
 
 func fatalln(vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintln(vals...)
 	writeWrapped(s, prefix["fatal"])
 	os.Exit(3)
 }
 
 func fatalf(format string, vals ...interface{}) {
+	lazySetupPrefixes()
 	s := fmt.Sprintf(format, vals...)
 	writeWrapped(s, prefix["fatal"])
 	os.Exit(3)
 }
 
-func fatalErr(err error) {
+var fatalErr func(error) = panicFatalErr
+
+func logFatalErr(err error) {
+	lazySetupPrefixes()
 	if err != nil {
 		writeWrapped(err.Error(), prefix["fatal"])
 		os.Exit(3)
+	}
+}
+
+func panicFatalErr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }

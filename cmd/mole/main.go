@@ -18,15 +18,12 @@ var (
 	buildStamp   string
 	buildDate    time.Time
 	buildUser    string
+	homeDir      string = path.Join(getHomeDir(), ".mole")
+	debugEnabled bool
+	noAnsi       bool
+	remapIntfs   bool
+	portOffset   int = 1000 // XXX: Remove later
 )
-
-var globalOpts struct {
-	Home       string
-	Debug      bool
-	NoAnsi     bool
-	Remap      bool
-	PortOffset int
-}
 
 var moleIni ini.File
 
@@ -37,40 +34,70 @@ type command struct {
 
 var commands = make(map[string]command)
 
-func main() {
+func init() {
 	epoch, e := strconv.ParseInt(buildStamp, 10, 64)
 	if e == nil {
 		buildDate = time.Unix(epoch, 0)
 	}
+}
 
+func main() {
+	loadConfig()
+
+	// Early disable ansi, if the ini file said to do so.
+	if noAnsi {
+		ansi.Disable()
+	}
+
+	// Using the logging functions before this point will panic. Used to weed
+	// out logging before having set up the debug & ansi flags.
+	enableLogging()
+
+	// Ensure that we have a home directory and that it has the right permissions.
+	ensureHome()
+
+	// Set the default remapIntfs before parsing flags
 	if runtime.GOOS == "windows" {
-		globalOpts.Remap = true
+		remapIntfs = true
 	}
 
-	fs := flag.NewFlagSet("mole", flag.ContinueOnError)
-	fs.StringVar(&globalOpts.Home, "home", "~/.mole", "Set mole's home directory")
-	fs.BoolVar(&globalOpts.Debug, "d", false, "Enable debug output")
-	fs.BoolVar(&globalOpts.NoAnsi, "no-ansi", false, "Disable ANSI formatting")
-	fs.BoolVar(&globalOpts.Remap, "remap", globalOpts.Remap, "Use port remapping for extended lo addresses")
-	fs.IntVar(&globalOpts.PortOffset, "port-offset", 1000, "**Temp** v3/v4 server compatibility (port shift)")
-	fs.Usage = usageFor(fs, msgMainUsage)
-	err := fs.Parse(os.Args[1:])
+	args := parseFlags()
 
-	if err != nil {
-		// fs.Usage() has already been printed
-		mainUsage(os.Stdout)
-		os.Exit(3)
+	// Late disable ansi, if the command line flags said so.
+	if noAnsi {
+		ansi.Disable()
 	}
 
-	setup()
-
-	args := fs.Args()
-	if len(args) == 0 {
-		fs.Usage()
-		mainUsage(os.Stdout)
-		os.Exit(3)
+	if debugEnabled {
+		printVersion()
 	}
 
+	go autoUpgrade()
+
+	// Early beta versions of mole4 wrote the fingerprint in lower case which
+	// is incompatible with both mole 3 and current 4+. Rewrite the fingerprint
+	// to upper case if necessary.
+	if fp := moleIni.Get("server", "fingerprint"); fp != strings.ToUpper(fp) {
+		moleIni.Set("server", "fingerprint", strings.ToUpper(fp))
+		saveMoleIni()
+	}
+
+	dispatchCommand(args)
+}
+
+// Keep this short and sweet so we get can call it very early and get default
+// values for the debug and ansi flags.
+func loadConfig() {
+	configFile := path.Join(homeDir, "mole.ini")
+	if fd, err := os.Open(configFile); err == nil {
+		moleIni = ini.Parse(fd)
+	}
+
+	noAnsi = moleIni.Get("client", "ansi") == "no"
+	debugEnabled = moleIni.Get("client", "debug") == "yes"
+}
+
+func dispatchCommand(args []string) {
 	// Direct match on command
 	if cmd, ok := commands[args[0]]; ok {
 		cmd.fn(args[1:])
@@ -97,53 +124,51 @@ func main() {
 	fatalf("no such command: %q", args[0])
 }
 
-func setup() {
-	if globalOpts.NoAnsi {
-		ansi.Disable()
-	}
-
-	if globalOpts.Debug {
-		printVersion()
-	}
-
-	if strings.HasPrefix(globalOpts.Home, "~/") {
-		home := getHomeDir()
-		globalOpts.Home = strings.Replace(globalOpts.Home, "~", home, 1)
-	}
-	debugln("homeDir", globalOpts.Home)
-
-	configFile := path.Join(globalOpts.Home, "mole.ini")
-
-	fi, err := os.Stat(globalOpts.Home)
+// Ensure home direcory exists and has appropriate permissions.
+func ensureHome() {
+	fi, err := os.Stat(homeDir)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(globalOpts.Home, 0700)
+		err := os.MkdirAll(homeDir, 0700)
 		fatalErr(err)
-		okln("Created", globalOpts.Home)
+		okln("Created", homeDir)
 	} else if fi.Mode()&0077 != 0 {
-		err := os.Chmod(globalOpts.Home, 0700)
+		err := os.Chmod(homeDir, 0700)
 		fatalErr(err)
-		okln("Corrected permissions on", globalOpts.Home)
-	}
-
-	if fd, err := os.Open(configFile); err == nil {
-		moleIni = ini.Parse(fd)
-		if moleIni.Get("upgrades", "automatic") != "no" {
-			go autoUpgrade()
-		} else {
-			debugln("automatic upgrades disabled")
-		}
-	}
-
-	// Early beta versions of mole4 write the fingerprint in lower case, which
-	// is incompatible with both mole 3 and current 4+. Rewrite the fingerprint
-	// to upper case if necessary.
-	if fp := moleIni.Get("server", "fingerprint"); fp != strings.ToUpper(fp) {
-		moleIni.Set("server", "fingerprint", strings.ToUpper(fp))
-		saveMoleIni()
+		okln("Corrected permissions on", homeDir)
 	}
 }
 
+func parseFlags() []string {
+	fs := flag.NewFlagSet("mole", flag.ContinueOnError)
+	fs.BoolVar(&debugEnabled, "d", debugEnabled, "Enable debug output")
+	fs.BoolVar(&noAnsi, "no-ansi", noAnsi, "Disable ANSI formatting")
+	fs.BoolVar(&remapIntfs, "remap", remapIntfs, "Use port remapping for extended lo addresses")
+	fs.IntVar(&portOffset, "port-offset", portOffset, "**Temp** v3/v4 server compatibility port shift")
+	fs.Usage = usageFor(fs, msgMainUsage)
+	err := fs.Parse(os.Args[1:])
+
+	if err != nil {
+		// fs.Usage() has already been printed
+		mainUsage(os.Stdout)
+		os.Exit(3)
+	}
+
+	args := fs.Args()
+	if len(args) == 0 {
+		fs.Usage()
+		mainUsage(os.Stdout)
+		os.Exit(3)
+	}
+
+	return args
+}
+
 func autoUpgrade() {
+	if moleIni.Get("upgrades", "automatic") == "no" {
+		debugln("automatic upgrades disabled")
+		return
+	}
+
 	// Only do the actual upgrade once we've been running for a while
 	time.Sleep(10 * time.Second)
 	build, err := latestBuild()
@@ -163,12 +188,12 @@ func autoUpgrade() {
 
 func serverAddress() string {
 	port, _ := strconv.Atoi(moleIni.Get("server", "port"))
-	port += globalOpts.PortOffset
+	port += portOffset
 	return moleIni.Get("server", "host") + ":" + strconv.Itoa(port)
 }
 
 func saveMoleIni() {
-	fd, err := os.Create(path.Join(globalOpts.Home, "mole.ini"))
+	fd, err := os.Create(path.Join(homeDir, "mole.ini"))
 	fatalErr(err)
 	err = moleIni.Write(fd)
 	fatalErr(err)

@@ -52,7 +52,7 @@ func bashcompCommand(args []string) error {
 		TunnelCommands []string
 		FileCommands   []string
 	}{
-		path.Join(globalOpts.Home, "tunnels.cache"),
+		path.Join(homeDir, "tunnels.cache"),
 		[]string{"dig", "ls", "push", "register", "show", "test", "upgrade", "version", "rm"},
 		[]string{"dig", "show", "test", "rm"},
 		[]string{"push"},

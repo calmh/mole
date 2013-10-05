@@ -70,7 +70,7 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 		return nil, err
 	}
 
-	if globalOpts.Debug {
+	if debugEnabled {
 		cmd.Stderr = os.Stderr
 	}
 

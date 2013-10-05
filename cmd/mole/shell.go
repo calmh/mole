@@ -38,7 +38,7 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 	go func() {
 		for {
 			prompt := "mole> "
-			if globalOpts.Debug {
+			if debugEnabled {
 				prompt = "(debug) mole> "
 			}
 			cmd, err := term.Prompt(prompt)
@@ -98,7 +98,7 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 			}
 		case "debug":
 			infoln(msgDebugEnabled)
-			globalOpts.Debug = true
+			debugEnabled = true
 		case "fwd":
 			if len(parts) != 3 {
 				warnf(msgErrIncorrectFwd, cmd)
