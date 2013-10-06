@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -12,24 +13,33 @@ func init() {
 func versionCommand(args []string) error {
 	printVersion()
 
-	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
-	if ver := cl.ServerVersion(); ver != "" {
-		infof("Server version:")
-		infof("  %s", ver)
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	build, err := latestBuild()
-	if err == nil {
-		infoln("Latest client version:")
-		infof("  %s", build.Version)
-
-		bd := time.Unix(int64(build.BuildStamp), 0)
-		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
-			warnln("Run 'mole upgrade'.")
-		} else {
-			okln(msgLatest)
+	go func() {
+		cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
+		if ver := cl.ServerVersion(); ver != "" {
+			infof("Server version:\n  %s", ver)
 		}
-	}
+		wg.Done()
+	}()
+
+	go func() {
+		build, err := latestBuild()
+		if err == nil {
+			infof("Latest client version:\n  %s", build.Version)
+
+			bd := time.Unix(int64(build.BuildStamp), 0)
+			if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
+				warnln("Run 'mole upgrade'.")
+			} else {
+				okln(msgLatest)
+			}
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
 
 	return nil
 }
