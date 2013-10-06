@@ -133,6 +133,26 @@ func (c *Client) Ping() (string, error) {
 	return string(data), err
 }
 
+func (c *Client) ServerVersion() string {
+	url := "http://" + c.host + "/ping"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return ""
+	}
+
+	req.Header.Set("User-Agent", "mole/"+clientVersion)
+	req.Header.Set("X-Mole-Version", clientVersion)
+	req.Header.Set("X-Mole-Ticket", c.Ticket)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return ""
+	}
+	resp.Body.Close()
+
+	return resp.Header.Get("X-Mole-Version")
+}
+
 func (c *Client) List() ([]ListItem, error) {
 	t0 := time.Now()
 

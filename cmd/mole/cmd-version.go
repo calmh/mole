@@ -12,9 +12,15 @@ func init() {
 func versionCommand(args []string) error {
 	printVersion()
 
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
+	if ver := cl.ServerVersion(); ver != "" {
+		infof("Server version:")
+		infof("  %s", ver)
+	}
+
 	build, err := latestBuild()
 	if err == nil {
-		infoln("Latest version:")
+		infoln("Latest client version:")
 		infof("  %s", build.Version)
 
 		bd := time.Unix(int64(build.BuildStamp), 0)
@@ -29,7 +35,7 @@ func versionCommand(args []string) error {
 }
 
 func printVersion() {
-	infof("Current version (mole %s-%s):", runtime.GOOS, runtime.GOARCH)
+	infof("Client version (mole %s-%s):", runtime.GOOS, runtime.GOARCH)
 	if buildVersion != "" {
 		infof("  %s", buildVersion)
 	}
