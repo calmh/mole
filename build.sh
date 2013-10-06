@@ -2,7 +2,7 @@
 
 pkg=github.com/calmh/mole
 buildstamp=$(date +%s)
-buildver=$(git describe --always)
+buildver=$(git describe --always --dirty)
 builduser="$(whoami)@$(hostname)"
 ldflags="-w -X main.buildStamp '$buildstamp' -X main.buildVersion '$buildver' -X main.buildUser '$builduser'"
 
