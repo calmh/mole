@@ -10,6 +10,7 @@ const (
 	msgShowUsage     = "mole [global-options] show [options] <tunnel>"
 	msgTestUsage     = "mole [global-options] test [options] <tunnel>"
 	msgUpgradeUsage  = "mole [global-options] upgrade [options]"
+	msgVersionUsage  = "mole [global-options] version [options]"
 
 	msgDigShort      = "Dig tunnel"
 	msgInstallShort  = "Install package"
