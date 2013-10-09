@@ -34,8 +34,6 @@ The `general` section contains four mandatory elements;
   - `main` - Name of the host to connect to when the tunnel definition is
     invoked.
   - `version` - Configuration format version. Current version is `3.2`.
-  - `aliases[]` - An array of extra name to IP mappings (white space separated)
-    to insert into the hosts file. (Optional)
 
 ### Example
 
@@ -43,8 +41,6 @@ The `general` section contains four mandatory elements;
     author = Jakob Borg <jakob@example.com>
     main = op1prod
     version = 3
-    aliases[] = srv1 127.0.0.1
-    aliases[] = srv2 127.0.0.2
 
 Section `hosts`
 ---------------
