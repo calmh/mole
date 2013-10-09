@@ -73,4 +73,14 @@ const (
 	msgLatest       = "You are running the latest version."
 	msgAutoUpgrades = "Mole uses automatic upgrades to keep your client up to date. To disable these automatic upgrades (which is a bad idea for most users) or silence this message, see 'mole upgrade -help'."
 	msgUpdatedHost  = "Updated configured server name to %q."
+
+	msgLsFlags = `  o····  Requires OpenConnect
+  v····  Requires vpnc
+  ·k···  Uses SSH with key authentication
+  ··p··  Uses SSH with password authentication
+  ···l·  Uses local (non-SSH) forwards
+  ···s·  Uses SOCKS proxy
+  ····E  Parse or access error reading tunnel
+  ····U  Unknown or unsupported features required
+`
 )

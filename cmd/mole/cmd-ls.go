@@ -17,15 +17,19 @@ func init() {
 }
 
 func commandLs(args []string) error {
-	fs := flag.NewFlagSet("ls", flag.ExitOnError)
+	fs := flag.NewFlagSet("ls", flag.ContinueOnError)
 	short := fs.Bool("s", false, "Short listing")
 	long := fs.Bool("l", false, "Long listing")
 	fs.Usage = usageFor(fs, msgLsUsage)
-	fs.Parse(args)
+	err := fs.Parse(args)
+	if err != nil {
+		fmt.Println(ansi.Bold("Feature Flags:"))
+		fmt.Println(msgLsFlags)
+		os.Exit(3)
+	}
 	args = fs.Args()
 
 	var re *regexp.Regexp
-	var err error
 	if len(args) == 1 {
 		re, err = regexp.Compile("(?i)" + args[0])
 		fatalErr(err)
