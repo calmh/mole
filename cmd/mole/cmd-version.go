@@ -70,4 +70,5 @@ func printVersion() {
 	if !buildDate.IsZero() {
 		infof("  %v by %s", buildDate, buildUser)
 	}
+	infof("  %s", runtime.Version())
 }
