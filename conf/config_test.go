@@ -22,24 +22,24 @@ type TestCase struct {
 }
 
 var validationCases = []TestCase{
-	TestCase{"valid-*.ini", ""}, // All valid files are valid
-	TestCase{"inv-*.ini", "."},  // All invalid files are invalid; more specific checks below
-	TestCase{"inv-nover.ini", `missing required field "version"`},
-	TestCase{"inv-nodescr.ini", `missing required field "description"`},
-	TestCase{"inv-noauthor.ini", `missing required field "author"`},
-	TestCase{"inv-unknown.ini", `unrecognized field "unrecognized"`},
-	TestCase{"inv-nohosts-nofwds.ini", `either "hosts" or "forwards"`},
-	TestCase{"inv-nosuchmain.ini", `nonexistent host "foo"`},
-	TestCase{"inv-nosuchvia.ini", `nonexistent host "tac2"`},
-	TestCase{"inv-unknhostattrs.ini", `unrecognized field "foo"`},
-	TestCase{"inv-fwdcomment.ini", `forward comments`},
-	TestCase{"inv-duplfwd.ini", `duplicate forward source "127.0.0.1:8443"`},
-	TestCase{"inv-lowport.ini", `privileged source port 443`},
-	TestCase{"inv-nohostaddr.ini", `required field "addr"`},
-	TestCase{"inv-nohostuser.ini", `required field "user"`},
-	TestCase{"inv-nohostpasskey.ini", `required field "password" or "key"`},
-	TestCase{"inv-badfwd*.ini", `malformed forward`},
-	TestCase{"inv-socksvia.ini", `"socks" and "via"`},
+	{"valid-*.ini", ""}, // All valid files are valid
+	{"inv-*.ini", "."},  // All invalid files are invalid; more specific checks below
+	{"inv-nover.ini", `missing required field "version"`},
+	{"inv-nodescr.ini", `missing required field "description"`},
+	{"inv-noauthor.ini", `missing required field "author"`},
+	{"inv-unknown.ini", `unrecognized field "unrecognized"`},
+	{"inv-nohosts-nofwds.ini", `either "hosts" or "forwards"`},
+	{"inv-nosuchmain.ini", `nonexistent host "foo"`},
+	{"inv-nosuchvia.ini", `nonexistent host "tac2"`},
+	{"inv-unknhostattrs.ini", `unrecognized field "foo"`},
+	{"inv-fwdcomment.ini", `forward comments`},
+	{"inv-duplfwd.ini", `duplicate forward source "127.0.0.1:8443"`},
+	{"inv-lowport.ini", `privileged source port 443`},
+	{"inv-nohostaddr.ini", `required field "addr"`},
+	{"inv-nohostuser.ini", `required field "user"`},
+	{"inv-nohostpasskey.ini", `required field "password" or "key"`},
+	{"inv-badfwd*.ini", `malformed forward`},
+	{"inv-socksvia.ini", `"socks" and "via"`},
 }
 
 func TestValidations(t *testing.T) {
