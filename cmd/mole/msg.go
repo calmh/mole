@@ -26,7 +26,7 @@ const (
 	msgDebugEnabled = "Debug output enabled."
 
 	msgErrGainRoot         = "Error: missing root privileges to execute %q.\nTo give mole root access, execute it using sudo. Mole itself drops root privilege on startup and executes as the non privileged user. However, child processes such as ifconfig will inherit the saved user ID and have the ability to become root as necessary."
-	msgErrNoVPN            = "No VPN provider for %q available."
+	msgErrNoVPN            = "No VPN provider for %q available. Try 'mole install' to see what packages are available or use the packaging system native to your platform."
 	msgErrIncorrectFwd     = "Badly formatted fwd command %q."
 	msgErrIncorrectFwdSrc  = "Badly formatted fwd source %q."
 	msgErrIncorrectFwdDst  = "Badly formatted fwd destination %q."
@@ -51,11 +51,9 @@ const (
 	msgDownloadingUpgrade = "Downloading upgrade..."
 	msgUpgraded           = "Upgraded your mole to %s."
 
-	msgFileNotInit     = "File %q should have .ini extension"
-	msgOkPushed        = "Pushed %q"
-	msgErrNoTunModule  = "Required tunnel module (kernel extension) not available and not loadable."
-	msgVpncUnavailable = "I cant't find a working vpnc on your system. Tunnels having the \"v\" flag will not work. Consider installing vpnc. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
-	msgOpncUnavailable = "I cant't find a working OpenConnect on your system. Tunnels having the \"o\" flag will not work. Consider installing OpenConnect. On Mac OS X, try 'mole install' to see available packages. On Linux, do whatever your distribution recommends."
+	msgFileNotInit    = "File %q should have .ini extension"
+	msgOkPushed       = "Pushed %q"
+	msgErrNoTunModule = "Required tunnel module (kernel extension) not available and not loadable."
 
 	msgNeedsAuth       = "Authentication required. Enter your LDAP credentials."
 	msgUsername        = "Username: "

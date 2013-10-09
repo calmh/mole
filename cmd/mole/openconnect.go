@@ -28,7 +28,6 @@ func init() {
 			return
 		}
 	}
-	warnln(msgOpncUnavailable)
 }
 
 type OpenConnect struct {

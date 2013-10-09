@@ -31,7 +31,6 @@ func init() {
 			return
 		}
 	}
-	warnln(msgVpncUnavailable)
 }
 
 type Vpnc struct {
