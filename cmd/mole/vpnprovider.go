@@ -22,3 +22,8 @@ func startVpn(provider string, cfg *conf.Config) (VPN, error) {
 	}
 	return prov.Start(cfg)
 }
+
+func supportsVpn(provider string) bool {
+	_, ok := vpnProviders[provider]
+	return ok
+}

@@ -85,14 +85,18 @@ func commandLs(args []string) error {
 
 				if hasFeatureFlags {
 					flags := ""
-					var spacer = "·"
+					spacer := "·"
+					unsupported := i.Features & ^(conf.FeatureError|conf.FeatureSshKey|conf.FeatureSshPassword|conf.FeatureLocalOnly|conf.FeatureVpnc|conf.FeatureOpenConnect|conf.FeatureSocks) != 0
+
 					if i.Features&conf.FeatureError != 0 {
 						flags = strings.Repeat(spacer, 4) + "E"
 					} else {
 						if i.Features&conf.FeatureVpnc != 0 {
 							flags += "v"
+							unsupported = unsupported || !supportsVpn("vpnc")
 						} else if i.Features&conf.FeatureOpenConnect != 0 {
 							flags += "o"
+							unsupported = unsupported || !supportsVpn("openconnect")
 						} else {
 							flags += spacer
 						}
@@ -117,7 +121,7 @@ func commandLs(args []string) error {
 							flags += spacer
 						}
 
-						if i.Features & ^(conf.FeatureError|conf.FeatureSshKey|conf.FeatureSshPassword|conf.FeatureLocalOnly|conf.FeatureVpnc|conf.FeatureOpenConnect|conf.FeatureSocks) != 0 {
+						if unsupported {
 							flags += "U"
 						} else {
 							flags += spacer
@@ -160,6 +164,8 @@ func tableFormatter(cell string, row, col, flags int) string {
 		return ansi.Underline(cell)
 	} else if col == 0 {
 		return ansi.Bold(ansi.Cyan(cell))
+	} else if col == 1 && (strings.HasSuffix(cell, "U") || strings.HasSuffix(cell, "E")) {
+		return ansi.Red(cell)
 	} else if flags&table.Truncated != 0 {
 		return cell[:len(cell)-1] + ansi.Red(">")
 	}
