@@ -181,6 +181,8 @@ func autoUpgrade() {
 					infoln(msgAutoUpgrades)
 				}
 				okf(msgUpgraded, build.Version)
+			} else {
+				warnln("Automatic upgrade failed:", err)
 			}
 		}
 	}
