@@ -89,50 +89,19 @@ func commandDig(args []string) error {
 		fatalErr(err)
 		dialer = sshConn
 
-		// A REALY dirty keepalive mechanism.
-		sess, err := sshConn.NewSession()
-		fatalErr(err)
-		stdout, err := sess.StdoutPipe()
-		fatalErr(err)
-		stderr, err := sess.StderrPipe()
-		fatalErr(err)
-		stdin, err := sess.StdinPipe()
-		fatalErr(err)
-		err = sess.Shell()
-		fatalErr(err)
-
 		go func() {
-			bs := make([]byte, 1024)
-			for {
-				debugln("shell read stdout")
-				_, err := stdout.Read(bs)
-				if err != nil {
-					warnln("keepalive stdout", err)
-					return
-				}
-			}
-		}()
-
-		go func() {
-			bs := make([]byte, 1024)
-			for {
-				debugln("shell read stderr")
-				_, err := stderr.Read(bs)
-				if err != nil {
-					warnln("keepalive stderr", err)
-					return
-				}
-			}
-		}()
-
-		go func() {
-			for {
-				time.Sleep(30 * time.Second)
-				debugln("shell write")
-				_, err := stdin.Write([]byte("\n"))
-				if err != nil {
-					warnln("keepalive stdin", err)
-					return
+			// Periodically connect to a forward to provide a primitive keepalive mechanism.
+			for _, fwd := range cfg.Forwards {
+				for _, line := range fwd.Lines {
+					debugln("keepalive dial", line.DstString(0))
+					conn, err := dialer.Dial("tcp", line.DstString(0))
+					if err != nil {
+						debugln("keepalive dial", err)
+					}
+					if conn != nil {
+						conn.Close()
+					}
+					time.Sleep(30 * time.Second)
 				}
 			}
 		}()
