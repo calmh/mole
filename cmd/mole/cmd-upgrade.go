@@ -60,11 +60,8 @@ func upgradeCommand(args []string) error {
 		infoln(msgDownloadingUpgrade)
 
 		err = upgrade.UpgradeTo(build)
-		if err != nil {
-			return err
-		} else {
-			okf(msgUpgraded, build.Version)
-		}
+		fatalErr(err)
+		okf(msgUpgraded, build.Version)
 	} else {
 		okln(msgLatest)
 	}
