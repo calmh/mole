@@ -17,6 +17,8 @@ func init() {
 	commands["dig"] = command{commandDig, msgDigShort}
 }
 
+const keepaliveInterval = 45 * time.Second
+
 func commandDig(args []string) error {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
@@ -91,18 +93,28 @@ func commandDig(args []string) error {
 
 		go func() {
 			// Periodically connect to a forward to provide a primitive keepalive mechanism.
-			for _, fwd := range cfg.Forwards {
-				for _, line := range fwd.Lines {
-					debugln("keepalive dial", line.DstString(0))
-					conn, err := dialer.Dial("tcp", line.DstString(0))
-					if err != nil {
-						debugln("keepalive dial", err)
+			i := 0
+			for {
+				for _, fwd := range cfg.Forwards {
+					for _, line := range fwd.Lines {
+						time.Sleep(keepaliveInterval)
+						go func(line conf.ForwardLine) {
+							x := 0
+							if line.Repeat > 0 {
+								x = i % line.Repeat
+							}
+							debugln("keepalive dial", line.DstString(x))
+							conn, err := dialer.Dial("tcp", line.DstString(x))
+							if err != nil {
+								debugln("keepalive dial", err)
+							}
+							if conn != nil {
+								conn.Close()
+							}
+						}(line)
 					}
-					if conn != nil {
-						conn.Close()
-					}
-					time.Sleep(30 * time.Second)
 				}
+				i++
 			}
 		}()
 	}
