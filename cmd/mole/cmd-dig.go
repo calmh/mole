@@ -106,7 +106,10 @@ func commandDig(args []string) error {
 			for {
 				debugln("shell read stdout")
 				_, err := stdout.Read(bs)
-				fatalErr(err)
+				if err != nil {
+					warnln("keepalive stdout", err)
+					return
+				}
 			}
 		}()
 
@@ -115,7 +118,10 @@ func commandDig(args []string) error {
 			for {
 				debugln("shell read stderr")
 				_, err := stderr.Read(bs)
-				fatalErr(err)
+				if err != nil {
+					warnln("keepalive stderr", err)
+					return
+				}
 			}
 		}()
 
@@ -124,7 +130,10 @@ func commandDig(args []string) error {
 				time.Sleep(30 * time.Second)
 				debugln("shell write")
 				_, err := stdin.Write([]byte("\n"))
-				fatalErr(err)
+				if err != nil {
+					warnln("keepalive stdin", err)
+					return
+				}
 			}
 		}()
 	}
