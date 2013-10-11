@@ -11,7 +11,7 @@ func init() {
 	commands["version"] = command{versionCommand, msgVersionShort}
 }
 
-func versionCommand(args []string) error {
+func versionCommand(args []string) {
 	fs := flag.NewFlagSet("version", flag.ExitOnError)
 	server := fs.Bool("s", false, "Show server version")
 	client := fs.Bool("c", false, "Show client version")
@@ -58,8 +58,6 @@ func versionCommand(args []string) error {
 
 		wg.Wait()
 	}
-
-	return nil
 }
 
 func printVersion() {

@@ -31,7 +31,7 @@ func latestBuild() (build upgrade.Build, err error) {
 	return
 }
 
-func upgradeCommand(args []string) error {
+func upgradeCommand(args []string) {
 	fs := flag.NewFlagSet("upgrade", flag.ExitOnError)
 	force := fs.Bool("force", false, "Perform upgrade to same or older version")
 	disableAuto := fs.Bool("disable-auto", false, "Disable automatic upgrades")
@@ -48,7 +48,7 @@ func upgradeCommand(args []string) error {
 		moleIni.Set("upgrades", "automatic", upgrades)
 		saveMoleIni()
 		okf("Automatic upgrades set to %q", upgrades)
-		return nil
+		return
 	}
 
 	build, err := latestBuild()
@@ -65,6 +65,4 @@ func upgradeCommand(args []string) error {
 	} else {
 		okln(msgLatest)
 	}
-
-	return nil
 }

@@ -19,7 +19,7 @@ func init() {
 
 const keepaliveInterval = 45 * time.Second
 
-func commandDig(args []string) error {
+func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
@@ -61,7 +61,7 @@ func commandDig(args []string) error {
 	fatalErr(err)
 
 	if cfg == nil {
-		return fmt.Errorf("no tunnel loaded")
+		fatalln("no tunnel loaded")
 	}
 
 	var addrs []string
@@ -141,8 +141,6 @@ func commandDig(args []string) error {
 
 	okln("Done")
 	printTotalStats()
-
-	return nil
 }
 
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {

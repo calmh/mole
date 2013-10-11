@@ -13,7 +13,7 @@ func init() {
 	commands["push"] = command{pushCommand, msgPushShort}
 }
 
-func pushCommand(args []string) error {
+func pushCommand(args []string) {
 	fs := flag.NewFlagSet("push", flag.ExitOnError)
 	fs.Usage = usageFor(fs, msgPushUsage)
 	fs.Parse(args)
@@ -49,5 +49,4 @@ func pushCommand(args []string) error {
 	fatalErr(err)
 
 	okf(msgOkPushed, tunnelname)
-	return nil
 }

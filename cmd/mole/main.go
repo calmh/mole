@@ -28,7 +28,7 @@ var (
 var moleIni ini.File
 
 type command struct {
-	fn    func([]string) error
+	fn    func([]string)
 	descr string
 }
 

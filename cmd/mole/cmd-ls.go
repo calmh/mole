@@ -16,7 +16,7 @@ func init() {
 	commands["ls"] = command{commandLs, msgLsShort}
 }
 
-func commandLs(args []string) error {
+func commandLs(args []string) {
 	fs := flag.NewFlagSet("ls", flag.ContinueOnError)
 	short := fs.Bool("s", false, "Short listing")
 	long := fs.Bool("l", false, "Long listing")
@@ -156,7 +156,6 @@ func commandLs(args []string) error {
 			fmt.Printf(ansi.Faint(" - Matched %d out of %d records\n"), matched, len(l))
 		}
 	}
-	return nil
 }
 
 func tableFormatter(cell string, row, col, flags int) string {

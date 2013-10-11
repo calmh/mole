@@ -9,7 +9,7 @@ func init() {
 	commands["rm"] = command{rmCommand, msgRmShort}
 }
 
-func rmCommand(args []string) error {
+func rmCommand(args []string) {
 	fs := flag.NewFlagSet("rm", flag.ExitOnError)
 	fs.Usage = usageFor(fs, msgPushUsage)
 	fs.Parse(args)
@@ -29,5 +29,4 @@ func rmCommand(args []string) error {
 	fatalErr(err)
 
 	okf(msgOkDeleted, tunnelname)
-	return nil
 }

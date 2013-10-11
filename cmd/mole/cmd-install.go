@@ -15,7 +15,7 @@ func init() {
 	commands["install"] = command{installCommand, msgInstallShort}
 }
 
-func installCommand(args []string) error {
+func installCommand(args []string) {
 	fs := flag.NewFlagSet("install", flag.ExitOnError)
 	fs.Usage = usageFor(fs, msgInstallUsage)
 	fs.Parse(args)
@@ -69,6 +69,4 @@ func installCommand(args []string) error {
 
 		okln("Installed")
 	}
-
-	return nil
 }

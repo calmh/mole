@@ -22,7 +22,7 @@ func hexBytes(bs []byte) string {
 	return str
 }
 
-func registerCommand(args []string) error {
+func registerCommand(args []string) {
 	fs := flag.NewFlagSet("register", flag.ExitOnError)
 	port := fs.Int("port", 9443, "Server port number")
 	fs.Usage = usageFor(fs, msgRegisterUsage)
@@ -49,5 +49,4 @@ func registerCommand(args []string) error {
 	infof("%s", randomart.Generate(fp, "mole"))
 	infoln(fpstr)
 	okf(msgRegistered, args[0])
-	return nil
 }

@@ -13,7 +13,7 @@ func init() {
 	commands["show"] = command{showCommand, msgShowShort}
 }
 
-func showCommand(args []string) error {
+func showCommand(args []string) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
 	raw := fs.Bool("r", false, "Show raw tunnel file")
 	fs.Usage = usageFor(fs, msgShowUsage)
@@ -64,6 +64,4 @@ func showCommand(args []string) error {
 			}
 		}
 	}
-
-	return nil
 }

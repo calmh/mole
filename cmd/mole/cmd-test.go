@@ -13,7 +13,7 @@ func init() {
 	commands["test"] = command{testCommand, msgTestShort}
 }
 
-func testCommand(args []string) error {
+func testCommand(args []string) {
 	fs := flag.NewFlagSet("test", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	fs.Usage = usageFor(fs, msgTestUsage)
@@ -50,7 +50,7 @@ func testCommand(args []string) error {
 	}
 
 	if cfg == nil {
-		return fmt.Errorf("no tunnel loaded")
+		fatalln("no tunnel loaded")
 	}
 
 	var vpn VPN
@@ -92,5 +92,4 @@ func testCommand(args []string) error {
 		warnln(msg)
 		os.Exit(1)
 	}
-	return nil
 }

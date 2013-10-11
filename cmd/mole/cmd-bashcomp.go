@@ -45,7 +45,7 @@ func init() {
 	commands["bashcomp"] = command{bashcompCommand, ""}
 }
 
-func bashcompCommand(args []string) error {
+func bashcompCommand(args []string) {
 	compData := struct {
 		CacheFile      string
 		AllCommands    []string
@@ -59,5 +59,4 @@ func bashcompCommand(args []string) error {
 	}
 
 	_ = compTpl.Execute(os.Stdout, compData)
-	return nil
 }
