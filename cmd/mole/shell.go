@@ -215,13 +215,15 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 						}()
 
 						t0 := time.Now()
+
 						go func() {
 							conn, err := dialer.Dial("tcp", line.DstString(i))
 							if conn != nil {
-								defer conn.Close()
+								conn.Close()
 							}
 							subres <- err
 						}()
+
 						err := <-subres
 						ms := time.Since(t0).Seconds() * 1000
 

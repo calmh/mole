@@ -95,7 +95,7 @@ func (p VPNCProvider) Start(cfg *conf.Config) (VPN, error) {
 			spaces := regexp.MustCompile(`\s+`)
 			msg := strings.Replace(stderrbuf.String(), "\n", "; ", -1)
 			msg = spaces.ReplaceAllString(msg, " ")
-			return nil, fmt.Errorf(msg)
+			return nil, fmt.Errorf("vpnc: %s", msg)
 		}
 
 		if err != nil {
