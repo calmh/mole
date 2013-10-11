@@ -16,6 +16,7 @@ func init() {
 func showCommand(args []string) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
 	raw := fs.Bool("r", false, "Show raw tunnel file")
+	toxml := fs.Bool("x", false, "Show XML tunnel file")
 	fs.Usage = usageFor(fs, msgShowUsage)
 	fs.Parse(args)
 	args = fs.Args()
@@ -33,6 +34,10 @@ func showCommand(args []string) {
 	if *raw {
 		// No log function, since it must be possible to pipe to a valid file
 		fmt.Printf(tun)
+	} else if *toxml {
+		cfg, err := conf.Load(bytes.NewBufferString(tun))
+		fatalErr(err)
+		cfg.WriteXML(os.Stdout)
 	} else {
 		cfg, err := conf.Load(bytes.NewBufferString(tun))
 		fatalErr(err)

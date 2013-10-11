@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"encoding/xml"
 	"fmt"
 	"github.com/calmh/mole/ini"
 	"io"
@@ -25,52 +26,57 @@ const (
 // Config is a complete tunnel configuration
 type Config struct {
 	General struct {
-		Description string
-		Author      string
-		Main        string
-		Version     int
-		Other       KeyValueList
-	}
+		Description  string       `xml:"description"`
+		AuthorName   string       `xml:"author>name"`
+		AuthorEmail  string       `xml:"author>email"`
+		Main         string       `xml:"main,omitempty"`
+		Version      int          `xml:"-"`
+		VersionFloat float64      `xml:"version,attr"`
+		Other        KeyValueList `xml:"other,omitempty"`
+	} `xml:"meta"`
 
-	Hosts       []Host
-	Forwards    []Forward
-	OpenConnect KeyValueList
-	Vpnc        KeyValueList
-	VpnRoutes   []string
+	Hosts       []Host       `xml:"host"`
+	Forwards    []Forward    `xml:"forward"`
+	OpenConnect KeyValueList `xml:"openconnect>opt,omitempty"`
+	Vpnc        KeyValueList `xml:"vpnc>opt,omitempty"`
+	VpnRoutes   []string     `xml:"vpnroutes>prefix,omitempty"`
+
+	XMLName struct{} `xml:"tunnel"`
 }
 
 // Host is an SSH host to bounce via
 type Host struct {
-	Name  string
-	Addr  string
-	Port  int
-	User  string
-	Key   string
-	Pass  string
-	Via   string
-	SOCKS string
-	Other KeyValueList
+	Name  string       `xml:"name,attr"`
+	Addr  string       `xml:"addr,attr"`
+	Port  int          `xml:"port,attr"`
+	User  string       `xml:"user"`
+	Key   string       `xml:"key,omitempty"`
+	Pass  string       `xml:"password,omitempty"`
+	Via   string       `xml:"via,omitempty"`
+	SOCKS string       `xml:"socks,omitempty"`
+	Other KeyValueList `xml:"other,omitempty"`
 }
 
 // Forward is a port forwarding directive
 type Forward struct {
-	Name    string
-	Lines   []ForwardLine
-	Comment string
+	Name    string        `xml:"name,attr"`
+	Lines   []ForwardLine `xml:"line"`
+	Comment string        `xml:",comment"`
 }
 
 // ForwardLine is a specific port or range or ports to forward
 type ForwardLine struct {
-	SrcIP   string
-	SrcPort int
-	DstIP   string
-	DstPort int
-	Repeat  int
+	SrcIP   string `xml:"srcip,attr"`
+	SrcPort int    `xml:"srcport,attr"`
+	DstIP   string `xml:"dstip,attr"`
+	DstPort int    `xml:"dstport,attr"`
+	Repeat  int    `xml:"repeat,attr,omitempty"`
 }
 
 // KeyValue is a simple key = value binding
 type KeyValue struct {
-	Key, Value string
+	Key   string `xml:"key,attr"`
+	Value string `xml:"value,attr"`
 }
 
 // KeyValueList is a slice of KeyValues
@@ -195,4 +201,12 @@ func (c *Config) GetHost(name string) *Host {
 		}
 	}
 	return nil
+}
+
+func (c *Config) WriteXML(w io.Writer) (int, error) {
+	bs, err := xml.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return 0, err
+	}
+	return w.Write(bs)
 }

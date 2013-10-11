@@ -105,16 +105,22 @@ func parseGeneral(c *Config, options map[string]string) (err error) {
 		case "description":
 			c.General.Description = v
 		case "author":
-			c.General.Author = v
+			authorRe := regexp.MustCompile(`(.+) <(.+)>`)
+			ms := authorRe.FindStringSubmatch(v)
+			if len(ms) == 3 {
+				c.General.AuthorName = ms[1]
+				c.General.AuthorEmail = ms[2]
+			} else {
+				c.General.AuthorName = v
+			}
 		case "main":
 			c.General.Main = v
 		case "version":
-			var f float64
-			_, err = fmt.Sscan(v, &f)
+			_, err = fmt.Sscan(v, &c.General.VersionFloat)
 			if err != nil {
 				return
 			}
-			c.General.Version = int(100 * f)
+			c.General.Version = int(100 * c.General.VersionFloat)
 		default:
 			c.General.Other = append(c.General.Other, KeyValue{k, v})
 		}
