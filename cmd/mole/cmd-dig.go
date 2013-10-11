@@ -147,7 +147,7 @@ func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
 		infoln(ansi.Bold(ansi.Cyan(fwd.Name)))
 		if fwd.Comment != "" {
-			lines := strings.Split(fwd.Comment, "\\n") // Yes, literal backslash-n
+			lines := strings.Split(fwd.Comment, "\n")
 			for i := range lines {
 				infoln(ansi.Cyan("  # " + lines[i]))
 			}

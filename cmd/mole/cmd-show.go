@@ -54,7 +54,7 @@ func showCommand(args []string) {
 		for _, fwd := range cfg.Forwards {
 			infof("Forward %q", fwd.Name)
 			if fwd.Comment != "" {
-				lines := strings.Split(fwd.Comment, "\\n") // Yes, literal backslash-n
+				lines := strings.Split(fwd.Comment, "\n")
 				for i := range lines {
 					infoln("  # " + lines[i])
 				}

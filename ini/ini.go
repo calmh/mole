@@ -79,6 +79,7 @@ func Parse(stream io.Reader) File {
 				curSection = section{name: m[1]}
 			} else if m := iniOptionRe.FindStringSubmatch(line); len(m) > 0 {
 				val := strings.Trim(m[2], `"`)
+				val = strings.Replace(val, "\\n", "\n", -1)
 				curSection.options = append(curSection.options, option{m[1], val})
 			}
 		}

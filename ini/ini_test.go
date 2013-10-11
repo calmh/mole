@@ -3,11 +3,22 @@ package ini_test
 import (
 	"bytes"
 	"github.com/calmh/mole/ini"
+	"strings"
 	"testing"
 )
 
 func TestParse(t *testing.T) {
-	buf := bytes.NewBufferString("[general]\nfoo=bar\nbaz    = foo quux \n;comment\nws=\"with some spaces  \"\n baz2 = 32 \n")
+	strs := []string{
+		"[general]",
+		"foo=bar",
+		"baz    = foo quux ",
+		"; comment",
+		`ws="with some spaces  "`,
+		`wn="with\nnewline"`,
+		" baz2 = 32 ",
+	}
+	instr := strings.Join(strs, "\n")
+	buf := bytes.NewBufferString(instr)
 	inf := ini.Parse(buf)
 
 	if l := len(inf.Sections()); l != 1 {
@@ -19,6 +30,7 @@ func TestParse(t *testing.T) {
 		"baz":   "foo quux",
 		"baz2":  "32",
 		"ws":    "with some spaces  ",
+		"wn":    "with\nnewline",
 		"other": "",
 	}
 
@@ -28,10 +40,10 @@ func TestParse(t *testing.T) {
 		}
 	}
 
-	if opts := inf.Options("general"); len(opts) != 4 {
+	if opts := inf.Options("general"); len(opts) != 5 {
 		t.Errorf("incorrect #options %d", len(opts))
 	} else {
-		correct := []string{"foo", "baz", "ws", "baz2"}
+		correct := []string{"foo", "baz", "ws", "wn", "baz2"}
 		for i := range correct {
 			if opts[i] != correct[i] {
 				t.Errorf("incorrect option #%d, %q != %q", i, opts[i], correct[i])
