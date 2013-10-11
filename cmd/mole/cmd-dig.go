@@ -161,8 +161,7 @@ func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 
 func sshPathStr(hostname string, cfg *conf.Config) string {
 	var this string
-	if hostID, ok := cfg.HostsMap[hostname]; ok {
-		host := cfg.Hosts[hostID]
+	if host := cfg.GetHost(hostname); host != nil {
 		this = fmt.Sprintf("ssh://%s@%s", host.User, host.Name)
 
 		if host.Via != "" {
@@ -176,14 +175,14 @@ func sshPathStr(hostname string, cfg *conf.Config) string {
 
 	if hostname == cfg.General.Main || hostname == "" {
 		if cfg.Vpnc != nil {
-			vpnc := fmt.Sprintf("vpnc://%s", cfg.Vpnc["IPSec_gateway"])
+			vpnc := fmt.Sprintf("vpnc://%s", cfg.Vpnc.Get("IPSec_gateway"))
 			if this == "" {
 				return vpnc
 			} else {
 				this = vpnc + " -> " + this
 			}
 		} else if cfg.OpenConnect != nil {
-			opnc := fmt.Sprintf("openconnect://%s", cfg.OpenConnect["server"])
+			opnc := fmt.Sprintf("openconnect://%s", cfg.OpenConnect.Get("server"))
 			if this == "" {
 				return opnc
 			} else {

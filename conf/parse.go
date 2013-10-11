@@ -12,8 +12,6 @@ var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`
 
 func parse(i ini.File) (cp *Config, err error) {
 	c := Config{}
-	c.General.Other = make(map[string]string)
-	c.HostsMap = make(map[string]int)
 
 	for _, section := range i.Sections() {
 		options := i.OptionMap(section)
@@ -34,12 +32,14 @@ func parse(i ini.File) (cp *Config, err error) {
 				return nil, err
 			}
 		} else if section == "openconnect" {
-			c.OpenConnect = options
+			c.OpenConnect = getKVs(i, section)
 		} else if section == "vpnc" {
-			c.Vpnc = options
+			c.Vpnc = getKVs(i, section)
 		} else if section == "vpn routes" {
-			for net, mask := range options {
-				c.VpnRoutes = append(c.VpnRoutes, net+"/"+mask)
+			nets := i.Options(section)
+			c.VpnRoutes = make([]string, len(nets))
+			for j, net := range nets {
+				c.VpnRoutes[j] = net + "/" + i.Get(section, net)
 			}
 		}
 	}
@@ -52,7 +52,7 @@ func parse(i ini.File) (cp *Config, err error) {
 
 	// Check for nonexistant "main"
 	if c.General.Main != "" {
-		if _, ok := c.HostsMap[c.General.Main]; !ok {
+		if h := c.GetHost(c.General.Main); h == nil {
 			err = fmt.Errorf(`"main" refers to nonexistent host %q`, c.General.Main)
 			return
 		}
@@ -61,7 +61,7 @@ func parse(i ini.File) (cp *Config, err error) {
 	for _, host := range c.Hosts {
 		// Check for errors in "via" links
 		if host.Via != "" {
-			if _, ok := c.HostsMap[host.Via]; !ok {
+			if h := c.GetHost(host.Via); h == nil {
 				err = fmt.Errorf(`host %q "via" refers to nonexistent host %q`, host.Name, host.Via)
 				return
 			}
@@ -116,13 +116,13 @@ func parseGeneral(c *Config, options map[string]string) (err error) {
 			}
 			c.General.Version = int(100 * f)
 		default:
-			c.General.Other[k] = v
+			c.General.Other = append(c.General.Other, KeyValue{k, v})
 		}
 	}
 
 	if c.General.Version < 400 {
-		for k := range c.General.Other {
-			return fmt.Errorf("unrecognized field %q in section general not permitted by config version %d", k, c.General.Version)
+		for _, kv := range c.General.Other {
+			return fmt.Errorf("unrecognized field %q in section general not permitted by config version %d", kv.Key, c.General.Version)
 		}
 	}
 
@@ -148,7 +148,7 @@ func parseHost(c *Config, section string, options map[string]string) (err error)
 		Name: name,
 		Port: defaultSSHPort,
 	}
-	host.Other = make(map[string]string)
+
 	for k, v := range options {
 		switch k {
 		case "addr":
@@ -172,15 +172,14 @@ func parseHost(c *Config, section string, options map[string]string) (err error)
 		case "prompt":
 			// legacy, ignored
 		default:
-			host.Other[k] = v
+			host.Other = append(host.Other, KeyValue{k, v})
 		}
 	}
 	c.Hosts = append(c.Hosts, host)
-	c.HostsMap[name] = len(c.Hosts) - 1
 
 	if c.General.Version < 400 {
-		for k := range host.Other {
-			return fmt.Errorf("unrecognized field %q on host %q not permitted by config version %d", k, host.Name, c.General.Version)
+		for _, kv := range host.Other {
+			return fmt.Errorf("unrecognized field %q on host %q not permitted by config version %d", kv.Key, host.Name, c.General.Version)
 		}
 	}
 
@@ -194,7 +193,6 @@ func parseHost(c *Config, section string, options map[string]string) (err error)
 func parseForward(c *Config, section string, options map[string]string) (err error) {
 	name := section[9:]
 	forw := Forward{Name: name}
-	forw.Other = make(map[string]string)
 
 	var srcfs, dstfs, srcps []string
 	var srcport, dstport, repeat int
@@ -261,4 +259,14 @@ func parseForward(c *Config, section string, options map[string]string) (err err
 	}
 	c.Forwards = append(c.Forwards, forw)
 	return
+}
+
+func getKVs(i ini.File, section string) []KeyValue {
+	options := i.Options(section)
+	res := make([]KeyValue, len(options))
+	for j, option := range options {
+		value := i.Get(section, option)
+		res[j] = KeyValue{option, value}
+	}
+	return res
 }

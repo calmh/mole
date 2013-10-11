@@ -96,7 +96,7 @@ func sshOnConn(conn net.Conn, h conf.Host) (*ssh.ClientConn, error) {
 }
 
 func sshHost(host string, cfg *conf.Config) (*ssh.ClientConn, error) {
-	h := cfg.Hosts[cfg.HostsMap[host]]
+	h := cfg.GetHost(host)
 	var conn net.Conn
 	var err error
 	if h.Via != "" {
@@ -127,5 +127,5 @@ func sshHost(host string, cfg *conf.Config) (*ssh.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sshOnConn(conn, h)
+	return sshOnConn(conn, *h)
 }

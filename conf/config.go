@@ -29,14 +29,13 @@ type Config struct {
 		Author      string
 		Main        string
 		Version     int
-		Other       map[string]string
+		Other       KeyValueList
 	}
 
 	Hosts       []Host
 	Forwards    []Forward
-	HostsMap    map[string]int
-	OpenConnect map[string]string
-	Vpnc        map[string]string
+	OpenConnect KeyValueList
+	Vpnc        KeyValueList
 	VpnRoutes   []string
 }
 
@@ -50,14 +49,13 @@ type Host struct {
 	Pass  string
 	Via   string
 	SOCKS string
-	Other map[string]string
+	Other KeyValueList
 }
 
 // Forward is a port forwarding directive
 type Forward struct {
 	Name    string
 	Lines   []ForwardLine
-	Other   map[string]string
 	Comment string
 }
 
@@ -68,6 +66,24 @@ type ForwardLine struct {
 	DstIP   string
 	DstPort int
 	Repeat  int
+}
+
+// KeyValue is a simple key = value binding
+type KeyValue struct {
+	Key, Value string
+}
+
+// KeyValueList is a slice of KeyValues
+type KeyValueList []KeyValue
+
+// Get gets the value for a named key or the empty string
+func (kvs KeyValueList) Get(key string) string {
+	for _, kv := range kvs {
+		if kv.Key == key {
+			return kv.Value
+		}
+	}
+	return ""
 }
 
 // SrcString returns the source IP address and port as a string formatted for
@@ -161,7 +177,7 @@ func (c *Config) FeatureFlags() uint32 {
 	if c.OpenConnect != nil {
 		flags |= FeatureOpenConnect
 	}
-	if c.General.Main != "" && c.Hosts[c.HostsMap[c.General.Main]].SOCKS != "" {
+	if c.General.Main != "" && c.GetHost(c.General.Main).SOCKS != "" {
 		flags |= FeatureSocks
 	}
 	if len(c.Hosts) == 0 {
@@ -169,4 +185,14 @@ func (c *Config) FeatureFlags() uint32 {
 	}
 
 	return flags
+}
+
+// GetHost returns a pointer to the named host or nil
+func (c *Config) GetHost(name string) *Host {
+	for _, host := range c.Hosts {
+		if host.Name == name {
+			return &host
+		}
+	}
+	return nil
 }

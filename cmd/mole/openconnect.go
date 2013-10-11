@@ -45,15 +45,15 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 	script := writeVpncScript(cfg)
 
 	args := []string{"--non-inter", "--passwd-on-stdin", "--script", script}
-	for k, v := range cfg.OpenConnect {
-		if k == "password" {
+	for _, kv := range cfg.OpenConnect {
+		if kv.Key == "password" {
 			continue
-		} else if k == "server" {
-			args = append(args, v)
-		} else if v == "yes" {
-			args = append(args, "--"+k)
+		} else if kv.Key == "server" {
+			args = append(args, kv.Value)
+		} else if kv.Value == "yes" {
+			args = append(args, "--"+kv.Key)
 		} else {
-			args = append(args, "--"+k+"="+v)
+			args = append(args, "--"+kv.Key+"="+kv.Value)
 		}
 
 	}
@@ -80,7 +80,7 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 	debugf(msgOpncStart, cmd.Process.Pid)
 	debugln(msgOpncWait)
 
-	_, err = stdin.Write([]byte(cfg.OpenConnect["password"] + "\n"))
+	_, err = stdin.Write([]byte(cfg.OpenConnect.Get("password") + "\n"))
 	if err != nil {
 		return nil, err
 	}

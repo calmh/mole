@@ -93,7 +93,7 @@ func TestGeneralSection(t *testing.T) {
 	if l := len(cfg.General.Other); l != 1 {
 		t.Errorf("Incorrect len(Other) %d", l)
 	}
-	if s := cfg.General.Other["unrecognized"]; s != "directive" {
+	if s := cfg.General.Other.Get("unrecognized"); s != "directive" {
 		t.Errorf("Incorrect unrecognized %q", s)
 	}
 }
@@ -105,7 +105,7 @@ func TestHosts(t *testing.T) {
 		t.Errorf("Incorrect len(Hosts) %d", l)
 	}
 
-	h := cfg.Hosts[cfg.HostsMap["tac1"]]
+	h := cfg.GetHost("tac1")
 	if h.Name != "tac1" {
 		t.Errorf("Incorrect Name %q", h.Name)
 	}
@@ -131,7 +131,7 @@ func TestHosts(t *testing.T) {
 		t.Errorf("Incorrect len(Other) %d", l)
 	}
 
-	h = cfg.Hosts[cfg.HostsMap["tac2"]]
+	h = cfg.GetHost("tac2")
 	if h.Name != "tac2" {
 		t.Errorf("Incorrect Name %q", h.Name)
 	}
@@ -228,10 +228,10 @@ func TestSourceAddresses(t *testing.T) {
 func TestVpnc(t *testing.T) {
 	cfg, _ := loadFile("test/valid-vpnc.ini")
 
-	if cfg.Vpnc["IPSec_secret"] != "s3cr3t" {
+	if cfg.Vpnc.Get("IPSec_secret") != "s3cr3t" {
 		t.Error("incorrectly parsed vpnc IPSec_secret")
 	}
-	if cfg.Vpnc["Xauth_password"] != "3v3nm0r3s3cr3t" {
+	if cfg.Vpnc.Get("Xauth_password") != "3v3nm0r3s3cr3t" {
 		t.Error("incorrectly parsed vpnc Xauth_password")
 	}
 }
@@ -250,7 +250,7 @@ func TestVpnRoutes(t *testing.T) {
 func TestOpenConnect(t *testing.T) {
 	cfg, _ := loadFile("test/valid-openconnect.ini")
 
-	if cfg.OpenConnect["server"] != "foo.example.com" {
+	if cfg.OpenConnect.Get("server") != "foo.example.com" {
 		t.Error("incorrectly parsed openconnect server")
 	}
 }

@@ -68,8 +68,8 @@ func (p VPNCProvider) Start(cfg *conf.Config) (VPN, error) {
 	debugf(msgVpncStart, cmd.Process.Pid)
 	debugln(msgVpncWait)
 
-	for k, v := range cfg.Vpnc {
-		line := strings.Replace(k, "_", " ", -1) + " " + v + "\n"
+	for _, kv := range cfg.Vpnc {
+		line := strings.Replace(kv.Key, "_", " ", -1) + " " + kv.Value + "\n"
 		_, err := stdin.Write([]byte(line))
 		if err != nil {
 			return nil, err
