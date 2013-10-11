@@ -57,6 +57,10 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 		}
 
 	}
+
+	becomeRoot()
+	defer dropRoot()
+
 	cmd := exec.Command(p.openconnectBinary, args...)
 
 	stdin, err := cmd.StdinPipe()
@@ -95,7 +99,7 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 		line := strings.TrimSpace(string(bs))
 		debugln("opnc:", line)
 
-		if strings.Contains(line, "Established DTLS connection") {
+		if strings.Contains(line, "Connected tun") {
 			debugln(msgOpncConnected)
 			return &OpenConnect{*cmd, script}, nil
 		}
