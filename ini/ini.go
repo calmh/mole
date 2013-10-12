@@ -99,7 +99,7 @@ func (f *File) Write(out io.Writer) error {
 			if len(val) == 0 || val[0] == ' ' || val[len(val)-1] == ' ' {
 				val = `"` + val + `"`
 			}
-			out.Write([]byte(opt.name + " = " + val + "\n"))
+			out.Write([]byte(opt.name + "=" + val + "\n"))
 		}
 		out.Write([]byte("\n"))
 	}
