@@ -1,30 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"github.com/calmh/mole/ticket"
-	"github.com/mavricknz/ldap"
-	"log"
 	"net"
 	"net/http"
 	"time"
 )
 
+var authBackends = map[string]func(string, string) bool{
+	"none": nil, // The nil backend always succeeds
+}
+
 func backendAuthenticate(user, password string) bool {
-	c := ldap.NewLDAPConnection(ldapServer, uint16(ldapPort))
-	err := c.Connect()
-	if err != nil {
-		log.Println("ldap:", err)
+	fn, ok := authBackends[auth]
+	if !ok {
 		return false
 	}
-
-	err = c.Bind(fmt.Sprintf(bindTemplate, user), password)
-	if err != nil {
-		log.Printf("ldap: %q: %s", user, err)
-		return false
+	if fn == nil {
+		return true
 	}
-
-	return true
+	return fn(user, password)
 }
 
 func authenticate(rw http.ResponseWriter, req *http.Request) bool {

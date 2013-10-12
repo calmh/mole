@@ -29,39 +29,40 @@ var (
 	keyFile           = "key.pem"
 	auditFile         = "audit.log"
 	auditIntv         = 86400 * time.Second
-	noAuth            = false
+	auth              = "none"
 	readOnly          = false
 	disableGit        = false
 	canonicalHostname = ""
-	ldapServer        = "localhost"
-	ldapPort          = 389
-	bindTemplate      = "uid=%s,cn=users"
 )
 
 var buildVersion string
 
+var globalFlags = flag.NewFlagSet("molesrv", flag.ExitOnError)
+
+func init() {
+	globalFlags.Usage = usageFor(globalFlags, "molesrv [options]")
+	globalFlags.StringVar(&listenAddr, "listen", listenAddr, "HTTPS listen address")
+	globalFlags.StringVar(&storeDir, "store-dir", storeDir, "Mole store directory")
+	globalFlags.StringVar(&certFile, "cert-file", certFile, "Certificate file (relative to store directory)")
+	globalFlags.StringVar(&keyFile, "key-file", keyFile, "Key file (relative to store directory)")
+	globalFlags.StringVar(&auditFile, "audit-file", auditFile, "Audit file (relative to store directory)")
+	globalFlags.DurationVar(&auditIntv, "audit-intv", auditIntv, "Audit file creation interval")
+	globalFlags.StringVar(&auth, "auth", auth, "Authentication backend")
+	globalFlags.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
+	globalFlags.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
+	globalFlags.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
+}
+
 func addHandler(hnd handler) {
 	handlers[hnd.pattern] = append(handlers[hnd.pattern], hnd)
-	//log.Printf("Added %s handler for %q (auth=%v, ro=%v)", hnd.method, hnd.pattern, hnd.auth, hnd.ro)
 }
 
 func main() {
-	fs := flag.NewFlagSet("molesrv", flag.ExitOnError)
-	fs.Usage = usageFor(fs, "molesrv [options]")
-	fs.StringVar(&listenAddr, "listen", listenAddr, "HTTPS listen address")
-	fs.StringVar(&storeDir, "store-dir", storeDir, "Mole store directory")
-	fs.StringVar(&certFile, "cert-file", certFile, "Certificate file (relative to store directory)")
-	fs.StringVar(&keyFile, "key-file", keyFile, "Key file (relative to store directory)")
-	fs.StringVar(&auditFile, "audit-file", auditFile, "Audit file (relative to store directory)")
-	fs.DurationVar(&auditIntv, "audit-intv", auditIntv, "Audit file creation interval")
-	fs.BoolVar(&noAuth, "no-auth", noAuth, "Do not perform authentication")
-	fs.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
-	fs.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
-	fs.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
-	fs.StringVar(&ldapServer, "ldap-host", ldapServer, "LDAP host")
-	fs.IntVar(&ldapPort, "ldap-port", ldapPort, "LDAP port")
-	fs.StringVar(&bindTemplate, "ldap-bind", bindTemplate, "LDAP bind template")
-	fs.Parse(os.Args[1:])
+	globalFlags.Parse(os.Args[1:])
+
+	if _, ok := authBackends[auth]; !ok {
+		log.Fatalf("Unknown auth backend %q", auth)
+	}
 
 	if buildVersion == "" {
 		buildVersion = "4.0-dev-unknown"
@@ -108,7 +109,7 @@ func setupHandler(p string, hs []handler) {
 				return
 			}
 
-			if h.auth && !noAuth {
+			if h.auth && auth != "none" {
 				if !authenticate(rw, req) {
 					audit(req, p+"; rejected")
 					rw.WriteHeader(401)
