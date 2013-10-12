@@ -59,6 +59,9 @@ func addHandler(hnd handler) {
 
 func main() {
 	globalFlags.Parse(os.Args[1:])
+	if globalFlags.NArg() > 0 {
+		log.Fatalf("Unrecognized extra arguments: %q", strings.Join(globalFlags.Args(), " "))
+	}
 
 	if _, ok := authBackends[auth]; !ok {
 		log.Fatalf("Unknown auth backend %q", auth)
