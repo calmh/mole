@@ -3,6 +3,7 @@ package ini
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -14,8 +15,9 @@ type File struct {
 }
 
 type section struct {
-	name    string
-	options []option
+	name     string
+	comments []string
+	options  []option
 }
 
 type option struct {
@@ -24,7 +26,7 @@ type option struct {
 
 var (
 	iniSectionRe = regexp.MustCompile(`^\[(.+)\]$`)
-	iniOptionRe  = regexp.MustCompile(`^\s*([^\s]+)\s*=\s*(.+?)\s*$`)
+	iniOptionRe  = regexp.MustCompile(`^([^\s]+)\s*=\s*(.+?)$`)
 )
 
 // Sections returns the list of sections in the file.
@@ -64,14 +66,27 @@ func (f *File) OptionMap(section string) map[string]string {
 	return options
 }
 
+// Comments returns the list of comments in a given section.
+func (f *File) Comments(section string) []string {
+	for _, sect := range f.sections {
+		if sect.name == section {
+			return sect.comments
+		}
+	}
+	return nil
+}
+
 // Parse reads the given io.Reader and returns a parsed File object.
 func Parse(stream io.Reader) File {
 	var iniFile File
 	var curSection section
 	scanner := bufio.NewScanner(bufio.NewReader(stream))
 	for scanner.Scan() {
-		line := scanner.Text()
-		if !(strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";")) && len(line) > 0 {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
+			comment := strings.TrimLeft(line, ";# ")
+			curSection.comments = append(curSection.comments, comment)
+		} else if len(line) > 0 {
 			if m := iniSectionRe.FindStringSubmatch(line); len(m) > 0 {
 				if curSection.name != "" {
 					iniFile.sections = append(iniFile.sections, curSection)
@@ -93,15 +108,21 @@ func Parse(stream io.Reader) File {
 // Write writes the sections and options to the io.Writer in INI format.
 func (f *File) Write(out io.Writer) error {
 	for _, sect := range f.sections {
-		out.Write([]byte("[" + sect.name + "]\n"))
+		fmt.Fprintf(out, "[%s]\n", sect.name)
+		for _, cmt := range sect.comments {
+			fmt.Fprintln(out, "; "+cmt)
+		}
 		for _, opt := range sect.options {
 			val := opt.value
-			if len(val) == 0 || val[0] == ' ' || val[len(val)-1] == ' ' {
-				val = `"` + val + `"`
+			if len(val) == 0 {
+				continue
 			}
-			out.Write([]byte(opt.name + "=" + val + "\n"))
+			if val[0] == ' ' || val[len(val)-1] == ' ' || strings.Contains(val, "\n") {
+				val = fmt.Sprintf("%q", val)
+			}
+			fmt.Fprintf(out, "%s=%s\n", opt.name, val)
 		}
-		out.Write([]byte("\n"))
+		fmt.Fprintln(out)
 	}
 	return nil
 }

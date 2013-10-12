@@ -16,9 +16,9 @@ func TestParse(t *testing.T) {
 		`ws= "with some spaces  " `, // Spaces are significant inside quotes
 		`wn=with\nnewline`,          // \n is interpreted as newline
 		" baz2 = 32 ",               // Spaces arund the value are ignored too
+		";   The last comment  ",    // Spaces around comments are trimmed too
 	}
-	instr := strings.Join(strs, "\n")
-	buf := bytes.NewBufferString(instr)
+	buf := bytes.NewBufferString(strings.Join(strs, "\n"))
 	inf := ini.Parse(buf)
 
 	if l := len(inf.Sections()); l != 1 {
@@ -50,19 +50,43 @@ func TestParse(t *testing.T) {
 			}
 		}
 	}
+
+	if cmts := inf.Comments("general"); len(cmts) != 2 {
+		t.Errorf("incorrect #comments %d", len(cmts))
+	} else {
+		correct := []string{"comment", "The last comment"}
+		for i := range correct {
+			if cmts[i] != correct[i] {
+				t.Errorf("incorrect comments #%d, %q != %q", i, cmts[i], correct[i])
+			}
+		}
+	}
 }
 
 func TestWrite(t *testing.T) {
-	buf := bytes.NewBufferString("[general]\nfoo=bar\nbaz    = foo quux \n;comment\nws=\"with some spaces  \"\n baz2 = 32 \n")
+	strs := []string{
+		"[general]",
+		"foo=bar",                   // Standard case
+		"baz    = foo quux ",        // Space around equal sign and after value is ignored
+		"; comment",                 // Comments are ignored, can start at column 1 only
+		`ws= "with some spaces  " `, // Spaces are significant inside quotes
+		`wn=with\nnewline`,          // \n is interpreted as newline
+		" baz2 = 32 ",               // Spaces arund the value are ignored too
+		";   The last comment  ",    // Spaces around comments are trimmed too
+	}
+	buf := bytes.NewBufferString(strings.Join(strs, "\n"))
 	inf := ini.Parse(buf)
 
 	var out bytes.Buffer
 	inf.Write(&out)
 
 	correct := `[general]
+; comment
+; The last comment
 foo=bar
 baz=foo quux
 ws="with some spaces  "
+wn="with\nnewline"
 baz2=32
 
 `
