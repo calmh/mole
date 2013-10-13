@@ -38,8 +38,6 @@ func commandDig(args []string) {
 	var err error
 
 	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
-	_, err = authenticated(cl, func() (interface{}, error) { return cl.Ping() })
-	fatalErr(err)
 
 	var tun string
 	if *local {
@@ -47,15 +45,17 @@ func commandDig(args []string) {
 		fatalErr(err)
 		bs, err := ioutil.ReadAll(fd)
 		fatalErr(err)
-		tun, err = cl.Deobfuscate(string(bs))
+		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Deobfuscate(string(bs)) })
 		fatalErr(err)
+		tun = tuni.(string)
 	} else {
-		tun, err = cl.Get(args[0])
+		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
+		fatalErr(err)
+		tun = tuni.(string)
+		tun, err = cl.Deobfuscate(tun)
 		fatalErr(err)
 	}
 
-	tun, err = cl.Deobfuscate(tun)
-	fatalErr(err)
 	cfg, err := conf.Load(bytes.NewBufferString(tun))
 	fatalErr(err)
 
