@@ -15,6 +15,8 @@ func parse(i ini.File) (cp *Config, err error) {
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
 
+	c.Comments = i.Comments("")
+
 	for _, section := range i.Sections() {
 		options := i.OptionMap(section)
 
@@ -23,16 +25,29 @@ func parse(i ini.File) (cp *Config, err error) {
 			if err != nil {
 				return nil, err
 			}
+			c.General.Comments = i.Comments(section)
 		} else if strings.HasPrefix(section, "hosts.") {
-			err := parseHost(&c, section, options)
+			host, err := parseHost(&i, section)
 			if err != nil {
 				return nil, err
 			}
+			if c.General.Version < 400 {
+				for k := range host.Other {
+					return nil, fmt.Errorf("unrecognized field %q on host %q not permitted by config version %d", k, host.Name, c.General.Version)
+				}
+			}
+
+			c.Hosts = append(c.Hosts, host)
+			c.HostsMap[host.Name] = len(c.Hosts) - 1
 		} else if strings.HasPrefix(section, "forwards.") {
-			err := parseForward(&c, section, options)
+			forw, err := parseForward(&i, section)
 			if err != nil {
 				return nil, err
 			}
+			if cmt := i.Get(section, "comment"); cmt != "" && c.General.Version < 320 {
+				return nil, fmt.Errorf("forward comments are supported in config version 3.2 and above")
+			}
+			c.Forwards = append(c.Forwards, forw)
 		} else if section == "openconnect" {
 			c.OpenConnect = options
 		} else if section == "vpnc" {
@@ -129,22 +144,25 @@ func parseGeneral(c *Config, options map[string]string) (err error) {
 	return
 }
 
-func parseHost(c *Config, section string, options map[string]string) (err error) {
+func parseHost(i *ini.File, section string) (host Host, err error) {
 	name := section[6:]
+	options := i.OptionMap(section)
 
 	for _, field := range []string{"addr", "user"} {
 		if _, ok := options[field]; !ok {
-			return fmt.Errorf("missing required field %q on host %q", field, name)
+			err = fmt.Errorf("missing required field %q on host %q", field, name)
+			return
 		}
 	}
 
 	if _, ok1 := options["password"]; !ok1 {
 		if _, ok2 := options["key"]; !ok2 {
-			return fmt.Errorf(`missing required field "password" or "key" on host %q`, name)
+			err = fmt.Errorf(`missing required field "password" or "key" on host %q`, name)
+			return
 		}
 	}
 
-	host := Host{
+	host = Host{
 		Name: name,
 		Port: defaultSSHPort,
 	}
@@ -156,7 +174,8 @@ func parseHost(c *Config, section string, options map[string]string) (err error)
 		case "port":
 			p, e := strconv.Atoi(v)
 			if e != nil {
-				return e
+				err = e
+				return
 			}
 			host.Port = p
 		case "key":
@@ -175,36 +194,27 @@ func parseHost(c *Config, section string, options map[string]string) (err error)
 			host.Other[k] = v
 		}
 	}
-	c.Hosts = append(c.Hosts, host)
-	c.HostsMap[name] = len(c.Hosts) - 1
-
-	if c.General.Version < 400 {
-		for k := range host.Other {
-			return fmt.Errorf("unrecognized field %q on host %q not permitted by config version %d", k, host.Name, c.General.Version)
-		}
-	}
 
 	if host.SOCKS != "" && host.Via != "" {
-		return fmt.Errorf(`cannot combine fields "socks" and "via" for host %q`, host.Name)
+		err = fmt.Errorf(`cannot combine fields "socks" and "via" for host %q`, host.Name)
+		return
 	}
 
+	host.Comments = i.Comments(section)
 	return
 }
 
-func parseForward(c *Config, section string, options map[string]string) (err error) {
+func parseForward(i *ini.File, section string) (forw Forward, err error) {
 	name := section[9:]
-	forw := Forward{Name: name}
+	options := i.OptionMap(section)
+	forw = Forward{Name: name}
 	forw.Other = make(map[string]string)
 
 	var srcfs, dstfs, srcps []string
 	var srcport, dstport, repeat int
 	for k, v := range options {
 		if k == "comment" {
-			if c.General.Version < 320 {
-				err = fmt.Errorf("forward comments are supported in config version 3.2 and above")
-				return
-			}
-			forw.Comment = v
+			forw.Comments = append(forw.Comments, strings.Split(v, "\n")...)
 			continue
 		}
 
@@ -259,6 +269,7 @@ func parseForward(c *Config, section string, options map[string]string) (err err
 
 		forw.Lines = append(forw.Lines, l)
 	}
-	c.Forwards = append(c.Forwards, forw)
+
+	forw.Comments = append(forw.Comments, i.Comments(section)...)
 	return
 }

@@ -24,12 +24,15 @@ const (
 
 // Config is a complete tunnel configuration
 type Config struct {
+	Comments []string
+
 	General struct {
 		Description string
 		Author      string
 		Main        string
 		Version     int
 		Other       map[string]string
+		Comments    []string
 	}
 
 	Hosts       []Host
@@ -42,23 +45,24 @@ type Config struct {
 
 // Host is an SSH host to bounce via
 type Host struct {
-	Name  string
-	Addr  string
-	Port  int
-	User  string
-	Key   string
-	Pass  string
-	Via   string
-	SOCKS string
-	Other map[string]string
+	Name     string
+	Addr     string
+	Port     int
+	User     string
+	Key      string
+	Pass     string
+	Via      string
+	SOCKS    string
+	Other    map[string]string
+	Comments []string
 }
 
 // Forward is a port forwarding directive
 type Forward struct {
-	Name    string
-	Lines   []ForwardLine
-	Other   map[string]string
-	Comment string
+	Name     string
+	Lines    []ForwardLine
+	Other    map[string]string
+	Comments []string
 }
 
 // ForwardLine is a specific port or range or ports to forward

@@ -9,6 +9,7 @@ import (
 
 func TestParse(t *testing.T) {
 	strs := []string{
+		";pre comment",
 		"[general]",
 		"foo=bar",                   // Standard case
 		"baz    = foo quux ",        // Space around equal sign and after value is ignored
@@ -51,6 +52,16 @@ func TestParse(t *testing.T) {
 		}
 	}
 
+	if cmts := inf.Comments(""); len(cmts) != 1 {
+		t.Errorf("incorrect #comments %d", len(cmts))
+	} else {
+		correct := []string{"pre comment"}
+		for i := range correct {
+			if cmts[i] != correct[i] {
+				t.Errorf("incorrect comments #%d, %q != %q", i, cmts[i], correct[i])
+			}
+		}
+	}
 	if cmts := inf.Comments("general"); len(cmts) != 2 {
 		t.Errorf("incorrect #comments %d", len(cmts))
 	} else {
@@ -65,6 +76,7 @@ func TestParse(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 	strs := []string{
+		";pre comment",
 		"[general]",
 		"foo=bar",                   // Standard case
 		"baz    = foo quux ",        // Space around equal sign and after value is ignored
@@ -80,7 +92,9 @@ func TestWrite(t *testing.T) {
 	var out bytes.Buffer
 	inf.Write(&out)
 
-	correct := `[general]
+	correct := `; pre comment
+
+[general]
 ; comment
 ; The last comment
 foo=bar

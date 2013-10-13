@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/calmh/mole/conf"
 	"os"
-	"strings"
 )
 
 func init() {
@@ -41,6 +40,12 @@ func showCommand(args []string) {
 			cfg.Remap()
 		}
 
+		for _, cmt := range cfg.Comments {
+			infoln("; " + cmt)
+		}
+		for _, cmt := range cfg.General.Comments {
+			infoln("; " + cmt)
+		}
 		for _, host := range cfg.Hosts {
 			infof("Host %q", host.Name)
 			infof("  %s@%s:%d", host.User, host.Addr, host.Port)
@@ -53,11 +58,8 @@ func showCommand(args []string) {
 		}
 		for _, fwd := range cfg.Forwards {
 			infof("Forward %q", fwd.Name)
-			if fwd.Comment != "" {
-				lines := strings.Split(fwd.Comment, "\n")
-				for i := range lines {
-					infoln("  # " + lines[i])
-				}
+			for _, cmt := range fwd.Comments {
+				infoln("  ; " + cmt)
 			}
 			for _, line := range fwd.Lines {
 				infoln("  " + line.String())

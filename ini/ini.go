@@ -12,6 +12,7 @@ import (
 // File is a parsed INI format file.
 type File struct {
 	sections []section
+	comments []string
 }
 
 type section struct {
@@ -67,7 +68,11 @@ func (f *File) OptionMap(section string) map[string]string {
 }
 
 // Comments returns the list of comments in a given section.
+// For the empty string, returns the file comments.
 func (f *File) Comments(section string) []string {
+	if section == "" {
+		return f.comments
+	}
 	for _, sect := range f.sections {
 		if sect.name == section {
 			return sect.comments
@@ -85,10 +90,16 @@ func Parse(stream io.Reader) File {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			comment := strings.TrimLeft(line, ";# ")
-			curSection.comments = append(curSection.comments, comment)
+			if curSection.name != "" {
+				// In a section
+				curSection.comments = append(curSection.comments, comment)
+			} else {
+				// Before any section
+				iniFile.comments = append(iniFile.comments, comment)
+			}
 		} else if len(line) > 0 {
 			if m := iniSectionRe.FindStringSubmatch(line); len(m) > 0 {
-				if curSection.name != "" {
+				if len(curSection.options) > 0 {
 					iniFile.sections = append(iniFile.sections, curSection)
 				}
 				curSection = section{name: m[1]}
@@ -99,7 +110,7 @@ func Parse(stream io.Reader) File {
 			}
 		}
 	}
-	if curSection.name != "" {
+	if len(curSection.options) > 0 {
 		iniFile.sections = append(iniFile.sections, curSection)
 	}
 	return iniFile
@@ -107,6 +118,13 @@ func Parse(stream io.Reader) File {
 
 // Write writes the sections and options to the io.Writer in INI format.
 func (f *File) Write(out io.Writer) error {
+	for _, cmt := range f.comments {
+		fmt.Fprintln(out, "; "+cmt)
+	}
+	if len(f.comments) > 0 {
+		fmt.Fprintln(out)
+	}
+
 	for _, sect := range f.sections {
 		fmt.Fprintf(out, "[%s]\n", sect.name)
 		for _, cmt := range sect.comments {

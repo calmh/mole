@@ -23,8 +23,25 @@ A tunnel definition consists of:
 
 You need to *either* have at least one host or at least one forward.
 
+Comments
+--------
+
+Comments start with `;` in the first column and continue until end of
+line. Comments are guaranteed to be retained in pushing etc. and may be
+shown when connecting to a tunnel. Specifically,
+
+ - File comments (those prior to any section) and comments on the
+   `[general]` section will be shown before attempting to connect the
+   tunnel with `mole dig`.
+ - Comments in `[forwards.*]` sections will be shown in proximity to the
+   forward information after connecting a tunnel.
+
+Comments in other sections will be retained and visible in `mole show -r`
+but have no other effect. A `;` in any position other than the first
+column does not start a comment.
+
 Section `general`
-------------------
+-----------------
 
 The `general` section contains four mandatory elements;
 
@@ -37,6 +54,8 @@ The `general` section contains four mandatory elements;
 
 ### Example
 
+    [general]
+    ; Break glass in case of emergency
     description = OperatorOne (UK, production network)
     author = Jakob Borg <jakob@example.com>
     main = op1prod
@@ -109,11 +128,6 @@ the forwards will be done from the local computer.  This can be used to
 provide the user with the same usage pattern as in the SSH forward case
 and also keep the tunnel definition self documenting.
 
-There can a `comment` attribute on the forward (introduced in config version
-`3.2`, mole version 3.2.0). This attributes contains a string, optionally
-with `\n` newlines, that will be displayed after the forward name when a
-tunnel is connected.
-
 ### Example
 
     [forwards.hostA]
@@ -121,7 +135,6 @@ tunnel is connected.
     127.0.0.1:22001-22005 = 10.0.33.69.193
 
     [forwards.hostB]
-    comment = This is a test system.\nNevertheless, be nice to it.
     127.0.0.2:22001-22005 = 10.0.33.70.194
 
 

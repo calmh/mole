@@ -205,8 +205,8 @@ func TestForwards(t *testing.T) {
 	}
 
 	f = cfg.Forwards[1]
-	if f.Comment != "yo" {
-		t.Errorf("Incorrect f[1] Comment %q", f.Comment)
+	if f.Comments[0] != "yo" {
+		t.Errorf("Incorrect f[1] Comment %q", f.Comments[0])
 	}
 }
 
@@ -252,5 +252,62 @@ func TestOpenConnect(t *testing.T) {
 
 	if cfg.OpenConnect["server"] != "foo.example.com" {
 		t.Error("incorrectly parsed openconnect server")
+	}
+}
+
+func TestComments(t *testing.T) {
+	cfg, _ := loadFile("test/valid-comments.ini")
+
+	if l := len(cfg.Comments); l != 1 {
+		t.Errorf("incorrect file comments len %d", l)
+	} else {
+		if c := cfg.Comments[0]; c != "Very general comments here" {
+			t.Errorf("incorrect general comment %q", c)
+		}
+	}
+
+	if l := len(cfg.General.Comments); l != 1 {
+		t.Errorf("incorrect general comments len %d", l)
+	} else {
+		if c := cfg.General.Comments[0]; c != "Some general comments" {
+			t.Errorf("incorrect general comment %q", c)
+		}
+	}
+
+	h := cfg.Hosts[0]
+	if l := len(h.Comments); l != 2 {
+		t.Errorf("incorrect tac1 comments len %d", l)
+	} else {
+		if c := h.Comments[0]; c != "tac1 comments" {
+			t.Errorf("incorrect tac1 comment[0] %q", c)
+		}
+		if c := h.Comments[1]; c != "further comments" {
+			t.Errorf("incorrect tac1 comment[1] %q", c)
+		}
+	}
+
+	f := cfg.Forwards[0]
+	if l := len(f.Comments); l != 2 {
+		t.Errorf("incorrect forward[0] comments len %d", l)
+	} else {
+		if c := f.Comments[0]; c != "This is the residential host" {
+			t.Errorf("incorrect forward[0] comment[0] %q", c)
+		}
+		if c := f.Comments[1]; c != "" {
+			t.Errorf("incorrect forward[0] comment[1] %q", c)
+		}
+	}
+
+	f = cfg.Forwards[1]
+	if l := len(f.Comments); l != 2 {
+		t.Errorf("incorrect forward[1] comments len %d", l)
+	} else {
+		// Value from comment= comes before actual comments
+		if c := f.Comments[0]; c != "yo" {
+			t.Errorf("incorrect forward[1] comment[0] %q", c)
+		}
+		if c := f.Comments[1]; c != "This is corporate" {
+			t.Errorf("incorrect forward[1] comment[1] %q", c)
+		}
 	}
 }

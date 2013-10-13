@@ -9,7 +9,6 @@ import (
 	"github.com/calmh/mole/conf"
 	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -62,6 +61,13 @@ func commandDig(args []string) {
 
 	if cfg == nil {
 		fatalln("no tunnel loaded")
+	}
+
+	for _, cmt := range cfg.Comments {
+		infoln(ansi.Cyan("; " + cmt))
+	}
+	for _, cmt := range cfg.General.Comments {
+		infoln(ansi.Cyan("; " + cmt))
 	}
 
 	var addrs []string
@@ -146,11 +152,8 @@ func commandDig(args []string) {
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {
 	for _, fwd := range cfg.Forwards {
 		infoln(ansi.Bold(ansi.Cyan(fwd.Name)))
-		if fwd.Comment != "" {
-			lines := strings.Split(fwd.Comment, "\n")
-			for i := range lines {
-				infoln(ansi.Cyan("  # " + lines[i]))
-			}
+		for _, cmt := range fwd.Comments {
+			infoln(ansi.Cyan("  ; " + cmt))
 		}
 		for _, line := range fwd.Lines {
 			infoln("  " + line.String())
