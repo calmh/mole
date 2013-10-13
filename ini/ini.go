@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// File is a parsed INI format file.
-type File struct {
+// Config is a parsed INI format file.
+type Config struct {
 	sections []section
 	comments []string
 }
@@ -31,18 +31,18 @@ var (
 )
 
 // Sections returns the list of sections in the file.
-func (f *File) Sections() []string {
+func (c *Config) Sections() []string {
 	var sections []string
-	for _, sect := range f.sections {
+	for _, sect := range c.sections {
 		sections = append(sections, sect.name)
 	}
 	return sections
 }
 
 // Options returns the list of options in a given section.
-func (f *File) Options(section string) []string {
+func (c *Config) Options(section string) []string {
 	var options []string
-	for _, sect := range f.sections {
+	for _, sect := range c.sections {
 		if sect.name == section {
 			for _, opt := range sect.options {
 				options = append(options, opt.name)
@@ -54,9 +54,9 @@ func (f *File) Options(section string) []string {
 }
 
 // OptionMap returns the map option => value for a given section.
-func (f *File) OptionMap(section string) map[string]string {
+func (c *Config) OptionMap(section string) map[string]string {
 	options := make(map[string]string)
-	for _, sect := range f.sections {
+	for _, sect := range c.sections {
 		if sect.name == section {
 			for _, opt := range sect.options {
 				options[opt.name] = opt.value
@@ -69,11 +69,11 @@ func (f *File) OptionMap(section string) map[string]string {
 
 // Comments returns the list of comments in a given section.
 // For the empty string, returns the file comments.
-func (f *File) Comments(section string) []string {
+func (c *Config) Comments(section string) []string {
 	if section == "" {
-		return f.comments
+		return c.comments
 	}
-	for _, sect := range f.sections {
+	for _, sect := range c.sections {
 		if sect.name == section {
 			return sect.comments
 		}
@@ -81,9 +81,9 @@ func (f *File) Comments(section string) []string {
 	return nil
 }
 
-// Parse reads the given io.Reader and returns a parsed File object.
-func Parse(stream io.Reader) File {
-	var iniFile File
+// Parse reads the given io.Reader and returns a parsed Config object.
+func Parse(stream io.Reader) Config {
+	var iniFile Config
 	var curSection section
 	scanner := bufio.NewScanner(bufio.NewReader(stream))
 	for scanner.Scan() {
@@ -117,15 +117,15 @@ func Parse(stream io.Reader) File {
 }
 
 // Write writes the sections and options to the io.Writer in INI format.
-func (f *File) Write(out io.Writer) error {
-	for _, cmt := range f.comments {
+func (c *Config) Write(out io.Writer) error {
+	for _, cmt := range c.comments {
 		fmt.Fprintln(out, "; "+cmt)
 	}
-	if len(f.comments) > 0 {
+	if len(c.comments) > 0 {
 		fmt.Fprintln(out)
 	}
 
-	for _, sect := range f.sections {
+	for _, sect := range c.sections {
 		fmt.Fprintf(out, "[%s]\n", sect.name)
 		for _, cmt := range sect.comments {
 			fmt.Fprintln(out, "; "+cmt)
@@ -147,8 +147,8 @@ func (f *File) Write(out io.Writer) error {
 
 // Get gets the value from the specified section and key name, or the empty
 // string if either the section or the key is missing.
-func (f *File) Get(section, key string) string {
-	for _, sect := range f.sections {
+func (c *Config) Get(section, key string) string {
+	for _, sect := range c.sections {
 		if sect.name == section {
 			for _, opt := range sect.options {
 				if opt.name == key {
@@ -164,21 +164,21 @@ func (f *File) Get(section, key string) string {
 // Set sets a value for an option in a section. If the option exists, it's
 // value will be overwritten. If the option does not exist, it will be added.
 // If the section does not exist, it will be added and the option added to it.
-func (f *File) Set(sectionName, key, value string) {
-	for i, sect := range f.sections {
+func (c *Config) Set(sectionName, key, value string) {
+	for i, sect := range c.sections {
 		if sect.name == sectionName {
 			for j, opt := range sect.options {
 				if opt.name == key {
-					f.sections[i].options[j].value = value
+					c.sections[i].options[j].value = value
 					return
 				}
 			}
-			f.sections[i].options = append(sect.options, option{key, value})
+			c.sections[i].options = append(sect.options, option{key, value})
 			return
 		}
 	}
 
-	f.sections = append(f.sections, section{
+	c.sections = append(c.sections, section{
 		name:    sectionName,
 		options: []option{{key, value}},
 	})

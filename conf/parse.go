@@ -10,24 +10,24 @@ import (
 
 var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)
 
-func parse(i ini.File) (cp *Config, err error) {
+func parse(ic ini.Config) (cp *Config, err error) {
 	c := Config{}
 	c.General.Other = make(map[string]string)
 	c.HostsMap = make(map[string]int)
 
-	c.Comments = i.Comments("")
+	c.Comments = ic.Comments("")
 
-	for _, section := range i.Sections() {
-		options := i.OptionMap(section)
+	for _, section := range ic.Sections() {
+		options := ic.OptionMap(section)
 
 		if section == "general" {
 			err := parseGeneral(&c, options)
 			if err != nil {
 				return nil, err
 			}
-			c.General.Comments = i.Comments(section)
+			c.General.Comments = ic.Comments(section)
 		} else if strings.HasPrefix(section, "hosts.") {
-			host, err := parseHost(&i, section)
+			host, err := parseHost(ic, section)
 			if err != nil {
 				return nil, err
 			}
@@ -40,11 +40,11 @@ func parse(i ini.File) (cp *Config, err error) {
 			c.Hosts = append(c.Hosts, host)
 			c.HostsMap[host.Name] = len(c.Hosts) - 1
 		} else if strings.HasPrefix(section, "forwards.") {
-			forw, err := parseForward(&i, section)
+			forw, err := parseForward(ic, section)
 			if err != nil {
 				return nil, err
 			}
-			if cmt := i.Get(section, "comment"); cmt != "" && c.General.Version < 320 {
+			if cmt := ic.Get(section, "comment"); cmt != "" && c.General.Version < 320 {
 				return nil, fmt.Errorf("forward comments are supported in config version 3.2 and above")
 			}
 			c.Forwards = append(c.Forwards, forw)
@@ -144,9 +144,9 @@ func parseGeneral(c *Config, options map[string]string) (err error) {
 	return
 }
 
-func parseHost(i *ini.File, section string) (host Host, err error) {
+func parseHost(ic ini.Config, section string) (host Host, err error) {
 	name := section[6:]
-	options := i.OptionMap(section)
+	options := ic.OptionMap(section)
 
 	for _, field := range []string{"addr", "user"} {
 		if _, ok := options[field]; !ok {
@@ -200,13 +200,13 @@ func parseHost(i *ini.File, section string) (host Host, err error) {
 		return
 	}
 
-	host.Comments = i.Comments(section)
+	host.Comments = ic.Comments(section)
 	return
 }
 
-func parseForward(i *ini.File, section string) (forw Forward, err error) {
+func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 	name := section[9:]
-	options := i.OptionMap(section)
+	options := ic.OptionMap(section)
 	forw = Forward{Name: name}
 	forw.Other = make(map[string]string)
 
@@ -270,6 +270,6 @@ func parseForward(i *ini.File, section string) (forw Forward, err error) {
 		forw.Lines = append(forw.Lines, l)
 	}
 
-	forw.Comments = append(forw.Comments, i.Comments(section)...)
+	forw.Comments = append(forw.Comments, ic.Comments(section)...)
 	return
 }

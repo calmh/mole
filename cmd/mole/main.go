@@ -25,7 +25,7 @@ var (
 	portOffset   int = 1000 // XXX: Remove later
 )
 
-var moleIni ini.File
+var moleIni ini.Config
 
 type command struct {
 	fn    func([]string)
