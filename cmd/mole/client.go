@@ -230,13 +230,30 @@ func (c *Client) Delete(tunnel string) error {
 func (c *Client) Deobfuscate(tunnel string) (string, error) {
 	t0 := time.Now()
 
+	var err error
+	var keylist []string
+	var keymap map[string]string
+
 	matches := obfuscatedRe.FindAllString(tunnel, -1)
 	for _, o := range matches {
-		s, err := c.resolveKey(o[6:])
-		if err != nil {
-			return "", err
-		}
-		tunnel = strings.Replace(tunnel, o, s, -1)
+		keylist = append(keylist, o[6:])
+	}
+
+	bs, _ := json.Marshal(keylist)
+	resp, err := c.request("POST", "/keys", bytes.NewBuffer(bs))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	bs, err = ioutil.ReadAll(resp.Body)
+	fatalErr(err)
+
+	err = json.Unmarshal(bs, &keymap)
+	fatalErr(err)
+
+	for k, v := range keymap {
+		tunnel = strings.Replace(tunnel, "$mole$"+k, fmt.Sprintf("%q", v), -1)
 	}
 
 	debugf("deobfuscate %.01f ms", time.Since(t0).Seconds()*1000)
@@ -324,26 +341,6 @@ func (c *Client) Package(file string) (io.ReadCloser, error) {
 	}
 
 	return resp.Body, nil
-}
-
-func (c *Client) resolveKey(key string) (string, error) {
-	resp, err := c.request("GET", "/key/"+key, nil)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var res map[string]string
-	err = json.Unmarshal(data, &res)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%q", res["key"]), nil
 }
 
 type listItems []ListItem
