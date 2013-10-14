@@ -15,4 +15,7 @@ packages:
 - name: github.com/mavricknz/ldap
   pakname: pak
   targetbranch: origin/master
+- name: github.com/calmh/randomart
+  pakname: pak
+  targetbranch: origin/master
 #
