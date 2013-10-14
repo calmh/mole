@@ -45,6 +45,5 @@ func getKeys(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	bs, _ = json.Marshal(keymap)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(bs)
 }

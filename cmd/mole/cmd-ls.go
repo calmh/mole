@@ -133,7 +133,7 @@ func commandLs(args []string) {
 				row = append(row, i.Description)
 
 				if *long {
-					ver := fmt.Sprintf("%.01f", i.Version)
+					ver := fmt.Sprintf("%.01f", float64(i.IntVersion)/100)
 					if hosts == "" {
 						hosts = "-"
 					}

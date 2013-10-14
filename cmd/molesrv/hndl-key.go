@@ -15,10 +15,8 @@ func init() {
 	})
 }
 
-// DEPRECATABLE
 func getKey(rw http.ResponseWriter, req *http.Request) {
 	if key, ok := keys[req.URL.Path[5:]]; ok {
-		rw.Header().Set("Content-Type", "application/json")
 		bs, _ := json.Marshal(struct {
 			Key string `json:"key"`
 		}{key})
