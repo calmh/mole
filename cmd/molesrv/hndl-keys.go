@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -20,14 +19,7 @@ func getKeys(rw http.ResponseWriter, req *http.Request) {
 	var keylist []string
 	var keymap = map[string]string{}
 
-	bs, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		rw.WriteHeader(500)
-		rw.Write([]byte(err.Error()))
-		return
-	}
-
-	err = json.Unmarshal(bs, &keylist)
+	err := json.NewDecoder(req.Body).Decode(&keylist)
 	if err != nil {
 		rw.WriteHeader(500)
 		rw.Write([]byte(err.Error()))
@@ -44,6 +36,6 @@ func getKeys(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	bs, _ = json.Marshal(keymap)
-	rw.Write(bs)
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(keymap)
 }

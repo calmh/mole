@@ -15,6 +15,7 @@ func init() {
 	})
 }
 
+// DEPRECATE
 func getKey(rw http.ResponseWriter, req *http.Request) {
 	if key, ok := keys[req.URL.Path[5:]]; ok {
 		bs, _ := json.Marshal(struct {

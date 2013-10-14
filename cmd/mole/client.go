@@ -30,11 +30,15 @@ type ListItem struct {
 	Hosts       []string
 	Version     float64
 	Features    uint32
-	IntVersion  int
 }
 
 type upgradeManifest struct {
 	URL string
+}
+
+type Package struct {
+	Package     string
+	Description string
 }
 
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-zA-Z+/-]+`)
@@ -119,20 +123,6 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 	return resp, nil
 }
 
-func (c *Client) Ping() (string, error) {
-	t0 := time.Now()
-
-	resp, err := c.request("GET", "/ping", nil)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-
-	debugf("ping %.01f ms", time.Since(t0).Seconds()*1000)
-	return string(data), err
-}
-
 func (c *Client) ServerVersion() string {
 	url := "http://" + c.host + "/ping"
 	req, err := http.NewRequest("GET", url, nil)
@@ -162,20 +152,12 @@ func (c *Client) List() ([]ListItem, error) {
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	var items []ListItem
-	err = json.Unmarshal(data, &items)
+	err = json.NewDecoder(resp.Body).Decode(&items)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range items {
-		items[i].IntVersion = int(100 * items[i].Version)
-	}
 	sort.Sort(listItems(items))
 
 	debugf("list %.01f ms", time.Since(t0).Seconds()*1000)
@@ -208,7 +190,7 @@ func (c *Client) Put(tunnel string, data io.Reader) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
 
 	debugf("put %.01f ms", time.Since(t0).Seconds()*1000)
 	return nil
@@ -239,17 +221,15 @@ func (c *Client) Deobfuscate(tunnel string) (string, error) {
 		keylist = append(keylist, o[6:])
 	}
 
-	bs, _ := json.Marshal(keylist)
-	resp, err := c.request("POST", "/keys", bytes.NewBuffer(bs))
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(keylist)
+	resp, err := c.request("POST", "/keys", &buf)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	bs, err = ioutil.ReadAll(resp.Body)
-	fatalErr(err)
-
-	err = json.Unmarshal(bs, &keymap)
+	err = json.NewDecoder(resp.Body).Decode(&keymap)
 	fatalErr(err)
 
 	for k, v := range keymap {
@@ -286,27 +266,16 @@ func (c *Client) UpgradesURL() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
 	var manifest upgradeManifest
-	err = json.Unmarshal(data, &manifest)
+	err = json.NewDecoder(resp.Body).Decode(&manifest)
 	if err != nil {
 		return "", err
 	}
 
 	debugf("upgradeurl %.01f ms", time.Since(t0).Seconds()*1000)
 	return manifest.URL, nil
-}
-
-type Package struct {
-	Package     string
-	Description string
 }
 
 func (c *Client) Packages() (map[string][]Package, error) {
@@ -316,22 +285,16 @@ func (c *Client) Packages() (map[string][]Package, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var m map[string][]Package
-	err = json.Unmarshal(data, &m)
+	var packageMap map[string][]Package
+	err = json.NewDecoder(resp.Body).Decode(&packageMap)
 	if err != nil {
 		return nil, err
 	}
 
 	debugf("packages %.01f ms", time.Since(t0).Seconds()*1000)
-	return m, nil
+	return packageMap, nil
 }
 
 func (c *Client) Package(file string) (io.ReadCloser, error) {
