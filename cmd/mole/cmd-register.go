@@ -4,10 +4,11 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/randomart"
 	"os"
 	"regexp"
 	"strconv"
+
+	"github.com/calmh/randomart"
 )
 
 func init() {
