@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"crypto/tls"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,7 +31,6 @@ type ListItem struct {
 	Hosts       []string
 	Version     float64
 	Features    uint32
-	IntVersion  int
 }
 
 type upgradeManifest struct {
@@ -84,6 +84,7 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 		return nil, err
 	}
 
+	req.Header.Set("Accept", "application/gob, application/json")
 	req.Header.Set("User-Agent", "mole/"+clientVersion)
 	req.Header.Set("X-Mole-Version", clientVersion)
 	req.Header.Set("X-Mole-Ticket", c.Ticket)
@@ -117,6 +118,18 @@ func (c *Client) request(method, path string, content io.Reader) (*http.Response
 	}
 
 	return resp, nil
+}
+
+func unmarshal(resp *http.Response, v interface{}) error {
+	defer resp.Body.Close()
+	switch resp.Header.Get("Content-Type") {
+	case "application/gob":
+		dec := gob.NewDecoder(resp.Body)
+		return dec.Decode(v)
+	default:
+		dec := json.NewDecoder(resp.Body)
+		return dec.Decode(v)
+	}
 }
 
 func (c *Client) Ping() (string, error) {
@@ -160,22 +173,13 @@ func (c *Client) List() ([]ListItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 
 	var items []ListItem
-	err = json.Unmarshal(data, &items)
+	err = unmarshal(resp, &items)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range items {
-		items[i].IntVersion = int(100 * items[i].Version)
-	}
 	sort.Sort(listItems(items))
 
 	debugf("list %.01f ms", time.Since(t0).Seconds()*1000)

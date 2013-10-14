@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"github.com/calmh/mole/conf"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -21,7 +23,7 @@ func init() {
 	})
 }
 
-var listCache []byte
+var listCache []listItem
 var listCacheLock sync.Mutex
 
 type listItem struct {
@@ -44,7 +46,6 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		var items []listItem
 		for _, file := range files {
 			item := listItem{
 				Name: path.Base(file[:len(file)-4]),
@@ -55,7 +56,7 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 				log.Printf("Warning: %q: %s", file, err)
 				item.Features = conf.FeatureError
 				item.Description = "- unreadable -"
-				items = append(items, item)
+				listCache = append(listCache, item)
 				continue
 			}
 
@@ -65,7 +66,7 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 				log.Printf("Warning: %q: %s", file, err)
 				item.Features = conf.FeatureError
 				item.Description = "- parse error -"
-				items = append(items, item)
+				listCache = append(listCache, item)
 				continue
 			}
 
@@ -78,16 +79,17 @@ func storeList(rw http.ResponseWriter, req *http.Request) {
 			item.Description = cfg.General.Description
 			item.Hosts = hosts
 			item.Version = float64(cfg.General.Version) / 100
-			items = append(items, item)
-		}
-
-		listCache, err = json.Marshal(items)
-		if err != nil {
-			rw.WriteHeader(500)
-			rw.Write([]byte(err.Error()))
-			return
+			listCache = append(listCache, item)
 		}
 	}
 
-	rw.Write(listCache)
+	if strings.Contains(req.Header.Get("Accept"), "application/gob") {
+		rw.Header().Set("Content-Type", "application/gob")
+		enc := gob.NewEncoder(rw)
+		enc.Encode(listCache)
+	} else {
+		bs, _ := json.Marshal(listCache)
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Write(bs)
+	}
 }
