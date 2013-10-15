@@ -2,9 +2,10 @@ package conf
 
 import (
 	"fmt"
-	"github.com/calmh/mole/ini"
 	"io"
 	"sort"
+
+	"github.com/calmh/ini"
 )
 
 const (

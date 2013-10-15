@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/calmh/mole/ini"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/calmh/ini"
 )
 
 const retries = 3

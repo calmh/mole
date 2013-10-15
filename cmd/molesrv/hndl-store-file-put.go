@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
-	"github.com/calmh/mole/conf"
-	"github.com/calmh/mole/ini"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"regexp"
+
+	"github.com/calmh/ini"
+	"github.com/calmh/mole/conf"
 )
 
 func init() {

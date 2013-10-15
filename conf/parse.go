@@ -2,10 +2,11 @@ package conf
 
 import (
 	"fmt"
-	"github.com/calmh/mole/ini"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/calmh/ini"
 )
 
 var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)

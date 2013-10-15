@@ -2,15 +2,16 @@ package main
 
 import (
 	"flag"
-	"github.com/calmh/mole/ansi"
-	"github.com/calmh/mole/ini"
-	"github.com/calmh/mole/upgrade"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/calmh/ini"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/upgrade"
 )
 
 var (
