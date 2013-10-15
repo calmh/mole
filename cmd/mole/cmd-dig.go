@@ -35,33 +35,7 @@ func commandDig(args []string) {
 	// platforms where it matters
 	requireRoot("dig")
 
-	var err error
-
-	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
-
-	var tun string
-	if *local {
-		fd, err := os.Open(args[0])
-		fatalErr(err)
-		bs, err := ioutil.ReadAll(fd)
-		fatalErr(err)
-		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Deobfuscate(string(bs)) })
-		fatalErr(err)
-		tun = tuni.(string)
-	} else {
-		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
-		fatalErr(err)
-		tun = tuni.(string)
-		tun, err = cl.Deobfuscate(tun)
-		fatalErr(err)
-	}
-
-	cfg, err := conf.Load(bytes.NewBufferString(tun))
-	fatalErr(err)
-
-	if cfg == nil {
-		fatalln("no tunnel loaded")
-	}
+	cfg := loadTunnel(args[0], *local)
 
 	for _, cmt := range cfg.Comments {
 		infoln(ansi.Cyan("; " + cmt))
@@ -83,6 +57,7 @@ func commandDig(args []string) {
 	infoln(sshPathStr(cfg.General.Main, cfg), "...")
 
 	var vpn VPN
+	var err error
 	if cfg.Vpnc != nil {
 		vpn, err = startVpn("vpnc", cfg)
 		fatalErr(err)
@@ -97,32 +72,7 @@ func commandDig(args []string) {
 		fatalErr(err)
 		dialer = sshConn
 
-		go func() {
-			// Periodically connect to a forward to provide a primitive keepalive mechanism.
-			i := 0
-			for {
-				for _, fwd := range cfg.Forwards {
-					for _, line := range fwd.Lines {
-						time.Sleep(keepaliveInterval)
-						go func(line conf.ForwardLine) {
-							x := 0
-							if line.Repeat > 0 {
-								x = i % line.Repeat
-							}
-							debugln("keepalive dial", line.DstString(x))
-							conn, err := dialer.Dial("tcp", line.DstString(x))
-							if err != nil {
-								debugln("keepalive dial", err)
-							}
-							if conn != nil {
-								conn.Close()
-							}
-						}(line)
-					}
-				}
-				i++
-			}
-		}()
+		go keepalive(cfg, dialer)
 	}
 
 	fwdChan := startForwarder(dialer)
@@ -147,6 +97,60 @@ func commandDig(args []string) {
 
 	okln("Done")
 	printTotalStats()
+}
+
+func keepalive(cfg *conf.Config, dialer Dialer) {
+	// Periodically connect to a forward to provide a primitive keepalive mechanism.
+	i := 0
+	for {
+		for _, fwd := range cfg.Forwards {
+			for _, line := range fwd.Lines {
+				time.Sleep(keepaliveInterval)
+				go func(line conf.ForwardLine) {
+					x := 0
+					if line.Repeat > 0 {
+						x = i % line.Repeat
+					}
+					debugln("keepalive dial", line.DstString(x))
+					conn, err := dialer.Dial("tcp", line.DstString(x))
+					if err != nil {
+						debugln("keepalive dial", err)
+					}
+					if conn != nil {
+						conn.Close()
+					}
+				}(line)
+			}
+		}
+		i++
+	}
+}
+
+func loadTunnel(name string, local bool) *conf.Config {
+	var err error
+	var tun string
+
+	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
+
+	if local {
+		fd, err := os.Open(name)
+		fatalErr(err)
+		bs, err := ioutil.ReadAll(fd)
+		fatalErr(err)
+		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Deobfuscate(string(bs)) })
+		fatalErr(err)
+		tun = tuni.(string)
+	} else {
+		tuni, err := authenticated(cl, func() (interface{}, error) { return cl.Get(name) })
+		fatalErr(err)
+		tun = tuni.(string)
+		tun, err = cl.Deobfuscate(tun)
+		fatalErr(err)
+	}
+
+	cfg, err := conf.Load(bytes.NewBufferString(tun))
+	fatalErr(err)
+	return cfg
 }
 
 func sendForwards(fwdChan chan<- conf.ForwardLine, cfg *conf.Config) {

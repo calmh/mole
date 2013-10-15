@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"code.google.com/p/go.net/proxy"
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/conf"
 	"os"
 )
 
@@ -29,31 +27,10 @@ func testCommand(args []string) {
 	// platforms where it matters
 	requireRoot("test")
 
-	var cfg *conf.Config
-	var err error
-
-	if *local {
-		fd, err := os.Open(args[0])
-		fatalErr(err)
-		cfg, err = conf.Load(fd)
-		fatalErr(err)
-	} else {
-		cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))
-		res, err := authenticated(cl, func() (interface{}, error) { return cl.Get(args[0]) })
-		fatalErr(err)
-		tun := res.(string)
-		fatalErr(err)
-		tun, err = cl.Deobfuscate(tun)
-		fatalErr(err)
-		cfg, err = conf.Load(bytes.NewBufferString(tun))
-		fatalErr(err)
-	}
-
-	if cfg == nil {
-		fatalln("no tunnel loaded")
-	}
+	cfg := loadTunnel(args[0], *local)
 
 	var vpn VPN
+	var err error
 
 	if cfg.Vpnc != nil {
 		vpn, err = startVpn("vpnc", cfg)
