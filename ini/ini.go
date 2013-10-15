@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -104,8 +105,16 @@ func Parse(stream io.Reader) Config {
 				}
 				curSection = section{name: m[1]}
 			} else if m := iniOptionRe.FindStringSubmatch(line); len(m) > 0 {
-				val := strings.Trim(m[2], `"`)
-				val = strings.Replace(val, "\\n", "\n", -1)
+				val := m[2]
+				if !strings.Contains(val, "\"") {
+					// If val does not contain any quote characers, we can make it
+					// a quoted string and safely let strconv.Unquote sort out any
+					// escapes
+					val = "\"" + val + "\""
+				}
+				if val[0] == '"' {
+					val, _ = strconv.Unquote(val)
+				}
 				curSection.options = append(curSection.options, option{m[1], val})
 			}
 		}
@@ -135,9 +144,24 @@ func (c *Config) Write(out io.Writer) error {
 			if len(val) == 0 {
 				continue
 			}
-			if val[0] == ' ' || val[len(val)-1] == ' ' || strings.Contains(val, "\n") {
-				val = fmt.Sprintf("%q", val)
+
+			// Quote the string if it begins or ends with space
+			needsQuoting := val[0] == ' ' || val[len(val)-1] == ' '
+
+			if !needsQuoting {
+				// Quote the string if it contains any unprintable characters
+				for _, r := range val {
+					if !strconv.IsPrint(r) {
+						needsQuoting = true
+						break
+					}
+				}
 			}
+
+			if needsQuoting {
+				val = strconv.Quote(val)
+			}
+
 			fmt.Fprintf(out, "%s=%s\n", opt.name, val)
 		}
 		fmt.Fprintln(out)

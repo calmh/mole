@@ -11,13 +11,15 @@ func TestParse(t *testing.T) {
 	strs := []string{
 		";pre comment",
 		"[general]",
-		"foo=bar",                   // Standard case
-		"baz    = foo quux ",        // Space around equal sign and after value is ignored
-		"; comment",                 // Comments are ignored, can start at column 1 only
-		`ws= "with some spaces  " `, // Spaces are significant inside quotes
-		`wn=with\nnewline`,          // \n is interpreted as newline
-		" baz2 = 32 ",               // Spaces arund the value are ignored too
-		";   The last comment  ",    // Spaces around comments are trimmed too
+		"foo=bar",                     // Standard case
+		"baz    = foo quux ",          // Space around equal sign and after value is ignored
+		"; comment",                   // Comments are ignored, can start at column 1 only
+		`ws= "with some spaces  " `,   // Spaces are significant inside quotes
+		`wn=with\nnewline`,            // \n is interpreted as newline
+		" baz2 = 32 ",                 // Spaces arund the value are ignored too
+		";   The last comment  ",      // Spaces around comments are trimmed too
+		`quoted1=a "quoted" word`,     // Quoted words are fine
+		`quoted2="a \"quoted\" word"`, // Same same
 	}
 	buf := bytes.NewBufferString(strings.Join(strs, "\n"))
 	inf := ini.Parse(buf)
@@ -27,12 +29,14 @@ func TestParse(t *testing.T) {
 	}
 
 	correct := map[string]string{
-		"foo":   "bar",
-		"baz":   "foo quux",
-		"baz2":  "32",
-		"ws":    "with some spaces  ",
-		"wn":    "with\nnewline",
-		"other": "",
+		"foo":     "bar",
+		"baz":     "foo quux",
+		"baz2":    "32",
+		"ws":      "with some spaces  ",
+		"wn":      "with\nnewline",
+		"quoted1": "a \"quoted\" word",
+		"quoted2": "a \"quoted\" word",
+		"other":   "",
 	}
 
 	for k, v := range correct {
@@ -41,7 +45,7 @@ func TestParse(t *testing.T) {
 		}
 	}
 
-	if opts := inf.Options("general"); len(opts) != 5 {
+	if opts := inf.Options("general"); len(opts) != len(correct)-1 {
 		t.Errorf("incorrect #options %d", len(opts))
 	} else {
 		correct := []string{"foo", "baz", "ws", "wn", "baz2"}

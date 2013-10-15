@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -233,7 +234,7 @@ func (c *Client) Deobfuscate(tunnel string) (string, error) {
 	fatalErr(err)
 
 	for k, v := range keymap {
-		tunnel = strings.Replace(tunnel, "$mole$"+k, fmt.Sprintf("%q", v), -1)
+		tunnel = strings.Replace(tunnel, "$mole$"+k, strconv.Quote(v), -1)
 	}
 
 	debugf("deobfuscate %.01f ms", time.Since(t0).Seconds()*1000)
