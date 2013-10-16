@@ -63,6 +63,7 @@ func NewClient(host, fingerprint string) *Client {
 
 	transport := &http.Transport{
 		Dial: func(n, a string) (net.Conn, error) {
+			t0 := time.Now()
 			tlsCfg := &tls.Config{InsecureSkipVerify: true}
 			conn, err := tls.Dial(n, host, tlsCfg)
 			if err != nil {
@@ -73,6 +74,7 @@ func NewClient(host, fingerprint string) *Client {
 			if fingerprint != "" && fp != fingerprint {
 				return nil, fmt.Errorf("server fingerprint mismatch (%s != %s)", fp, fingerprint)
 			}
+			debugf("tls connect %.01f ms", time.Since(t0).Seconds()*1000)
 			return conn, err
 		},
 	}
