@@ -219,7 +219,7 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 						go func() {
 							debugln("test", line.DstString(i))
 							conn, err := dialer.Dial("tcp", line.DstString(i))
-							if conn != nil {
+							if err == nil && conn != nil {
 								conn.Close()
 							}
 							subres <- err
