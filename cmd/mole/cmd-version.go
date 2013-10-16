@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	commands["version"] = command{versionCommand, msgVersionShort}
+	addCommand(command{name: "version", fn: versionCommand, descr: msgVersionShort})
 }
 
 func versionCommand(args []string) {

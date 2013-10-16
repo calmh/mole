@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	commands["register"] = command{registerCommand, msgRegisterShort}
+	addCommand(command{name: "register", fn: registerCommand, descr: msgRegisterShort})
 }
 
 func hexBytes(bs []byte) string {

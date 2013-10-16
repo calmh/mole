@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	commands["install"] = command{installCommand, msgInstallShort}
+	addCommand(command{name: "install", fn: installCommand, descr: msgInstallShort})
 }
 
 func installCommand(args []string) {

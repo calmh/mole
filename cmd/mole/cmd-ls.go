@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	commands["ls"] = command{commandLs, msgLsShort}
+	addCommand(command{name: "ls", fn: commandLs, descr: msgLsShort, aliases: []string{"list"}})
 }
 
 func commandLs(args []string) {

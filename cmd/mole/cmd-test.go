@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	commands["test"] = command{testCommand, msgTestShort}
+	addCommand(command{name: "test", fn: testCommand, descr: msgTestShort})
 }
 
 func testCommand(args []string) {

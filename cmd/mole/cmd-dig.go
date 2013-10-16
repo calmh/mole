@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	commands["dig"] = command{commandDig, msgDigShort}
+	addCommand(command{name: "dig", fn: commandDig, descr: msgDigShort, aliases: []string{"connect"}})
 }
 
 const keepaliveInterval = 45 * time.Second

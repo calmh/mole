@@ -7,6 +7,7 @@ import (
 	"github.com/calmh/mole/ansi"
 	"io"
 	"sort"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -55,14 +56,19 @@ func mainUsage(w io.Writer) {
 
 	fmt.Fprintln(w, ansi.Bold("Commands:"))
 	var cmds []string
-	for name := range commands {
-		cmds = append(cmds, name)
+	for _, cmd := range commandList {
+		cmds = append(cmds, cmd.name)
 	}
 	sort.Strings(cmds)
 	for _, name := range cmds {
-		if sn := commands[name].descr; sn != "" {
+		cmd := commandMap[name]
+		if sn := cmd.descr; sn != "" {
+			alias := ""
 			// Ignore undocumented commands
-			tw.Write([]byte(fmt.Sprintf("  %s\t%s\n", ansi.Bold(ansi.Cyan(name)), sn)))
+			if len(cmd.aliases) > 0 {
+				alias = " (" + strings.Join(cmd.aliases, ", ") + ")"
+			}
+			tw.Write([]byte(fmt.Sprintf("  %s%s\t%s\n", ansi.Bold(ansi.Cyan(name)), ansi.Cyan(alias), sn)))
 		}
 	}
 	tw.Flush()

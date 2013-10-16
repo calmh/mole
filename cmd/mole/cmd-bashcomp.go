@@ -42,7 +42,7 @@ complete -F _mole mole
 `
 
 func init() {
-	commands["bashcomp"] = command{bashcompCommand, ""}
+	addCommand(command{name: "bashcomp", fn: bashcompCommand})
 }
 
 func bashcompCommand(args []string) {

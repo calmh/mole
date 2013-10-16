@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	commands["show"] = command{showCommand, msgShowShort}
+	addCommand(command{name: "show", fn: showCommand, descr: msgShowShort, aliases: []string{"export"}})
 }
 
 func showCommand(args []string) {

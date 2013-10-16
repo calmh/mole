@@ -29,11 +29,22 @@ var (
 var moleIni ini.Config
 
 type command struct {
-	fn    func([]string)
-	descr string
+	name    string
+	fn      func([]string)
+	descr   string
+	aliases []string
 }
 
-var commands = make(map[string]command)
+var commandList []command
+var commandMap = make(map[string]command)
+
+func addCommand(c command) {
+	commandList = append(commandList, c)
+	commandMap[c.name] = c
+	for _, alias := range c.aliases {
+		commandMap[alias] = c
+	}
+}
 
 func init() {
 	epoch, e := strconv.ParseInt(buildStamp, 10, 64)
@@ -100,23 +111,23 @@ func loadConfig() {
 
 func dispatchCommand(args []string) {
 	// Direct match on command
-	if cmd, ok := commands[args[0]]; ok {
+	if cmd, ok := commandMap[args[0]]; ok {
 		cmd.fn(args[1:])
 		os.Exit(0)
 	}
 
 	// Unique prefix match
 	var found string
-	for n := range commands {
+	for n := range commandMap {
 		if strings.HasPrefix(n, args[0]) {
-			if found != "" {
+			if found != "" && commandMap[found].name != commandMap[n].name {
 				fatalf("ambigous command: %q (could be %q or %q)", args[0], n, found)
 			}
 			found = n
 		}
 	}
 	if found != "" {
-		cmd := commands[found]
+		cmd := commandMap[found]
 		cmd.fn(args[1:])
 		os.Exit(0)
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	commands["push"] = command{pushCommand, msgPushShort}
+	addCommand(command{name: "push", fn: pushCommand, descr: msgPushShort})
 }
 
 func pushCommand(args []string) {

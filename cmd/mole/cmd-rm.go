@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	commands["rm"] = command{rmCommand, msgRmShort}
+	addCommand(command{name: "rm", fn: rmCommand, descr: msgRmShort})
 }
 
 func rmCommand(args []string) {

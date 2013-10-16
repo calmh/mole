@@ -10,7 +10,7 @@ import (
 var errNoUpgradeUrl = errors.New("no upgrade URL")
 
 func init() {
-	commands["upgrade"] = command{upgradeCommand, msgUpgradeShort}
+	addCommand(command{name: "upgrade", fn: upgradeCommand, descr: msgUpgradeShort})
 }
 
 func latestBuild() (build upgrade.Build, err error) {
