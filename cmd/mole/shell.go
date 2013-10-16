@@ -153,7 +153,7 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 			okln("add", fwd)
 			fwdChan <- fwd
 		default:
-			warnln(msgErrNoSuchCommand, parts[0])
+			warnf(msgErrNoSuchCommand, parts[0])
 		}
 
 		next <- true
