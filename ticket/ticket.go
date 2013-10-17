@@ -2,16 +2,16 @@
 package ticket
 
 import (
+	"encoding/asn1"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 )
 
 type ticket struct {
-	// Short JSON keys keep the ticket size down
-	User     string `json:"u"`
-	IP       string `json:"i"`
-	Validity int64  `json:"v"`
+	// Short asn1 keys keep the ticket size down
+	User     string
+	IP       string
+	Validity int64
 }
 
 // Init (re)initializes the session that tickets are based on. Init is called
@@ -23,7 +23,7 @@ func Init() {
 
 // Grant generates a ticket for the given user, IP and validity stamp.
 func Grant(user, ip string, validity int64) string {
-	bs, err := json.Marshal(ticket{user, ip, validity})
+	bs, err := asn1.Marshal(ticket{user, ip, validity})
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +46,7 @@ func Verify(tic, ip string, validity int64) (string, error) {
 	}
 
 	var dec ticket
-	err = json.Unmarshal(msg, &dec)
+	_, err = asn1.Unmarshal(msg, &dec)
 	if err != nil {
 		return "", err
 	}
