@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,23 +28,21 @@ type Build struct {
 var ErrHashMismatch = errors.New("hash mismatch")
 
 // Newest checks for the newest build available for a given binary at a given
-// base URL and returns a Build on an error.
-func Newest(binary string, url string) (b Build, err error) {
+// base URL and returns a Build or an error.
+func Newest(binary string, url string) (Build, error) {
+	var build Build
 	archBin := binary + "-" + runtime.GOOS + "-" + runtime.GOARCH
 	binUrl := url + "/" + archBin
+
 	resp, err := http.Get(binUrl + ".json")
 	if err != nil {
-		return
+		return build, err
 	}
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
 
-	b.URL = binUrl
-	err = json.Unmarshal(data, &b)
-	return
+	build.URL = binUrl
+	err = json.NewDecoder(resp.Body).Decode(&build)
+	return build, err
 }
 
 // UpgradeTo upgrades the currently exeuting binary to the specified Build and
