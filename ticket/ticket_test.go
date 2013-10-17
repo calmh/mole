@@ -67,3 +67,15 @@ func TestGrantVerifyReinitialized(t *testing.T) {
 		t.Errorf("unexpected nil err")
 	}
 }
+
+func TestTicketSimilarity(t *testing.T) {
+	var t0, t1 string
+	for i := 0; i < 100; i++ {
+		t1 = ticket.Grant("jb", "10.2.3.4", int64(1234567890+i/10))
+		if t0 == t1 {
+			t.Errorf("identical keys generated (%q)", t0)
+			break
+		}
+		t0 = t1
+	}
+}

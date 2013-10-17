@@ -2,17 +2,20 @@
 package ticket
 
 import (
+	"crypto/rand"
 	"encoding/asn1"
 	"encoding/base64"
 	"errors"
 )
 
 type ticket struct {
-	// Short asn1 keys keep the ticket size down
+	Random   []byte
 	User     string
 	IP       string
 	Validity int64
 }
+
+const nonceSize = 8
 
 // Init (re)initializes the session that tickets are based on. Init is called
 // automatically on package initialization but may be called manually to
@@ -23,7 +26,13 @@ func Init() {
 
 // Grant generates a ticket for the given user, IP and validity stamp.
 func Grant(user, ip string, validity int64) string {
-	bs, err := asn1.Marshal(ticket{user, ip, validity})
+	t := ticket{User: user, IP: ip, Validity: validity}
+	t.Random = make([]byte, nonceSize)
+	n, err := rand.Read(t.Random)
+	if n != nonceSize || err != nil {
+		panic(err)
+	}
+	bs, err := asn1.Marshal(t)
 	if err != nil {
 		panic(err)
 	}
