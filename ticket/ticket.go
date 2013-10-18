@@ -8,14 +8,21 @@ import (
 	"errors"
 )
 
-type ticket struct {
-	Random   []byte
+type Ticket struct {
+	Nonce    []byte
 	User     string
-	IP       string
+	IP       []string
 	Validity int64
 }
 
-const nonceSize = 8
+const (
+	nonceSize = 8
+)
+
+var (
+	ErrExpired   = errors.New("expired")
+	ErrInvalidIP = errors.New("invalid IP")
+)
 
 // Init (re)initializes the session that tickets are based on. Init is called
 // automatically on package initialization but may be called manually to
@@ -26,12 +33,43 @@ func Init() {
 
 // Grant generates a ticket for the given user, IP and validity stamp.
 func Grant(user, ip string, validity int64) string {
-	t := ticket{User: user, IP: ip, Validity: validity}
-	t.Random = make([]byte, nonceSize)
-	n, err := rand.Read(t.Random)
+	t := Ticket{User: user, IP: []string{ip}, Validity: validity}
+	return t.String()
+}
+
+// Verify checks that a ticket is valid for the given IP and validity time,
+// and returns the authenticated user name or an error.
+func Verify(tic, ip string, validity int64) (string, error) {
+	dec, err := Load(tic)
+	if err != nil {
+		return "", err
+	}
+
+	foundIp := false
+	for _, dip := range dec.IP {
+		if dip == ip {
+			foundIp = true
+			break
+		}
+	}
+	if !foundIp {
+		return "", ErrInvalidIP
+	}
+
+	if dec.Validity < validity {
+		return "", ErrExpired
+	}
+
+	return dec.User, nil
+}
+
+func (t Ticket) String() string {
+	t.Nonce = make([]byte, nonceSize)
+	n, err := rand.Read(t.Nonce)
 	if n != nonceSize || err != nil {
 		panic(err)
 	}
+
 	bs, err := asn1.Marshal(t)
 	if err != nil {
 		panic(err)
@@ -41,32 +79,22 @@ func Grant(user, ip string, validity int64) string {
 	return base64.StdEncoding.EncodeToString(enc)
 }
 
-// Verify checks that a ticket is valid for the given IP and validity time,
-// and returns the authenticated user name or an error.
-func Verify(tic, ip string, validity int64) (string, error) {
+func Load(tic string) (*Ticket, error) {
 	bs, err := base64.StdEncoding.DecodeString(tic)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	msg, err := decryptAndHash(bs)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	var dec ticket
+	var dec Ticket
 	_, err = asn1.Unmarshal(msg, &dec)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if dec.IP != ip {
-		return "", errors.New("incorrect IP")
-	}
-
-	if dec.Validity < validity {
-		return "", errors.New("expired")
-	}
-
-	return dec.User, nil
+	return &dec, nil
 }

@@ -79,3 +79,30 @@ func TestTicketSimilarity(t *testing.T) {
 		t0 = t1
 	}
 }
+
+func TestTicketExtendValidity(t *testing.T) {
+	tic := ticket.Grant("jb", "10.2.3.4", 1234567890)
+
+	user, err := ticket.Verify(tic, "10.2.3.4", 1234567890)
+	if user != "jb" {
+		t.Errorf("unexpected user %q", user)
+	}
+	if err != nil {
+		t.Errorf("unexpected err %s", err)
+	}
+
+	ts, err := ticket.Load(tic)
+	if err != nil {
+		t.Error(err)
+	}
+	ts.Validity = 1234567900
+	tic = ts.String()
+
+	user, err = ticket.Verify(tic, "10.2.3.4", 1234567895)
+	if user != "jb" {
+		t.Errorf("unexpected user %q", user)
+	}
+	if err != nil {
+		t.Errorf("unexpected err %s", err)
+	}
+}
