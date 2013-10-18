@@ -14,8 +14,9 @@ v3.2 to v4.0
 ## Improved security
 
 - Authenticates the user against LDAP (SSO). Successful authentication
-  gets you a ticket that is valid for one week from the same IP.
-  Requires server version 3.2.3 or higher.
+  gets you a ticket that is valid for one week from the same IP number.
+  Up to four IP numbers will be added to the same ticket to allow for
+  some mobility. Requires server version 4.0.0 or higher.
 
 - No longer writes any temporary files containing cleartext secrets.
 
@@ -55,6 +56,8 @@ v3.2 to v4.0
 
 - Due to the LDAP authentication, there is no longer any need to
   maintain a separate user database on the server.
+
+- Improved comment handling in tunnel files.
 
 ## Windows build
 
