@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -16,7 +18,7 @@ func versionCommand(args []string) {
 	server := fs.Bool("s", false, "Show server version")
 	client := fs.Bool("c", false, "Show client version")
 	latest := fs.Bool("l", false, "Show latest client version")
-	fs.Usage = usageFor(fs, msgVersionUsage)
+	fs.Usage = usage.For(fs, msgVersionUsage)
 	fs.Parse(args)
 
 	if *client {

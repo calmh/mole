@@ -2,14 +2,16 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/proxy"
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/ansi"
-	"github.com/calmh/mole/conf"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"code.google.com/p/go.net/proxy"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -22,7 +24,7 @@ func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
-	fs.Usage = usageFor(fs, msgDigUsage)
+	fs.Usage = usage.For(fs, msgDigUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

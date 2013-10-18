@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"flag"
-	"github.com/calmh/mole/conf"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -15,7 +17,7 @@ func init() {
 
 func pushCommand(args []string) {
 	fs := flag.NewFlagSet("push", flag.ExitOnError)
-	fs.Usage = usageFor(fs, msgPushUsage)
+	fs.Usage = usage.For(fs, msgPushUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

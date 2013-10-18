@@ -3,13 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/ansi"
-	"github.com/calmh/mole/conf"
-	"github.com/calmh/mole/table"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/table"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -20,7 +22,7 @@ func commandLs(args []string) {
 	fs := flag.NewFlagSet("ls", flag.ContinueOnError)
 	short := fs.Bool("s", false, "Short listing")
 	long := fs.Bool("l", false, "Long listing")
-	fs.Usage = usageFor(fs, msgLsUsage)
+	fs.Usage = usage.For(fs, msgLsUsage)
 	err := fs.Parse(args)
 	if err != nil {
 		fmt.Println(ansi.Bold("Feature Flags:"))

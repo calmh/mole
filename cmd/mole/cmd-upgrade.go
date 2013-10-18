@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/calmh/mole/upgrade"
 	"time"
+
+	"github.com/calmh/mole/upgrade"
+	"github.com/calmh/mole/usage"
 )
 
 var errNoUpgradeUrl = errors.New("no upgrade URL")
@@ -36,7 +38,7 @@ func upgradeCommand(args []string) {
 	force := fs.Bool("force", false, "Perform upgrade to same or older version")
 	disableAuto := fs.Bool("disable-auto", false, "Disable automatic upgrades")
 	enableAuto := fs.Bool("enable-auto", false, "Enable automatic upgrades")
-	fs.Usage = usageFor(fs, msgUpgradeUsage)
+	fs.Usage = usage.For(fs, msgUpgradeUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

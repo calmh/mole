@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"os"
+
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -11,7 +13,7 @@ func init() {
 
 func rmCommand(args []string) {
 	fs := flag.NewFlagSet("rm", flag.ExitOnError)
-	fs.Usage = usageFor(fs, msgPushUsage)
+	fs.Usage = usage.For(fs, msgPushUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

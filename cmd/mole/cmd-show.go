@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/conf"
 	"os"
+
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -15,7 +17,7 @@ func init() {
 func showCommand(args []string) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
 	raw := fs.Bool("r", false, "Show raw tunnel file")
-	fs.Usage = usageFor(fs, msgShowUsage)
+	fs.Usage = usage.For(fs, msgShowUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

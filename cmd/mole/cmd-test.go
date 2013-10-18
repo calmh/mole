@@ -1,10 +1,12 @@
 package main
 
 import (
-	"code.google.com/p/go.net/proxy"
 	"flag"
 	"fmt"
 	"os"
+
+	"code.google.com/p/go.net/proxy"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -14,7 +16,7 @@ func init() {
 func testCommand(args []string) {
 	fs := flag.NewFlagSet("test", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
-	fs.Usage = usageFor(fs, msgTestUsage)
+	fs.Usage = usage.For(fs, msgTestUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

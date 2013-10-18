@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/calmh/mole/usage"
 	"github.com/calmh/randomart"
 )
 
@@ -26,7 +27,7 @@ func hexBytes(bs []byte) string {
 func registerCommand(args []string) {
 	fs := flag.NewFlagSet("register", flag.ExitOnError)
 	port := fs.Int("port", 9443, "Server port number")
-	fs.Usage = usageFor(fs, msgRegisterUsage)
+	fs.Usage = usage.For(fs, msgRegisterUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

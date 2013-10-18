@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/calmh/mole/usage"
 )
 
 type handler struct {
@@ -40,7 +42,7 @@ var buildVersion string
 var globalFlags = flag.NewFlagSet("molesrv", flag.ExitOnError)
 
 func init() {
-	globalFlags.Usage = usageFor(globalFlags, "molesrv [options]")
+	globalFlags.Usage = usage.For(globalFlags, "molesrv [options]")
 	globalFlags.StringVar(&listenAddr, "listen", listenAddr, "HTTPS listen address")
 	globalFlags.StringVar(&storeDir, "store-dir", storeDir, "Mole store directory")
 	globalFlags.StringVar(&certFile, "cert-file", certFile, "Certificate file (relative to store directory)")

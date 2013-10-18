@@ -4,11 +4,13 @@ package main
 
 import (
 	"flag"
-	"github.com/calmh/mole/table"
 	"io"
 	"io/ioutil"
 	"os/exec"
 	"runtime"
+
+	"github.com/calmh/mole/table"
+	"github.com/calmh/mole/usage"
 )
 
 func init() {
@@ -17,7 +19,7 @@ func init() {
 
 func installCommand(args []string) {
 	fs := flag.NewFlagSet("install", flag.ExitOnError)
-	fs.Usage = usageFor(fs, msgInstallUsage)
+	fs.Usage = usage.For(fs, msgInstallUsage)
 	fs.Parse(args)
 	args = fs.Args()
 

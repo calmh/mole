@@ -12,6 +12,7 @@ import (
 	"github.com/calmh/ini"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/upgrade"
+	"github.com/calmh/mole/usage"
 )
 
 var (
@@ -156,7 +157,7 @@ func parseFlags() []string {
 	fs.BoolVar(&noAnsi, "no-ansi", noAnsi, "Disable ANSI formatting")
 	fs.BoolVar(&remapIntfs, "remap", remapIntfs, "Use port remapping for extended lo addresses")
 	fs.IntVar(&portOffset, "port-offset", portOffset, "**Temp** v3/v4 server compatibility port shift")
-	fs.Usage = usageFor(fs, msgMainUsage)
+	fs.Usage = usage.For(fs, msgMainUsage)
 	err := fs.Parse(os.Args[1:])
 
 	if err != nil {
