@@ -2,11 +2,12 @@ package ticket
 
 import (
 	"bytes"
-	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha1"
 	"errors"
+
+	"code.google.com/p/go.crypto/twofish"
 )
 
 const (
@@ -39,7 +40,7 @@ func initKeyAndIV() {
 }
 
 func encrypt(blob []byte) {
-	c, err := aes.NewCipher(key)
+	c, err := twofish.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +49,7 @@ func encrypt(blob []byte) {
 }
 
 func decrypt(blob []byte) {
-	c, err := aes.NewCipher(key)
+	c, err := twofish.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}

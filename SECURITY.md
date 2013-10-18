@@ -42,9 +42,9 @@ request is authenticated by sending an opaque ticket in the
 it checks out the request is permitted. If it does not, a `403
 Forbidden` is returned and the client will have to request a new ticket.
 
-The ticket is a hashed (SHA1) and encrypted (AES256) blob containing the
-authenticated username, the IP the client came from and a validity time
-in the form of epoch seconds.
+The ticket is a hashed (SHA1) and encrypted (Twofish) blob containing
+the authenticated username, the IP the client came from and a validity
+time in the form of epoch seconds.
 
 The ticket is considered valid by the server if it decrypts and hashes
 correctly, the validity time is in the future and the client IP is as
