@@ -70,7 +70,7 @@ func grantTicket(rw http.ResponseWriter, req *http.Request) {
 
 	validTo := time.Now().Unix() + validityPeriod
 
-	tic := getTicket()
+	tic := getTicket(req)
 	tic.User = user
 	tic.Validity = validTo
 	tic.IP = newIPList(tic.IP, ip, maxValidIPs)
@@ -80,7 +80,7 @@ func grantTicket(rw http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func getTicket() ticket.Ticket {
+func getTicket(req *http.Request) ticket.Ticket {
 	ticStr := req.Header.Get("X-Mole-Ticket")
 	if ticStr != "" {
 		ticp, err := ticket.Load(ticStr)
