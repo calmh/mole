@@ -17,6 +17,8 @@ import (
 
 var errTimeout = fmt.Errorf("connection timeout")
 
+const maxOutstandingTests = 16 // max number of parallell connection attempts when performing test
+
 func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 	help := func() {
 		infoln("Available commands:")
@@ -198,46 +200,74 @@ type testResult struct {
 
 func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 	results := make(chan forwardTest)
+	outstanding := make(chan bool, maxOutstandingTests)
 
-	var scanWg sync.WaitGroup
-	scanWg.Add(len(cfg.Forwards))
+	// Do the test in the background
 	go func() {
+		var scanWg sync.WaitGroup
+		scanWg.Add(len(cfg.Forwards))
+
 		for _, fwd := range cfg.Forwards {
+			// Do each forward in parallell
 			go func(fwd conf.Forward) {
+				nlines := 0
+				for _, line := range fwd.Lines {
+					nlines += line.Repeat + 1
+				}
+
 				res := forwardTest{name: fwd.Name}
+				res.results = make([]testResult, nlines)
+
+				var fwdWg sync.WaitGroup
+				fwdWg.Add(nlines)
+				j := 0
+
 				for _, line := range fwd.Lines {
 					for i := 0; i <= line.Repeat; i++ {
-						subres := make(chan error, 1)
+						// Do each line in parallell
+						go func(i, j int) {
+							outstanding <- true
+							t0 := time.Now()
+							err := <-testLineIndex(dialer, line, i)
+							ms := time.Since(t0).Seconds() * 1000
+							<-outstanding
 
-						go func() {
-							time.Sleep(5 * time.Second)
-							subres <- errTimeout
-						}()
-
-						t0 := time.Now()
-
-						go func() {
-							debugln("test", line.DstString(i))
-							conn, err := dialer.Dial("tcp", line.DstString(i))
-							if err == nil && conn != nil {
-								conn.Close()
-							}
-							subres <- err
-						}()
-
-						err := <-subres
-						ms := time.Since(t0).Seconds() * 1000
-
-						res.results = append(res.results, testResult{dst: line.DstString(i), ms: ms, err: err})
+							res.results[j] = testResult{dst: line.DstString(i), ms: ms, err: err}
+							fwdWg.Done()
+						}(i, j)
+						j++
 					}
 				}
+
+				fwdWg.Wait()
 				results <- res
 				scanWg.Done()
 			}(fwd)
 		}
+
 		scanWg.Wait()
 		close(results)
 	}()
 
 	return results
+}
+
+func testLineIndex(dialer Dialer, line conf.ForwardLine, i int) <-chan error {
+	subres := make(chan error, 1)
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		subres <- errTimeout
+	}()
+
+	go func() {
+		debugln("test", line.DstString(i))
+		conn, err := dialer.Dial("tcp", line.DstString(i))
+		if err == nil && conn != nil {
+			conn.Close()
+		}
+		subres <- err
+	}()
+
+	return subres
 }
