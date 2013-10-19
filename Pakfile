@@ -1,24 +1,15 @@
-# Pakfile[.yaml]
 packages:
 - name: code.google.com/p/go.net/proxy
-  pakname: pak
   targetbranch: tip
-- name: code.google.com/p/go.crypto/ssh
-  pakname: pak
+- name: code.google.com/p/go.crypto/ssh # also blowfish
   targetbranch: tip
 - name: github.com/sbinet/liner
-  pakname: pak
   targetbranch: origin/master
 - name: bitbucket.org/kardianos/osext
-  pakname: pak
   targetbranch: tip
 - name: github.com/mavricknz/ldap
-  pakname: pak
   targetbranch: origin/master
 - name: github.com/calmh/randomart
-  pakname: pak
   targetbranch: origin/master
 - name: github.com/calmh/ini
-  pakname: pak
   targetbranch: origin/master
-#

@@ -1,6 +1,6 @@
-bitbucket.org/kardianos/osext: 84d8cbacbe137d1c00cdc0762b3ad585a4d64418
-code.google.com/p/go.crypto/ssh: 3a49c11addedb2659f4ec11422d5cecd522c45e4
-code.google.com/p/go.net/proxy: d6167d29456ccb4d1ac0e774631589202a411c8a
+bitbucket.org/kardianos/osext: 364fb577de68fb646c4cb39cc0e09c887ee16376
+code.google.com/p/go.crypto/ssh: 5ff5636e18c9742dbc94f412ddf4d802bcd6cc54
+code.google.com/p/go.net/proxy: 355ff0aa1b2e5eccd483c854587946e9cad1606d
 github.com/calmh/ini: 1020b6d8618a7dc6031cda4a7782324eac346875
 github.com/calmh/randomart: c93aeb3ba3f3e6081cd41b1f2c46e95403491ec5
 github.com/mavricknz/ldap: 6e4860d2f38e0a6ccbbb8eda955d80ab4e39f692
