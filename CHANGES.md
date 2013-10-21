@@ -9,20 +9,21 @@ v3.2 to v4.0
 
 - Easy manual upgrades (`mole upgrade`).
 
-- Automatic upgrades (with option to disable).
+- Automatic background upgrades (with option to disable).
 
 ## Improved security
 
-- Authenticates the user against LDAP (SSO). Successful authentication
-  gets you a ticket that is valid for one week from the same IP number.
-  Up to four IP numbers will be added to the same ticket to allow for
-  some mobility. Requires server version 4.0.0 or higher.
-
-- No longer writes any temporary files containing cleartext secrets.
+- (Optionally) Authenticates the user against LDAP (SSO). Successful
+  authentication gets you a ticket that is valid for one week from the
+  same IP number.  Up to four IP numbers will be added to the same
+  ticket to allow for some mobility. Requires server version 4.0.0 or
+  higher.
 
 - Requires explicit sudo invocation for reconfiguring interfaces or
   starting VPNs. Drops privileges on startup while keeping them
   available for ifconfig, vpnc, etc.
+
+- No longer writes any temporary files containing cleartext secrets.
 
 - Shows randomart rendering of the server certificate when registering.
 
@@ -49,7 +50,7 @@ v3.2 to v4.0
 - `mole ls <regexp>` to list a subset of tunnels based on regexp match
   of tunnel name, description or host names.
 
-- `mole test <tunnel>` to automatically verify a tunnels connectivity.
+- `mole test <tunnel>` to automatically verify tunnel connectivity.
 
 - Bash completion. Add `eval "$(mole bashcomp)"` to your `.bash_profile`
   or similar to get tab completion of commands and tunnel names.
