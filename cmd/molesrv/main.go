@@ -51,6 +51,7 @@ func init() {
 	globalFlags.BoolVar(&readOnly, "no-write", readOnly, "Disallow writable client operations (push, rm, etc)")
 	globalFlags.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
 	globalFlags.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
+	globalFlags.StringVar(&buildVersion, "version", buildVersion, "Version string to advertise")
 }
 
 func addHandler(hnd handler) {
@@ -70,6 +71,8 @@ func main() {
 	if buildVersion == "" {
 		buildVersion = "4.0-dev-unknown"
 	}
+
+	log.Println("mole server", buildVersion)
 
 	if strings.HasPrefix(storeDir, "~/") {
 		home := getHomeDir()
