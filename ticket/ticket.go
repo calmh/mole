@@ -6,6 +6,7 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"errors"
+	"io"
 )
 
 type Ticket struct {
@@ -28,7 +29,13 @@ var (
 // automatically on package initialization but may be called manually to
 // invalidate all currently granted tickets.
 func Init() {
-	initKeyAndIV()
+	initKeyAndIV(rand.Reader)
+}
+
+// LoadKey initializes the session key that tickets are based on from the
+// Reader.
+func LoadKey(r io.Reader) {
+	initKeyAndIV(r)
 }
 
 // Grant generates a ticket for the given user, IP and validity stamp.

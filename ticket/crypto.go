@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"errors"
+	"io"
 
 	"code.google.com/p/go.crypto/twofish"
 )
@@ -22,18 +23,18 @@ var (
 )
 
 func init() {
-	initKeyAndIV()
+	initKeyAndIV(rand.Reader)
 }
 
-func initKeyAndIV() {
+func initKeyAndIV(r io.Reader) {
 	key = make([]byte, keySize)
-	_, err := rand.Read(key)
+	_, err := r.Read(key)
 	if err != nil {
 		panic(err)
 	}
 
 	iv = make([]byte, ivSize)
-	_, err = rand.Read(iv)
+	_, err = r.Read(iv)
 	if err != nil {
 		panic(err)
 	}

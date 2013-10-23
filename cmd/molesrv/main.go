@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/calmh/mole/ticket"
 )
 
 type handler struct {
@@ -33,6 +35,7 @@ var (
 	readOnly          = false
 	disableGit        = false
 	canonicalHostname = ""
+	ticketKeyFile     = ""
 )
 
 var buildVersion string
@@ -52,6 +55,7 @@ func init() {
 	globalFlags.BoolVar(&disableGit, "no-git", disableGit, "Do not treat the store as a git repository")
 	globalFlags.StringVar(&canonicalHostname, "canonical-hostname", canonicalHostname, "Server hostname to advertise as canonical")
 	globalFlags.StringVar(&buildVersion, "version", buildVersion, "Version string to advertise")
+	globalFlags.StringVar(&ticketKeyFile, "ticket-file", ticketKeyFile, "Ticket key file. Leave blank to autogenerate key on startup.")
 }
 
 func addHandler(hnd handler) {
@@ -86,6 +90,14 @@ func main() {
 	if keys == nil {
 		keys = make(map[string]string)
 		log.Println("Initialized new key store")
+	}
+
+	if ticketKeyFile != "" {
+		f, err := os.Open(ticketKeyFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ticket.LoadKey(f)
 	}
 
 	for pattern, handlerList := range handlers {
