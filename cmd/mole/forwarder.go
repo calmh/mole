@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/calmh/mole/conf"
+	"io"
 	"net"
 	"sync/atomic"
 	"time"
@@ -69,27 +70,10 @@ func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 }
 
 func copyData(dst net.Conn, src net.Conn, counter *uint64) {
-	buf := make([]byte, 10240)
-	for {
-		n, e := src.Read(buf)
-		atomic.AddUint64(counter, uint64(n))
-
-		if e != nil {
-			debugln("close (r)")
-			_ = src.Close()
-			_ = dst.Close()
-			break
-		}
-
-		_, e = dst.Write(buf[:n])
-
-		if e != nil {
-			debugln("close (w)")
-			_ = src.Close()
-			_ = dst.Close()
-			break
-		}
-	}
+	n, _ := io.Copy(dst, src)
+	atomic.AddUint64(counter, uint64(n))
+	_ = src.Close()
+	_ = dst.Close()
 }
 
 func formatBytes(n uint64) string {
