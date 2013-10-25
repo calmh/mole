@@ -5,6 +5,7 @@ import (
 	"github.com/calmh/mole/conf"
 	"net"
 	"sync/atomic"
+	"time"
 )
 
 type trafficCounter struct {
@@ -45,6 +46,7 @@ func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 						fatalErr(e)
 						debugln("accepted", c1.LocalAddr(), c1.RemoteAddr())
 						var c2 net.Conn
+						t0 := time.Now()
 						debugln("dial", dst)
 						c2, e = dialer.Dial("tcp", dst)
 						if e != nil {
@@ -53,6 +55,7 @@ func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 							_ = c1.Close()
 							continue
 						}
+						debugf("dial %s complete in %.01f ms", dst, time.Since(t0).Seconds()*1000)
 
 						atomic.AddUint64(&cnt.conns, 1)
 						go copyData(c1, c2, &cnt.in)
