@@ -49,6 +49,7 @@ buildServer() {
 case $1 in
 	all)
 		pak get
+		patch -p1 -f "$GOPATH"/src/code.google.com/p/go.crypto/ssh/tcpip.go ssh-tcpip.diff
 		go test ./... || exit 1
 		buildClient
 		;;
