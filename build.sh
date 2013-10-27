@@ -48,7 +48,14 @@ buildServer() {
 
 case $1 in
 	all)
-		pak get
+		rm -fr \
+			"$GOPATH"/src/bitbucket.org/kardianos/osext \
+			"$GOPATH"/src/code.google.com/p/go.crypto \
+			"$GOPATH"/src/code.google.com/p/go.net \
+			"$GOPATH"/src/github.com/mavricknz/ldap \
+			"$GOPATH"/src/github.com/sbinet/liner
+
+		pak get || exit 1
 
 		# https://code.google.com/p/go/issues/detail?id=6675
 		patch -p1 -f -d "$GOPATH"/src/code.google.com/p/go.crypto < ssh-window-size.diff
