@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/go.crypto/ssh/terminal"
 	"github.com/calmh/ini"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/upgrade"
@@ -22,7 +21,7 @@ var (
 	buildUser    string
 	homeDir      string = path.Join(getHomeDir(), ".mole")
 	debugEnabled bool
-	useAnsi      bool = terminal.IsTerminal(int(os.Stdout.Fd()))
+	useAnsi      bool = isTerminal(os.Stdout.Fd())
 	remapIntfs   bool
 	portOffset   int = 1000 // XXX: Remove later
 )
