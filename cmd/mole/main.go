@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"code.google.com/p/go.crypto/ssh/terminal"
 	"github.com/calmh/ini"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/upgrade"
@@ -21,7 +22,7 @@ var (
 	buildUser    string
 	homeDir      string = path.Join(getHomeDir(), ".mole")
 	debugEnabled bool
-	noAnsi       bool
+	useAnsi      bool = terminal.IsTerminal(int(os.Stdout.Fd()))
 	remapIntfs   bool
 	portOffset   int = 1000 // XXX: Remove later
 )
@@ -56,8 +57,8 @@ func init() {
 func main() {
 	loadConfig()
 
-	// Early disable ansi, if the ini file said to do so.
-	if noAnsi {
+	// Early disable ansi, if the defaults say to do so.
+	if !useAnsi {
 		ansi.Disable()
 	}
 
@@ -76,7 +77,7 @@ func main() {
 	args := parseFlags()
 
 	// Late disable ansi, if the command line flags said so.
-	if noAnsi {
+	if !useAnsi {
 		ansi.Disable()
 	}
 
@@ -105,7 +106,6 @@ func loadConfig() {
 		moleIni = ini.Parse(fd)
 	}
 
-	noAnsi = moleIni.Get("client", "ansi") == "no"
 	debugEnabled = moleIni.Get("client", "debug") == "yes"
 }
 
@@ -153,7 +153,7 @@ func ensureHome() {
 func parseFlags() []string {
 	fs := flag.NewFlagSet("mole", flag.ContinueOnError)
 	fs.BoolVar(&debugEnabled, "d", debugEnabled, "Enable debug output")
-	fs.BoolVar(&noAnsi, "no-ansi", noAnsi, "Disable ANSI formatting")
+	fs.BoolVar(&useAnsi, "ansi", useAnsi, "Enable/disable ANSI formatting")
 	fs.BoolVar(&remapIntfs, "remap", remapIntfs, "Use port remapping for extended lo addresses")
 	fs.IntVar(&portOffset, "port-offset", portOffset, "**Temp** v3/v4 server compatibility port shift")
 	fs.Usage = usageFor(fs, msgMainUsage)
