@@ -22,6 +22,7 @@ func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
+	noVerify := fs.Bool("n", false, "Don't verify connectivity")
 	fs.Usage = usageFor(fs, msgDigUsage)
 	fs.Parse(args)
 	args = fs.Args()
@@ -79,6 +80,10 @@ func commandDig(args []string) {
 	sendForwards(fwdChan, cfg)
 
 	setupHostsFile(args[0], cfg, *qualify)
+
+	if !*noVerify {
+		verify(dialer, cfg)
+	}
 
 	shell(fwdChan, cfg, dialer)
 
@@ -200,4 +205,27 @@ func sshPathStr(hostname string, cfg *conf.Config) string {
 	}
 
 	return this
+}
+
+func verify(dialer Dialer, cfg *conf.Config) {
+	okln(msgTesting)
+	minRtt := float64(1e100)
+	allFwd, okFwd := 0, 0
+	results := testForwards(dialer, cfg)
+	for res := range results {
+		for _, line := range res.results {
+			if line.err == nil {
+				if line.ms < minRtt {
+					minRtt = line.ms
+				}
+				okFwd++
+			}
+			allFwd++
+		}
+	}
+	if float64(okFwd)/float64(allFwd) < 0.5 || minRtt > 250 {
+		warnf(msgTunnelRtt, minRtt, okFwd, allFwd)
+	} else {
+		okf(msgTunnelRtt, minRtt, okFwd, allFwd)
+	}
 }

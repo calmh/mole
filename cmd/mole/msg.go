@@ -83,4 +83,6 @@ const (
   ····E  Parse or access error reading tunnel
   ····U  Unknown or unsupported features required
 `
+	msgTesting   = "Connected; verifying connectivity..."
+	msgTunnelRtt = "Tunnel RTT ~%.0f ms; %d of %d forwards connect OK"
 )
