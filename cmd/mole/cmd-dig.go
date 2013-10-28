@@ -2,27 +2,35 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/proxy"
 	"flag"
 	"fmt"
-	"github.com/calmh/mole/ansi"
-	"github.com/calmh/mole/conf"
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
+
+	"code.google.com/p/go.crypto/ssh"
+	"code.google.com/p/go.net/proxy"
+	"github.com/calmh/mole/ansi"
+	"github.com/calmh/mole/conf"
 )
 
 func init() {
 	addCommand(command{name: "dig", fn: commandDig, descr: msgDigShort, aliases: []string{"connect"}})
 }
 
-const keepaliveInterval = 45 * time.Second
+var (
+	keepaliveInterval = 30 * time.Second
+	keepaliveOk       time.Time
+	keepaliveLock     sync.Mutex
+)
 
 func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
 	noVerify := fs.Bool("n", false, "Don't verify connectivity")
+	fs.DurationVar(&keepaliveInterval, "keepalive", keepaliveInterval, "SSH server alive timeout")
 	fs.Usage = usageFor(fs, msgDigUsage)
 	fs.Parse(args)
 	args = fs.Args()
@@ -84,7 +92,7 @@ func commandDig(args []string) {
 		fatalErr(err)
 		dialer = sshConn
 
-		go keepalive(cfg, dialer)
+		startKeepalive(dialer)
 	}
 
 	fwdChan := startForwarder(dialer)
@@ -105,31 +113,43 @@ func commandDig(args []string) {
 	printTotalStats()
 }
 
-func keepalive(cfg *conf.Config, dialer Dialer) {
-	// Periodically connect to a forward to provide a primitive keepalive mechanism.
-	i := 0
-	for {
-		for _, fwd := range cfg.Forwards {
-			for _, line := range fwd.Lines {
-				time.Sleep(keepaliveInterval)
-				go func(line conf.ForwardLine) {
-					x := 0
-					if line.Repeat > 0 {
-						x = i % line.Repeat
-					}
-					debugln("keepalive dial", line.DstString(x))
-					conn, err := dialer.Dial("tcp", line.DstString(x))
-					if err != nil {
-						debugln("keepalive dial", err)
-					}
-					if conn != nil {
-						conn.Close()
-					}
-				}(line)
-			}
-		}
-		i++
+func startKeepalive(dialer Dialer) {
+	conn, ok := dialer.(*ssh.ClientConn)
+	if !ok {
+		warnln("keepalive on non-ssh connection")
+		return
 	}
+
+	keepaliveOk = time.Now()
+
+	go func() {
+		for {
+			t0 := time.Now()
+			err := conn.CheckServerAlive()
+			fatalErr(err)
+
+			keepaliveLock.Lock()
+			keepaliveOk = time.Now()
+			keepaliveLock.Unlock()
+
+			debugf("keepalive resp in %.01f ms", time.Since(t0).Seconds()*1000)
+			time.Sleep(keepaliveInterval)
+		}
+	}()
+
+	go func() {
+		for {
+			keepaliveLock.Lock()
+			t := keepaliveOk
+			keepaliveLock.Unlock()
+
+			if time.Since(t) > 2*keepaliveInterval {
+				fatalln(msgKeepaliveTimeout)
+			}
+
+			time.Sleep(1 * time.Second)
+		}
+	}()
 }
 
 func loadTunnel(name string, local bool) *conf.Config {

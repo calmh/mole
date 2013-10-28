@@ -59,7 +59,10 @@ case $1 in
 
 		# https://code.google.com/p/go/issues/detail?id=6675
 		patch -p1 -f -d "$GOPATH"/src/code.google.com/p/go.crypto < ssh-window-size.diff
+		# https://code.google.com/p/go/issues/detail?id=5875
+		cp ssh-keepalive.go "$GOPATH"/src/code.google.com/p/go.crypto/ssh
 
+		rm -fr "$GOPATH"/pkg
 		go test ./... || exit 1
 		buildClient
 		;;
