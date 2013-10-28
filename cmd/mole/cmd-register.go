@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 
@@ -32,7 +31,7 @@ func registerCommand(args []string) {
 
 	if len(args) != 1 {
 		fs.Usage()
-		os.Exit(3)
+		exit(3)
 	}
 
 	server := fmt.Sprintf("%s:%d", args[0], *port)

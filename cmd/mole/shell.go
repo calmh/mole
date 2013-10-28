@@ -31,7 +31,9 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 	}
 
 	term := liner.NewLiner()
-	defer term.Close()
+	atExit(func() {
+		term.Close()
+	})
 
 	// Receive commands
 

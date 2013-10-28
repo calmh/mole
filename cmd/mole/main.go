@@ -95,6 +95,8 @@ func main() {
 	}
 
 	dispatchCommand(args)
+
+	exit(0)
 }
 
 // Keep this short and sweet so we get can call it very early and get default
@@ -112,7 +114,7 @@ func dispatchCommand(args []string) {
 	// Direct match on command
 	if cmd, ok := commandMap[args[0]]; ok {
 		cmd.fn(args[1:])
-		os.Exit(0)
+		exit(0)
 	}
 
 	// Unique prefix match
@@ -128,7 +130,7 @@ func dispatchCommand(args []string) {
 	if found != "" {
 		cmd := commandMap[found]
 		cmd.fn(args[1:])
-		os.Exit(0)
+		exit(0)
 	}
 
 	// No command found
@@ -161,14 +163,14 @@ func parseFlags() []string {
 	if err != nil {
 		// fs.Usage() has already been printed
 		mainUsage(os.Stdout)
-		os.Exit(3)
+		exit(3)
 	}
 
 	args := fs.Args()
 	if len(args) == 0 {
 		fs.Usage()
 		mainUsage(os.Stdout)
-		os.Exit(3)
+		exit(3)
 	}
 
 	return args

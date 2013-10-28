@@ -25,7 +25,7 @@ func commandLs(args []string) {
 	if err != nil {
 		fmt.Println(ansi.Bold("Feature Flags:"))
 		fmt.Println(msgLsFlags)
-		os.Exit(3)
+		exit(3)
 	}
 	args = fs.Args()
 

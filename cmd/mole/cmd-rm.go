@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"os"
 )
 
 func init() {
@@ -17,7 +16,7 @@ func rmCommand(args []string) {
 
 	if len(args) != 1 {
 		fs.Usage()
-		os.Exit(3)
+		exit(3)
 	}
 
 	tunnelname := args[0]

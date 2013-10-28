@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/go.net/proxy"
 	"flag"
 	"fmt"
-	"os"
 )
 
 func init() {
@@ -20,7 +19,7 @@ func testCommand(args []string) {
 
 	if len(args) != 1 {
 		fs.Usage()
-		os.Exit(3)
+		exit(3)
 	}
 
 	// Fail early in case we don't have root since it's always required on
@@ -67,6 +66,6 @@ func testCommand(args []string) {
 		okln(msg)
 	} else {
 		warnln(msg)
-		os.Exit(1)
+		exit(1)
 	}
 }

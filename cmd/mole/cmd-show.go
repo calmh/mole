@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/calmh/mole/conf"
-	"os"
 )
 
 func init() {
@@ -21,7 +20,7 @@ func showCommand(args []string) {
 
 	if len(args) != 1 {
 		fs.Usage()
-		os.Exit(3)
+		exit(3)
 	}
 
 	cl := NewClient(serverAddress(), moleIni.Get("server", "fingerprint"))

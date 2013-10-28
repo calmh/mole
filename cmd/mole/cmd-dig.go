@@ -29,7 +29,7 @@ func commandDig(args []string) {
 
 	if len(args) != 1 {
 		fs.Usage()
-		os.Exit(3)
+		exit(3)
 	}
 
 	// Fail early in case we don't have root since it's always required on
@@ -53,6 +53,12 @@ func commandDig(args []string) {
 		if len(addrs) > 0 {
 			addAddresses(addrs)
 		}
+		atExit(func() {
+			addrs := extraneousAddresses(cfg)
+			if len(addrs) > 0 {
+				removeAddresses(addrs)
+			}
+		})
 	}
 
 	infoln(sshPathStr(cfg.General.Main, cfg), "...")
@@ -66,6 +72,11 @@ func commandDig(args []string) {
 		vpn, err = startVpn("openconnect", cfg)
 		fatalErr(err)
 	}
+	atExit(func() {
+		if vpn != nil {
+			vpn.Stop()
+		}
+	})
 
 	var dialer Dialer = proxy.Direct
 	if mh := cfg.General.Main; mh != "" {
@@ -80,25 +91,15 @@ func commandDig(args []string) {
 	sendForwards(fwdChan, cfg)
 
 	setupHostsFile(args[0], cfg, *qualify)
+	atExit(func() {
+		restoreHostsFile(args[0], *qualify)
+	})
 
 	if !*noVerify {
 		verify(dialer, cfg)
 	}
 
 	shell(fwdChan, cfg, dialer)
-
-	restoreHostsFile(args[0], *qualify)
-
-	if vpn != nil {
-		vpn.Stop()
-	}
-
-	if !remapIntfs {
-		addrs = extraneousAddresses(cfg)
-		if len(addrs) > 0 {
-			removeAddresses(addrs)
-		}
-	}
 
 	okln("Done")
 	printTotalStats()

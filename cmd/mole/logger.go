@@ -145,14 +145,14 @@ func fatalln(vals ...interface{}) {
 	lazySetupPrefixes()
 	s := fmt.Sprintln(vals...)
 	writeWrapped(s, prefix["fatal"])
-	os.Exit(3)
+	exit(3)
 }
 
 func fatalf(format string, vals ...interface{}) {
 	lazySetupPrefixes()
 	s := fmt.Sprintf(format, vals...)
 	writeWrapped(s, prefix["fatal"])
-	os.Exit(3)
+	exit(3)
 }
 
 var fatalErr func(error) = panicFatalErr
@@ -161,7 +161,7 @@ func logFatalErr(err error) {
 	lazySetupPrefixes()
 	if err != nil {
 		writeWrapped(err.Error(), prefix["fatal"])
-		os.Exit(3)
+		exit(3)
 	}
 }
 
