@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sync"
 	"time"
 
 	"code.google.com/p/go.crypto/ssh"
@@ -19,11 +18,7 @@ func init() {
 	addCommand(command{name: "dig", fn: commandDig, descr: msgDigShort, aliases: []string{"connect"}})
 }
 
-var (
-	keepaliveInterval = 30 * time.Second
-	keepaliveOk       time.Time
-	keepaliveLock     sync.Mutex
-)
+var keepaliveInterval = 30 * time.Second
 
 func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
@@ -114,40 +109,28 @@ func commandDig(args []string) {
 }
 
 func startKeepalive(dialer Dialer) {
-	conn, ok := dialer.(*ssh.ClientConn)
-	if !ok {
-		warnln("keepalive on non-ssh connection")
-		return
-	}
-
-	keepaliveOk = time.Now()
+	conn := dialer.(*ssh.ClientConn)
+	kc := make(chan time.Duration)
 
 	go func() {
 		for {
 			t0 := time.Now()
 			err := conn.CheckServerAlive()
 			fatalErr(err)
+			kc <- time.Since(t0)
 
-			keepaliveLock.Lock()
-			keepaliveOk = time.Now()
-			keepaliveLock.Unlock()
-
-			debugf("keepalive resp in %.01f ms", time.Since(t0).Seconds()*1000)
 			time.Sleep(keepaliveInterval)
 		}
 	}()
 
 	go func() {
 		for {
-			keepaliveLock.Lock()
-			t := keepaliveOk
-			keepaliveLock.Unlock()
-
-			if time.Since(t) > 2*keepaliveInterval {
+			select {
+			case t := <-kc:
+				debugf("keepalive response in %.01f ms", t.Seconds()*1000)
+			case <-time.After(2*keepaliveInterval + 2*time.Second):
 				fatalln(msgKeepaliveTimeout)
 			}
-
-			time.Sleep(1 * time.Second)
 		}
 	}()
 }
