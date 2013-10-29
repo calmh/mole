@@ -99,7 +99,7 @@ func commandDig(args []string) {
 	})
 
 	if !*noVerify {
-		verify(dialer, cfg)
+		go verify(dialer, cfg)
 	}
 
 	shell(fwdChan, cfg, dialer)

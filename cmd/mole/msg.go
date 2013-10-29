@@ -83,7 +83,7 @@ const (
   ····E  Parse or access error reading tunnel
   ····U  Unknown or unsupported features required
 `
-	msgTesting            = "Connected; verifying connectivity..."
+	msgTesting            = "Connected; verifying connectivity in background..."
 	msgTunnelRtt          = "Tunnel RTT ~%.0f ms; %d of %d forwards connect OK"
 	msgKeepaliveTimeout   = "SSH server alive check failed"
 	msgTunnelVerifyFailed = "No forwards (out of %d) could connect. Aborting."
