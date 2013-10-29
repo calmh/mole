@@ -227,7 +227,9 @@ func verify(dialer Dialer, cfg *conf.Config) {
 			allFwd++
 		}
 	}
-	if float64(okFwd)/float64(allFwd) < 0.5 || minRtt > 250 {
+	if okFwd == 0 {
+		fatalf(msgTunnelVerifyFailed, allFwd)
+	} else if float64(okFwd)/float64(allFwd) < 0.5 || minRtt > 250 {
 		warnf(msgTunnelRtt, minRtt, okFwd, allFwd)
 	} else {
 		okf(msgTunnelRtt, minRtt, okFwd, allFwd)
