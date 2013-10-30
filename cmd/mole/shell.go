@@ -227,7 +227,7 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 				for _, line := range fwd.Lines {
 					for i := 0; i <= line.Repeat; i++ {
 						// Do each line in parallell
-						go func(i, j int) {
+						go func(line conf.ForwardLine, i, j int) {
 							outstanding <- true
 							t0 := time.Now()
 							err := <-testLineIndex(dialer, line, i)
@@ -236,7 +236,7 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 
 							res.results[j] = testResult{dst: line.DstString(i), ms: ms, err: err}
 							fwdWg.Done()
-						}(i, j)
+						}(line, i, j)
 						j++
 					}
 				}
