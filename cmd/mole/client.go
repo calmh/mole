@@ -14,10 +14,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
-var clientVersion = strings.Replace(buildVersion, "v", "", 1)
+var clientVersion string
+var clientVersionLock sync.Mutex
 
 type Client struct {
 	Ticket string
@@ -56,10 +58,16 @@ func NewClient(host, fingerprint string) *Client {
 		fatalln(msgNoHost)
 	}
 
+	clientVersionLock.Lock()
 	if !strings.HasPrefix(clientVersion, "4.") {
-		// Built from go get, so no tag info
-		clientVersion = "4.0-unknown-dev"
+		if buildVersion != "" {
+			clientVersion = strings.Replace(buildVersion, "v", "", 1)
+		} else {
+			// Built from go get, so no tag info
+			clientVersion = "4.0-unknown-dev"
+		}
 	}
+	clientVersionLock.Unlock()
 
 	transport := &http.Transport{
 		Dial: func(n, a string) (net.Conn, error) {
