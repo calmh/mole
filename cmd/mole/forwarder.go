@@ -5,6 +5,7 @@ import (
 	"github.com/calmh/mole/conf"
 	"io"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -16,7 +17,10 @@ type trafficCounter struct {
 	out   uint64
 }
 
-var globalConnectionStats []*trafficCounter
+var (
+	globalConnectionStats     []*trafficCounter
+	globalConnectionStatsLock sync.Mutex
+)
 
 func (cnt trafficCounter) row() []string {
 	return []string{cnt.name, fmt.Sprintf("%d", cnt.conns), formatBytes(cnt.in) + "B", formatBytes(cnt.out) + "B"}
@@ -39,7 +43,9 @@ func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 				fatalErr(e)
 
 				cnt := trafficCounter{name: dst}
+				globalConnectionStatsLock.Lock()
 				globalConnectionStats = append(globalConnectionStats, &cnt)
+				globalConnectionStatsLock.Unlock()
 
 				go func(l net.Listener, dst string, cnt *trafficCounter) {
 					for {

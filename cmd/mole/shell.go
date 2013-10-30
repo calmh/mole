@@ -168,23 +168,27 @@ func printStats() {
 	var rows [][]string
 	rows = append(rows, []string{"FORWARD", "CONNS", "IN", "OUT"})
 	total := trafficCounter{name: "Total"}
+	globalConnectionStatsLock.Lock()
 	for _, cnt := range globalConnectionStats {
 		rows = append(rows, cnt.row())
 		total.conns += cnt.conns
 		total.in += cnt.in
 		total.out += cnt.out
 	}
+	globalConnectionStatsLock.Unlock()
 	rows = append(rows, total.row())
 	fmt.Println(table.Fmt("lrrr", rows))
 }
 
 func printTotalStats() {
 	total := trafficCounter{}
+	globalConnectionStatsLock.Lock()
 	for _, cnt := range globalConnectionStats {
 		total.conns += cnt.conns
 		total.in += cnt.in
 		total.out += cnt.out
 	}
+	globalConnectionStatsLock.Unlock()
 	if total.conns > 0 {
 		infof("Total: %d connections, %sB in, %sB out", total.conns, formatBytes(total.in), formatBytes(total.out))
 	}
