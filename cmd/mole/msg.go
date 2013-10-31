@@ -32,7 +32,7 @@ const (
 	msgErrIncorrectFwdDst  = "Badly formatted fwd destination %q."
 	msgErrIncorrectFwdIP   = "Cannot forward from non-existent local IP %q."
 	msgErrIncorrectFwdPriv = "Cannot forward from privileged port %q (<1024)."
-	msgErrNoSuchCommand    = "No such command %q. Try 'mole help'."
+	msgErrNoSuchCommand    = `No such command %q. Try "help".`
 	msgErrNoHome           = "No home directory that I could find; cannot proceed."
 	msgErrPEMNoKey         = "No ssh key found after PEM decode."
 
