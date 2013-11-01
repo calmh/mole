@@ -100,7 +100,7 @@ func newIPList(ips []string, ip string, max int) []string {
 	}
 	newIPs = append(newIPs, ip)
 	if l := len(newIPs); l > max {
-		newIPs = newIPs[max-l:]
+		newIPs = newIPs[l-max:]
 	}
 	return newIPs
 }
