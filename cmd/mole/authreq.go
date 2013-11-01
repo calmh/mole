@@ -24,16 +24,21 @@ func authenticated(c *Client, r authenticatedRequest) (interface{}, error) {
 
 	for i := 0; i < retries; i++ {
 		infoln(msgNeedsAuth)
-		fmt.Printf(msgUsername)
-		bs, _, err := br.ReadLine()
-		fatalErr(err)
-		user := string(bs)
-		pass := readpass(msgPassword)
+		user := moleIni.Get("server", "user")
+		if user == "" || i != 0 {
+			// Reuse known username on first attempt only
+			fmt.Printf(msgUsername)
+			bs, _, err := br.ReadLine()
+			fatalErr(err)
+			user = string(bs)
+		}
+		pass := readpass(fmt.Sprintf(msgPassword, user))
 
 		ticket, err := c.GetTicket(user, pass)
 		if err == nil {
 			c.Ticket = ticket
 			moleIni.Set("server", "ticket", ticket)
+			moleIni.Set("server", "user", user)
 			saveMoleIni()
 		} else {
 			warnln(err.Error())

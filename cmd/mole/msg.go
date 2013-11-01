@@ -57,7 +57,7 @@ const (
 
 	msgNeedsAuth       = "Authentication required. Enter your LDAP credentials."
 	msgUsername        = "Username: "
-	msgPassword        = "Password: "
+	msgPassword        = "Password for %q: "
 	msgPasswordVisible = "Password will be visible when typed."
 
 	msgNoHost = "No server hostname is configured. Have you run 'mole register'?"
