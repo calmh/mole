@@ -44,6 +44,24 @@ type Package struct {
 	Description string
 }
 
+type EpochTime time.Time
+
+func (t *EpochTime) UnmarshalJSON(bs []byte) error {
+	n, err := strconv.Atoi(string(bs))
+	if err != nil {
+		return err
+	}
+
+	*t = EpochTime(time.Unix(int64(n), 0))
+	return nil
+}
+
+type ParsedTicket struct {
+	User     string
+	IPs      []string
+	Validity EpochTime
+}
+
 var obfuscatedRe = regexp.MustCompile(`\$mole\$[0-9a-zA-Z+/-]+`)
 
 func certFingerprint(conn *tls.Conn) []byte {
@@ -267,6 +285,25 @@ func (c *Client) GetTicket(username, password string) (string, error) {
 	res := string(data)
 
 	debugf("getticket %.01f ms", time.Since(t0).Seconds()*1000)
+	return res, nil
+}
+
+func (c *Client) ParseTicket() (ParsedTicket, error) {
+	t0 := time.Now()
+	var res ParsedTicket
+
+	resp, err := c.request("GET", "/ticket/", nil)
+	if err != nil {
+		return res, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	if err != nil {
+		return res, err
+	}
+
+	debugf("parseticket %.01f ms", time.Since(t0).Seconds()*1000)
 	return res, nil
 }
 

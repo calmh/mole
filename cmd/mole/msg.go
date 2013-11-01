@@ -20,6 +20,7 @@ const (
 	msgRmShort       = "Delete tunnel"
 	msgShowShort     = "Show tunnel"
 	msgTestShort     = "Test tunnel"
+	msgTicketShort   = "Explain current ticket"
 	msgUpgradeShort  = "Upgrade mole"
 	msgVersionShort  = "Show version"
 
@@ -87,4 +88,6 @@ const (
 	msgTunnelRtt          = "Tunnel RTT ~%.0f ms; %d of %d forwards connect OK"
 	msgKeepaliveTimeout   = "SSH server alive check failed"
 	msgTunnelVerifyFailed = "No forwards (out of %d) could connect. Aborting."
+
+	msgTicketExplanation = "Ticket valid for %s\nUntil %s\nFor the following IPs:"
 )
