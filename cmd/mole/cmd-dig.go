@@ -18,7 +18,7 @@ func init() {
 	addCommand(command{name: "dig", fn: commandDig, descr: msgDigShort, aliases: []string{"connect"}})
 }
 
-var keepaliveInterval = 30 * time.Second
+var keepaliveInterval = 120 * time.Second
 
 func commandDig(args []string) {
 	fs := flag.NewFlagSet("dig", flag.ExitOnError)
