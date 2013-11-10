@@ -9,6 +9,8 @@ packages:
   targetbranch: tip
 - name: github.com/mavricknz/ldap
   targetbranch: origin/master
+- name: github.com/mavricknz/asn1-ber
+  targetbranch: origin/master
 - name: github.com/calmh/randomart
   targetbranch: origin/master
 - name: github.com/calmh/ini
