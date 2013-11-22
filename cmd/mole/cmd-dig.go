@@ -30,7 +30,7 @@ func commandDig(args []string) {
 	fs.Parse(args)
 	args = fs.Args()
 
-	if len(args) != 1 {
+	if l := len(args); l < 1 || l > 2 {
 		fs.Usage()
 		exit(3)
 	}
@@ -64,6 +64,15 @@ func commandDig(args []string) {
 		})
 	}
 
+	if mh := fs.Arg(1); mh != "" {
+		_, ok := cfg.HostsMap[mh]
+		if !ok {
+			fatalf(msgDigNoHost, mh)
+		}
+		cfg.General.Main = mh
+		warnln(msgDigWarnMainHost)
+		*noVerify = true
+	}
 	infoln(sshPathStr(cfg.General.Main, cfg), "...")
 
 	var vpn VPN

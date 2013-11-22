@@ -2,7 +2,7 @@ package main
 
 const (
 	msgMainUsage     = "mole [options] <command> [command-options]"
-	msgDigUsage      = "mole [global-options] dig [options] <tunnel>"
+	msgDigUsage      = "mole [global-options] dig [options] <tunnel> [host]"
 	msgInstallUsage  = "mole [global-options] install [package]"
 	msgLsUsage       = "mole [global-options] ls [options] [regexp]"
 	msgPushUsage     = "mole [global-options] push <tunnelfile>"
@@ -90,4 +90,7 @@ const (
 	msgTunnelVerifyFailed = "No forwards (out of %d) could connect. Aborting."
 
 	msgTicketExplanation = "Ticket valid for %s\nUntil %s\nFor the following IPs:"
+
+	msgDigWarnMainHost = "Using non-default main host; some or all tunnels may be nonfunctional."
+	msgDigNoHost       = "Host %q does not exist in tunnel configuration."
 )
