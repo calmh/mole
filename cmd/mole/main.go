@@ -23,7 +23,6 @@ var (
 	debugEnabled bool
 	useAnsi      bool = isTerminal(os.Stdout.Fd())
 	remapIntfs   bool
-	portOffset   int = 1000 // XXX: Remove later
 )
 
 var moleIni ini.Config
@@ -156,7 +155,6 @@ func parseFlags() []string {
 	fs.BoolVar(&debugEnabled, "d", debugEnabled, "Enable debug output")
 	fs.BoolVar(&useAnsi, "ansi", useAnsi, "Enable/disable ANSI formatting")
 	fs.BoolVar(&remapIntfs, "remap", remapIntfs, "Use port remapping for extended lo addresses")
-	fs.IntVar(&portOffset, "port-offset", portOffset, "**Temp** v3/v4 server compatibility port shift")
 	fs.Usage = usageFor(fs, msgMainUsage)
 	err := fs.Parse(os.Args[1:])
 
@@ -203,7 +201,6 @@ func autoUpgrade() {
 
 func serverAddress() string {
 	port, _ := strconv.Atoi(moleIni.Get("server", "port"))
-	port += portOffset
 	return moleIni.Get("server", "host") + ":" + strconv.Itoa(port)
 }
 
