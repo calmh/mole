@@ -28,7 +28,7 @@ buildClient() {
 		echo "$arch"
 		rm -rf bin
 		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
-		zip -qr "mole-$arch.tar.zip" bin
+		zip -qr "mole-$arch.zip" bin
 	done
 	rm -rf bin
 }
@@ -44,6 +44,7 @@ buildServer() {
 		[ -f bin/*/molesrv ] && mv bin/*/molesrv "srv/molesrv-$arch"
 	done
 	rm -rf bin
+	tar zcf molesrv-all.tar.gz srv
 }
 
 case $1 in
@@ -62,11 +63,13 @@ case $1 in
 
 		rm -fr "$GOPATH"/pkg
 		go test ./... || exit 1
+		echo
+		echo Client
+		echo
 		buildClient
-		;;
-	srv)
-		pak get
-		go test ./... || exit 1
+		echo
+		echo Server
+		echo
 		buildServer
 		;;
 	*)
