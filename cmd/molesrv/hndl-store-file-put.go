@@ -100,6 +100,6 @@ func putFile(rw http.ResponseWriter, req *http.Request) {
 		// Commit
 		dir := path.Join(storeDir, "data")
 		user := req.Header.Get("X-Mole-Authenticated")
-		commit(dir, "push "+tun, user)
+		gitCommit(dir, "push "+tun, user)
 	}
 }

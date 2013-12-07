@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func commit(dir, comment, user string) {
+func gitCommit(dir, comment, user string) {
 	var cmd *exec.Cmd
 
 	cmd = exec.Command("git", "add", "-A")
@@ -21,6 +21,18 @@ func commit(dir, comment, user string) {
 	cmd = exec.Command("git", "commit", "--author", author, "-m", comment)
 	cmd.Dir = dir
 	_, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Println("git:", err)
+		return
+	}
+}
+
+func gitInit(dir string) {
+	var cmd *exec.Cmd
+
+	cmd = exec.Command("git", "init")
+	cmd.Dir = dir
+	_, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Println("git:", err)
 		return
