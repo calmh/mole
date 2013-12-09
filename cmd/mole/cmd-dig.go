@@ -12,6 +12,7 @@ import (
 	"code.google.com/p/go.net/proxy"
 	"github.com/calmh/mole/ansi"
 	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/upgrade"
 )
 
 func init() {
@@ -110,6 +111,8 @@ func commandDig(args []string) {
 	if !*noVerify {
 		go verify(dialer, cfg)
 	}
+
+	go autoUpgrade()
 
 	shell(fwdChan, cfg, dialer)
 
@@ -242,5 +245,30 @@ func verify(dialer Dialer, cfg *conf.Config) {
 		warnf(msgTunnelRtt, minRtt, okFwd, allFwd)
 	} else {
 		okf(msgTunnelRtt, minRtt, okFwd, allFwd)
+	}
+}
+
+func autoUpgrade() {
+	if moleIni.Get("upgrades", "automatic") == "no" {
+		debugln("automatic upgrades disabled")
+		return
+	}
+
+	// Only do the actual upgrade once we've been running for a while
+	time.Sleep(10 * time.Second)
+	build, err := latestBuild()
+	if err == nil {
+		bd := time.Unix(int64(build.BuildStamp), 0)
+		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
+			err = upgrade.UpgradeTo(build)
+			if err == nil {
+				if moleIni.Get("upgrades", "automatic") != "yes" {
+					infoln(msgAutoUpgrades)
+				}
+				okf(msgUpgraded, build.Version)
+			} else {
+				warnln("Automatic upgrade failed:", err)
+			}
+		}
 	}
 }

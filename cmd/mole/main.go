@@ -11,7 +11,6 @@ import (
 
 	"github.com/calmh/ini"
 	"github.com/calmh/mole/ansi"
-	"github.com/calmh/mole/upgrade"
 )
 
 var (
@@ -82,8 +81,6 @@ func main() {
 	if debugEnabled {
 		printVersion()
 	}
-
-	go autoUpgrade()
 
 	// Early beta versions of mole4 wrote the fingerprint in lower case which
 	// is incompatible with both mole 3 and current 4+. Rewrite the fingerprint
@@ -172,31 +169,6 @@ func parseFlags() []string {
 	}
 
 	return args
-}
-
-func autoUpgrade() {
-	if moleIni.Get("upgrades", "automatic") == "no" {
-		debugln("automatic upgrades disabled")
-		return
-	}
-
-	// Only do the actual upgrade once we've been running for a while
-	time.Sleep(10 * time.Second)
-	build, err := latestBuild()
-	if err == nil {
-		bd := time.Unix(int64(build.BuildStamp), 0)
-		if isNewer := bd.Sub(buildDate).Seconds() > 0; isNewer {
-			err = upgrade.UpgradeTo(build)
-			if err == nil {
-				if moleIni.Get("upgrades", "automatic") != "yes" {
-					infoln(msgAutoUpgrades)
-				}
-				okf(msgUpgraded, build.Version)
-			} else {
-				warnln("Automatic upgrade failed:", err)
-			}
-		}
-	}
 }
 
 func serverAddress() string {
