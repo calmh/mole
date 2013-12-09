@@ -140,7 +140,10 @@ func ensureHome() {
 		err := os.MkdirAll(homeDir, 0700)
 		fatalErr(err)
 		okln("Created", homeDir)
-	} else if fi.Mode()&0077 != 0 {
+	} else if err != nil {
+		fatalErr(err)
+	}
+	if fi.Mode()&0077 != 0 {
 		err := os.Chmod(homeDir, 0700)
 		fatalErr(err)
 		okln("Corrected permissions on", homeDir)
