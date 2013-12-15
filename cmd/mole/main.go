@@ -143,7 +143,7 @@ func ensureHome() {
 	} else if err != nil {
 		fatalErr(err)
 	}
-	if fi.Mode()&0077 != 0 {
+	if err == nil && fi.Mode()&0077 != 0 {
 		err := os.Chmod(homeDir, 0700)
 		fatalErr(err)
 		okln("Corrected permissions on", homeDir)
