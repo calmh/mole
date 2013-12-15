@@ -3,12 +3,13 @@
 package main
 
 import (
-	"github.com/calmh/mole/conf"
-	"github.com/calmh/mole/hosts"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/calmh/mole/conf"
+	"github.com/calmh/mole/hosts"
 )
 
 var hasRoot bool
@@ -38,13 +39,17 @@ func requireRoot(reason string) {
 }
 
 func becomeRoot() {
-	e := syscall.Setreuid(-1, 0)
-	fatalErr(e)
+	if hasRoot && syscall.Geteuid() != 0 {
+		e := syscall.Setreuid(-1, 0)
+		fatalErr(e)
+	}
 }
 
 func dropRoot() {
-	e := syscall.Setreuid(-1, realUid)
-	fatalErr(e)
+	if hasRoot && syscall.Geteuid() != realUid {
+		e := syscall.Setreuid(-1, realUid)
+		fatalErr(e)
+	}
 }
 
 func getHomeDir() string {
