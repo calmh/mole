@@ -249,6 +249,9 @@ func (c *Client) Deobfuscate(tunnel string) (string, error) {
 	for _, o := range matches {
 		keylist = append(keylist, o[6:])
 	}
+	if len(keylist) == 0 {
+		return tunnel, nil
+	}
 
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(keylist)
