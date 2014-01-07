@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/calmh/mole/conf"
 	"net"
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
+
+	"github.com/calmh/mole/conf"
 )
 
 var errNoLoopbackFound = errors.New("no loopback interface found")
@@ -89,7 +91,11 @@ func addAddresses(addrs []string) {
 }
 
 func removeAddresses(addrs []string) {
-	ifconfigAddresses("remove", addrs)
+	if runtime.GOOS == "darwin" {
+		ifconfigAddresses("remove", addrs)
+	} else {
+		ifconfigAddresses("del", addrs)
+	}
 }
 
 func ifconfigAddresses(command string, addrs []string) {
