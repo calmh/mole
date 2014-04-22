@@ -54,7 +54,7 @@ func writeVpncScript(cfg *conf.Config) string {
 	e = f.Close()
 	fatalErr(e)
 
-	e = os.Chmod(f.Name(), 0x755)
+	e = os.Chmod(f.Name(), 0755)
 	fatalErr(e)
 
 	return f.Name()
