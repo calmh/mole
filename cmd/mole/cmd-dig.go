@@ -26,6 +26,7 @@ func commandDig(args []string) {
 	local := fs.Bool("l", false, "Local file, not remote tunnel definition")
 	qualify := fs.Bool("q", false, "Use <host>.<tunnel> for host aliases instead of just <host>")
 	noVerify := fs.Bool("n", false, "Don't verify connectivity")
+	direct := fs.Bool("d", false, "Use direct connectivity, bypassing VPN/SSH")
 	fs.DurationVar(&keepaliveInterval, "keepalive", keepaliveInterval, "SSH server alive timeout")
 	fs.Usage = usageFor(fs, msgDigUsage)
 	fs.Parse(args)
@@ -78,26 +79,31 @@ func commandDig(args []string) {
 
 	var vpn VPN
 	var err error
-	if cfg.Vpnc != nil {
-		vpn, err = startVpn("vpnc", cfg)
-		fatalErr(err)
-	} else if cfg.OpenConnect != nil {
-		vpn, err = startVpn("openconnect", cfg)
-		fatalErr(err)
-	}
-	atExit(func() {
-		if vpn != nil {
-			vpn.Stop()
+
+	if !*direct {
+		if cfg.Vpnc != nil {
+			vpn, err = startVpn("vpnc", cfg)
+			fatalErr(err)
+		} else if cfg.OpenConnect != nil {
+			vpn, err = startVpn("openconnect", cfg)
+			fatalErr(err)
 		}
-	})
+		atExit(func() {
+			if vpn != nil {
+				vpn.Stop()
+			}
+		})
+	}
 
 	var dialer Dialer = proxy.Direct
-	if mh := cfg.General.Main; mh != "" {
-		sshConn, err := sshHost(mh, cfg)
-		fatalErr(err)
-		dialer = sshConn
+	if !*direct {
+		if mh := cfg.General.Main; mh != "" {
+			sshConn, err := sshHost(mh, cfg)
+			fatalErr(err)
+			dialer = sshConn
 
-		startKeepalive(dialer)
+			startKeepalive(dialer)
+		}
 	}
 
 	fwdChan := startForwarder(dialer)
