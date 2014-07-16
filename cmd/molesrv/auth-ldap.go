@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/mavricknz/ldap"
 	"log"
+
+	"github.com/mavricknz/ldap"
 )
 
 var (
@@ -32,6 +33,7 @@ func backendAuthenticateLDAP(user, password string) bool {
 		log.Printf("ldap: %q: %s", user, err)
 		return false
 	}
+	defer c.Close()
 
 	return true
 }

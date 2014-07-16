@@ -62,7 +62,7 @@ case $1 in
 		cp ssh-keepalive.go "$GOPATH"/src/code.google.com/p/go.crypto/ssh
 
 		rm -fr "$GOPATH"/pkg
-		go test ./... || exit 1
+		go test ./... 
 		echo
 		echo Client
 		echo
