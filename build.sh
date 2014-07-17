@@ -11,11 +11,12 @@ export GOBIN=$(pwd)/bin
 buildClient() {
 	rm -rf auto
 	mkdir auto
-	source /usr/local/golang-crosscompile/crosscompile.bash
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo "$arch"
+		export GOOS=${arch%-*}
+		export GOARCH=${arch#*-}
 		rm -rf bin
-		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
+		godep go install -ldflags "$ldflags" "$pkg/cmd/mole"
 		tar zcf "mole-$arch.tar.gz" bin
 
 		[ -f bin/mole ] && mv bin/mole "auto/mole-$arch"
@@ -26,8 +27,10 @@ buildClient() {
 	done
 	for arch in windows-386 windows-amd64 ; do
 		echo "$arch"
+		export GOOS=${arch%-*}
+		export GOARCH=${arch#*-}
 		rm -rf bin
-		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/mole"
+		godep go install -ldflags "$ldflags" "$pkg/cmd/mole"
 		zip -qr "mole-$arch.zip" bin
 	done
 	rm -rf bin
@@ -49,20 +52,8 @@ buildServer() {
 
 case $1 in
 	all)
-		rm -fr \
-			"$GOPATH"/src/bitbucket.org/kardianos/osext \
-			"$GOPATH"/src/code.google.com/p/go.crypto \
-			"$GOPATH"/src/code.google.com/p/go.net \
-			"$GOPATH"/src/github.com/mavricknz/ldap \
-			"$GOPATH"/src/github.com/sbinet/liner
-
-		pak get || exit 1
-
-		# https://code.google.com/p/go/issues/detail?id=5875
-		cp ssh-keepalive.go "$GOPATH"/src/code.google.com/p/go.crypto/ssh
-
 		rm -fr "$GOPATH"/pkg
-		go test ./... 
+		godep go test ./... 
 		echo
 		echo Client
 		echo
@@ -73,6 +64,6 @@ case $1 in
 		buildServer
 		;;
 	*)
-		go install -ldflags "$ldflags" "$pkg/cmd/..."
+		godep go install -ldflags "$ldflags" "$pkg/cmd/..."
 		;;
 esac
