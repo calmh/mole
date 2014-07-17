@@ -3,6 +3,7 @@ package conf
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -57,6 +58,7 @@ func parse(ic ini.Config) (cp *Config, err error) {
 			for net, mask := range options {
 				c.VpnRoutes = append(c.VpnRoutes, net+"/"+mask)
 			}
+			sort.Strings(c.VpnRoutes)
 		}
 	}
 
