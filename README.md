@@ -19,7 +19,7 @@ need to know is the name you want to connect to. Mole will sort out any needed
 passwords, keys and tunnelings and set up a bunch of forwardings for you.
 
 It'll tell you what forwardings are available and what they point to, so you
-can get on with real work and not have to dig around for inrastructure
+can get on with real work and not have to dig around for infrastructure
 information.
 
 It's based around *tunnel definitions* which are self contained recipes that
