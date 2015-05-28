@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var tunModulesRe = regexp.MustCompile(`\bfoo\.tun\b|\bnet\.tunnelblick\.tun|\bcom\.viscosityvpn\.Viscosity\.tun\b`)
+var tunModulesRe = regexp.MustCompile(`\bfoo\.tun\b|\bnet\.tunnelblick\.tun|\bcom\.viscosityvpn\.Viscosity\.tun\b|\bnet\.sf\.tuntaposx\.tun\b`)
 
 func ensureTunModule() bool {
 	if runtime.GOOS != "darwin" {
