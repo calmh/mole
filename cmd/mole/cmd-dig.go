@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
+	"strings"
 
 	"code.google.com/p/go.crypto/ssh"
 	"code.google.com/p/go.net/proxy"
@@ -109,9 +110,14 @@ func commandDig(args []string) {
 	fwdChan := startForwarder(dialer)
 	sendForwards(fwdChan, cfg)
 
-	setupHostsFile(args[0], cfg, *qualify)
+	domain := args[0]
+	if *local {
+		domain = strings.TrimSuffix(domain, ".ini")
+	}
+
+	setupHostsFile(domain, cfg, *qualify)
 	atExit(func() {
-		restoreHostsFile(args[0], *qualify)
+		restoreHostsFile(domain, *qualify)
 	})
 
 	if !*noVerify {
