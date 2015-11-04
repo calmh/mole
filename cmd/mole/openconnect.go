@@ -99,7 +99,7 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 		line := strings.TrimSpace(string(bs))
 		debugln("opnc:", line)
 
-		if strings.Contains(line, "Connected tun") {
+		if strings.Contains(line, "Connected tun") || strings.Contains(line, "Connected utun") {
 			debugln(msgOpncConnected)
 			return &OpenConnect{*cmd, script}, nil
 		}
