@@ -47,6 +47,15 @@ someone has written a tunnel definition, you can just `mole dig foobar` to
 connect all the way and get a nice list of available port forwardings
 presented to you.
 
+Building
+--------
+
+Install `gb` (https://github.com/constabulary/gb)
+
+Run `./build.sh` to create the binary.
+
+Run `./build.sh all` to create the distribution packages.
+
 License
 -------
 

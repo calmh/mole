@@ -1,0 +1,76 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/calmh/ini",
+			"repository": "https://github.com/calmh/ini",
+			"revision": "e7cd82536f43e21e8f38fb0b370dc637ec1fe045",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/calmh/randomart",
+			"repository": "https://github.com/calmh/randomart",
+			"revision": "c93aeb3ba3f3e6081cd41b1f2c46e95403491ec5",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/kardianos/osext",
+			"repository": "https://github.com/kardianos/osext",
+			"revision": "c2c54e542fb797ad986b31721e1baedf214ca413",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mavricknz/asn1-ber",
+			"repository": "https://github.com/mavricknz/asn1-ber",
+			"revision": "b9df1c2f4213e9acfe05cbd20696ac5fc0d5c70e",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mavricknz/ldap",
+			"repository": "https://github.com/mavricknz/ldap",
+			"revision": "f5a958005e43f515b70d9b1a61d9c842ecd507a6",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/sbinet/liner",
+			"repository": "https://github.com/sbinet/liner",
+			"revision": "d9335eee40a45a4f5d74524c90040d6fe6013d50",
+			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/crypto/curve25519",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "e311231e83195f401421a286060d65643f9c9d40",
+			"branch": "master",
+			"path": "/curve25519"
+		},
+		{
+			"importpath": "golang.org/x/crypto/ed25519",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "e311231e83195f401421a286060d65643f9c9d40",
+			"branch": "master",
+			"path": "/ed25519"
+		},
+		{
+			"importpath": "golang.org/x/crypto/ssh",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "e311231e83195f401421a286060d65643f9c9d40",
+			"branch": "master",
+			"path": "/ssh"
+		},
+		{
+			"importpath": "golang.org/x/crypto/twofish",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "e311231e83195f401421a286060d65643f9c9d40",
+			"branch": "master",
+			"path": "/twofish"
+		},
+		{
+			"importpath": "golang.org/x/net/proxy",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "749a502dd1eaf3e5bfd4f8956748c502357c0bbe",
+			"branch": "master",
+			"path": "/proxy"
+		}
+	]
+}
