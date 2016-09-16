@@ -1,10 +1,11 @@
 #!/bin/bash
+set -euo pipefail
 
 pkg=github.com/calmh/mole
 buildstamp=$(date +%s)
 buildver=$(git describe --always --dirty)
 builduser="$(whoami)@$(hostname)"
-ldflags="-w -X main.buildStamp '$buildstamp' -X main.buildVersion '$buildver' -X main.buildUser '$builduser'"
+ldflags="-w -X main.buildStamp=$buildstamp -X main.buildVersion=$buildver -X main.buildUser=$builduser"
 
 export GOBIN=$(pwd)/bin
 
@@ -16,7 +17,8 @@ buildClient() {
 		export GOOS=${arch%-*}
 		export GOARCH=${arch#*-}
 		rm -rf bin
-		godep go install -ldflags "$ldflags" "$pkg/cmd/mole"
+		mkdir bin
+		godep go build -ldflags "$ldflags" -o bin/mole "$pkg/cmd/mole"
 		tar zcf "mole-$arch.tar.gz" bin
 
 		[ -f bin/mole ] && mv bin/mole "auto/mole-$arch"
@@ -30,27 +32,14 @@ buildClient() {
 		export GOOS=${arch%-*}
 		export GOARCH=${arch#*-}
 		rm -rf bin
-		godep go install -ldflags "$ldflags" "$pkg/cmd/mole"
+		mkdir bin
+		godep go build -ldflags "$ldflags" -o bin/mole.exe "$pkg/cmd/mole"
 		zip -qr "mole-$arch.zip" bin
 	done
 	rm -rf bin
 }
 
-buildServer() {
-	rm -rf srv bin
-	mkdir srv
-	source /usr/local/golang-crosscompile/crosscompile.bash
-	for arch in linux-386 linux-amd64 darwin-amd64 ; do
-		echo "$arch"
-		"go-$arch" install -ldflags "$ldflags" "$pkg/cmd/molesrv"
-		[ -f bin/molesrv ] && mv bin/molesrv "srv/molesrv-$arch"
-		[ -f bin/*/molesrv ] && mv bin/*/molesrv "srv/molesrv-$arch"
-	done
-	rm -rf bin
-	tar zcf molesrv-all.tar.gz srv
-}
-
-case $1 in
+case ${1:-default} in
 	all)
 		rm -fr "$GOPATH"/pkg
 		godep go test ./... 
@@ -58,12 +47,8 @@ case $1 in
 		echo Client
 		echo
 		buildClient
-		echo
-		echo Server
-		echo
-		buildServer
 		;;
-	*)
+	default)
 		godep go install -ldflags "$ldflags" "$pkg/cmd/..."
 		;;
 esac
