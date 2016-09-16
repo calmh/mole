@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net"
 
@@ -82,8 +81,11 @@ func sshHost(host string, cfg *conf.Config) (*ssh.Client, error) {
 
 func kbdInteractive(secret string) ssh.KeyboardInteractiveChallenge {
 	return func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+		if len(questions) == 0 {
+			return nil, nil
+		}
 		if len(questions) != 1 {
-			return nil, errors.New("too complex questionnaire")
+			return nil, fmt.Errorf("too complex questionnaire: %#v", questions)
 		}
 		return []string{secret}, nil
 	}
