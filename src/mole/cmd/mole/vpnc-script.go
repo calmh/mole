@@ -83,8 +83,10 @@ add_route() {
 
 {add_cmds}
 
-[ -f /usr/local/etc/vpnc/vpnc-script ] && /usr/local/etc/vpnc/vpnc-script
-[ -f /etc/vpnc/vpnc-script ] && /etc/vpnc/vpnc-script
+[ -f /usr/local/etc/vpnc/vpnc-script ] && VPNC_SCRIPT=/usr/local/etc/vpnc/vpnc-script
+[ -f /etc/vpnc/vpnc-script ] && VPNC_SCRIPT=/etc/vpnc/vpnc-script
+[ -f /usr/share/vpnc-scripts/vpnc-script ] && VPNC_SCRIPT=/usr/share/vpnc-scripts/vpnc-script
+[ ! -z $VPNC_SCRIPT ] && $VPNC_SCRIPT
 
 if [ "$reason" == "connect" ] ; then
 	echo mole-vpnc-script-next
