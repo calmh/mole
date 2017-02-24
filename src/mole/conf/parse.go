@@ -10,7 +10,7 @@ import (
 	"github.com/calmh/ini"
 )
 
-var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)
+var ipRe = regexp.MustCompile(`^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|([0-9a-f]*:[0-9a-f:]*)$`)
 
 func parse(ic ini.Config) (cp *Config, err error) {
 	c := Config{}
@@ -220,8 +220,13 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			forw.Comments = append(forw.Comments, strings.Split(v, "\n")...)
 			continue
 		}
-
-		srcfs = strings.SplitN(k, ":", 2)
+		if(k[0] == '[') {
+			srcfs = strings.SplitN(k, "]", 2)
+			srcfs[0] = srcfs[0][1:]
+			srcfs[1] = srcfs[1][1:]
+		} else {
+			srcfs = strings.SplitN(k, ":", 2)
+		}
 		if len(srcfs) != 2 || len(srcfs[0]) == 0 || len(srcfs[1]) == 0 {
 			err = fmt.Errorf("malformed forward source %q", k)
 			return
@@ -241,10 +246,16 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			repeat = 0
 		}
 
-		dstfs = strings.SplitN(v, ":", 2)
+		if(v[0] == '[') {
+			dstfs = strings.SplitN(v, "]", 2)
+			dstfs[0] = dstfs[0][1:]
+			dstfs[1] = dstfs[1][1:]
+		} else {
+			dstfs = strings.SplitN(v, ":", 2)
+		}
 
 		if !ipRe.MatchString(dstfs[0]) {
-			err = fmt.Errorf("malformed forward destination %q", v)
+			err = fmt.Errorf("malformed forward destination type %q", v)
 			return
 		}
 
