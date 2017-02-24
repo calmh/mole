@@ -111,7 +111,7 @@ func ifconfigAddresses(command string, addrs []string) {
 	}
 
 	debugln(cmd.String())
-	ifconfig := exec.Command("sh", "-c", cmd.String())
+	ifconfig := exec.Command("bash", "-c", cmd.String())
 	ifconfig.Stderr = os.Stderr
 	ifconfig.Stdout = os.Stdout
 	ifconfig.Stdin = os.Stdin
