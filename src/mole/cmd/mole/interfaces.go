@@ -58,6 +58,9 @@ func missingAddresses(cfg *conf.Config) []string {
 
 	var missing []string
 	for _, ip := range wanted {
+		if(ip[0] == '[') {
+			ip = ip[1:len(ip)-1]
+		}
 		if !curMap[ip] {
 			missing = append(missing, ip)
 		}
