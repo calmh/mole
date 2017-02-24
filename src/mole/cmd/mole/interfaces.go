@@ -74,6 +74,9 @@ func extraneousAddresses(cfg *conf.Config) []string {
 	added := cfg.SourceAddresses()
 	addedMap := make(map[string]bool)
 	for _, ip := range added {
+		if(ip[0] == '[') {
+			ip = ip[1:len(ip)-1]
+		}
 		addedMap[ip] = true
 	}
 
