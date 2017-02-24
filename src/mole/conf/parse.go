@@ -10,7 +10,7 @@ import (
 	"github.com/calmh/ini"
 )
 
-var ipRe = regexp.MustCompile(`^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|([0-9a-f]*:[0-9a-f:]*)$`)
+var ipRe = regexp.MustCompile(`^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|(\[[0-9a-f]*:[0-9a-f:]*\])$`)
 
 func parse(ic ini.Config) (cp *Config, err error) {
 	c := Config{}
@@ -222,7 +222,7 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 		}
 		if(k[0] == '[') {
 			srcfs = strings.SplitN(k, "]", 2)
-			srcfs[0] = srcfs[0][1:]
+			srcfs[0] = srcfs[0] + "]"
 			srcfs[1] = srcfs[1][1:]
 		} else {
 			srcfs = strings.SplitN(k, ":", 2)
@@ -248,7 +248,7 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 
 		if(v[0] == '[') {
 			dstfs = strings.SplitN(v, "]", 2)
-			dstfs[0] = dstfs[0][1:]
+			dstfs[0] = dstfs[0] + "]"
 			dstfs[1] = dstfs[1][1:]
 		} else {
 			dstfs = strings.SplitN(v, ":", 2)
