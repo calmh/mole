@@ -137,7 +137,7 @@ func (c *Config) Remap() {
 	port := 10000
 	for fi := range c.Forwards {
 		for li := range c.Forwards[fi].Lines {
-			if c.Forwards[fi].Lines[li].SrcIP != "127.0.0.1" {
+			if c.Forwards[fi].Lines[li].SrcIP != "127.0.0.1" && c.Forwards[fi].Lines[li].SrcIP != "[::1]"{
 				// BUG: Need to keep track of used ports and not try to use them twice.
 				c.Forwards[fi].Lines[li].SrcIP = "127.0.0.1"
 				c.Forwards[fi].Lines[li].SrcPort = port
