@@ -41,8 +41,6 @@ func tunModuleLoaded() bool {
 
 func loadTunModule() {
 	requireRoot("kextload")
-	becomeRoot()
-	defer dropRoot()
 	debugln("kextload", "/Library/Extensions/tun.kext")
 	cmd := exec.Command("kextload", "/Library/Extensions/tun.kext")
 	bs, err := cmd.CombinedOutput()

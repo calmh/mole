@@ -4,9 +4,9 @@ package main
 
 import (
 	"flag"
-	"mole/table"
 	"io"
 	"io/ioutil"
+	"mole/table"
 	"os/exec"
 	"runtime"
 )
@@ -61,11 +61,9 @@ func installCommand(args []string) {
 		_, err = cmd.CombinedOutput()
 		fatalErr(err)
 
-		becomeRoot()
 		cmd = exec.Command(td+"/install.sh", td)
 		_, err = cmd.CombinedOutput()
 		fatalErr(err)
-		dropRoot()
 
 		okln("Installed")
 	}

@@ -58,9 +58,6 @@ func (p OpenConnectProvider) Start(cfg *conf.Config) (VPN, error) {
 
 	}
 
-	becomeRoot()
-	defer dropRoot()
-
 	cmd := exec.Command(p.openconnectBinary, args...)
 
 	stdin, err := cmd.StdinPipe()
