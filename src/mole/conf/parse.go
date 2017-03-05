@@ -2,15 +2,13 @@ package conf
 
 import (
 	"fmt"
-	"regexp"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/calmh/ini"
 )
-
-var ipRe = regexp.MustCompile(`^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|(\[[0-9a-f]*:[0-9a-f:]*\])$`)
 
 func parse(ic ini.Config) (cp *Config, err error) {
 	c := Config{}
@@ -220,19 +218,20 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			forw.Comments = append(forw.Comments, strings.Split(v, "\n")...)
 			continue
 		}
-		if(k[0] == '[') {
+		if k[0] == '[' {
 			srcfs = strings.SplitN(k, "]", 2)
+			if net.ParseIP(srcfs[0][1:]) == nil {
+				err = fmt.Errorf("Malformated forward source ipv6 addr %q", k)
+			}
 			srcfs[0] = srcfs[0] + "]"
 			srcfs[1] = srcfs[1][1:]
 		} else {
 			srcfs = strings.SplitN(k, ":", 2)
+			if net.ParseIP(srcfs[0]) == nil {
+				err = fmt.Errorf("Malformated forward source ipv4 addr %q", k)
+			}
 		}
 		if len(srcfs) != 2 || len(srcfs[0]) == 0 || len(srcfs[1]) == 0 {
-			err = fmt.Errorf("malformed forward source %q", k)
-			return
-		}
-
-		if !ipRe.MatchString(srcfs[0]) {
 			err = fmt.Errorf("malformed forward source %q", k)
 			return
 		}
@@ -246,17 +245,18 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			repeat = 0
 		}
 
-		if(v[0] == '[') {
+		if v[0] == '[' {
 			dstfs = strings.SplitN(v, "]", 2)
+			if net.ParseIP(dstfs[0][1:]) == nil {
+				err = fmt.Errorf("Malformated forward destination ipv6 addr %q", k)
+			}
 			dstfs[0] = dstfs[0] + "]"
 			dstfs[1] = dstfs[1][1:]
 		} else {
 			dstfs = strings.SplitN(v, ":", 2)
-		}
-
-		if !ipRe.MatchString(dstfs[0]) {
-			err = fmt.Errorf("malformed forward destination type %q", v)
-			return
+			if net.ParseIP(dstfs[0][1:]) == nil {
+				err = fmt.Errorf("Malformated forward destination ipv4 addr %q", k)
+			}
 		}
 
 		if len(dstfs) == 2 {
