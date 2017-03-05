@@ -107,7 +107,7 @@ func ifconfigAddresses(command string, addrs []string) {
 
 	lo := loInterface()
 	for _, addr := range addrs {
-		debugln(ifconfig, lo, command, addr)
+		debugln("ifconfig", lo, command, addr)
 		out, err := exec.Command("ifconfig", lo, command, addr).CombinedOutput()
 		if err != nil {
 			os.Stdout.Write(out)
