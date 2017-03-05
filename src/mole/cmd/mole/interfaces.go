@@ -13,7 +13,7 @@ import (
 )
 
 var errNoLoopbackFound = errors.New("no loopback interface found")
-var keepAddressRe = regexp.MustCompile(`^127\.0\.0\.([0-9]|[0-2][0-9]|3[0-1])$`)
+var keepAddressRe = regexp.MustCompile(`^(127\.0\.0\.([0-9]|[0-2][0-9]|3[0-1])|::1)$`)
 
 func loInterface() string {
 	intfs, err := net.Interfaces()
