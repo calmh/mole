@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -58,8 +56,8 @@ func missingAddresses(cfg *conf.Config) []string {
 
 	var missing []string
 	for _, ip := range wanted {
-		if(ip[0] == '[') {
-			ip = ip[1:len(ip)-1]
+		if ip[0] == '[' {
+			ip = ip[1 : len(ip)-1]
 		}
 		if !curMap[ip] {
 			missing = append(missing, ip)
@@ -74,8 +72,8 @@ func extraneousAddresses(cfg *conf.Config) []string {
 	added := cfg.SourceAddresses()
 	addedMap := make(map[string]bool)
 	for _, ip := range added {
-		if(ip[0] == '[') {
-			ip = ip[1:len(ip)-1]
+		if ip[0] == '[' {
+			ip = ip[1 : len(ip)-1]
 		}
 		addedMap[ip] = true
 	}
@@ -108,16 +106,12 @@ func ifconfigAddresses(command string, addrs []string) {
 	requireRoot("ifconfig")
 
 	lo := loInterface()
-	var cmd bytes.Buffer
-	for i := range addrs {
-		_, _ = cmd.WriteString(fmt.Sprintf("ifconfig %s %s %s;", lo, command, addrs[i]))
+	for _, addr := range addrs {
+		debugln(ifconfig, lo, command, addr)
+		out, err := exec.Command("ifconfig", lo, command, addr).CombinedOutput()
+		if err != nil {
+			os.Stdout.Write(out)
+			fatalErr(err)
+		}
 	}
-
-	debugln(cmd.String())
-	ifconfig := exec.Command("bash", "-c", cmd.String())
-	ifconfig.Stderr = os.Stderr
-	ifconfig.Stdout = os.Stdout
-	ifconfig.Stdin = os.Stdin
-	err := ifconfig.Run()
-	fatalErr(err)
 }
