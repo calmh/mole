@@ -26,7 +26,7 @@ const (
 
 	msgDebugEnabled = "Debug output enabled."
 
-	msgErrGainRoot         = "Error: missing root privileges to execute %q.\nTo give mole root access, execute it using sudo. Mole itself drops root privilege on startup and executes as the non privileged user. However, child processes such as ifconfig will inherit the saved user ID and have the ability to become root as necessary."
+	msgErrGainRoot         = "Error: missing root privileges to execute %q.\nTo give mole root access, execute it using sudo."
 	msgErrNoVPN            = "No VPN provider for %q available. Try 'mole install' to see what packages are available or use the packaging system native to your platform."
 	msgErrIncorrectFwd     = "Badly formatted fwd command %q."
 	msgErrIncorrectFwdSrc  = "Badly formatted fwd source %q."
