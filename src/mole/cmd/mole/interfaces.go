@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -102,16 +100,12 @@ func ifconfigAddresses(command string, addrs []string) {
 	requireRoot("ifconfig")
 
 	lo := loInterface()
-	var cmd bytes.Buffer
-	for i := range addrs {
-		_, _ = cmd.WriteString(fmt.Sprintf("ifconfig %s %s %s;", lo, command, addrs[i]))
+	for _, addr := range addrs {
+		debugln(ifconfig, lo, command, addr)
+		out, err := exec.Command("ifconfig", lo, command, addr).CombinedOutput()
+		if err != nil {
+			os.Stdout.Write(out)
+			fatalErr(err)
+		}
 	}
-
-	debugln(cmd.String())
-	ifconfig := exec.Command("sh", "-c", cmd.String())
-	ifconfig.Stderr = os.Stderr
-	ifconfig.Stdout = os.Stdout
-	ifconfig.Stdin = os.Stdin
-	err := ifconfig.Run()
-	fatalErr(err)
 }
