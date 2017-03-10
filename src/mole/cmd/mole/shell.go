@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/sbinet/liner"
+	"io"
 	"mole/ansi"
 	"mole/conf"
 	"mole/table"
-	"github.com/sbinet/liner"
-	"io"
+	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -148,11 +149,17 @@ func shell(fwdChan chan<- conf.ForwardLine, cfg *conf.Config, dialer Dialer) {
 				warnln(err)
 				break
 			}
+			srcpa := conf.Addrports{
+				Addr:  net.ParseIP(src[0]),
+				Ports: []int{srcp},
+			}
+			dstpa := conf.Addrports{
+				Addr:  net.ParseIP(dst[0]),
+				Ports: []int{dstp},
+			}
 			fwd := conf.ForwardLine{
-				SrcIP:   src[0],
-				SrcPort: srcp,
-				DstIP:   dst[0],
-				DstPort: dstp,
+				Src: srcpa,
+				Dst: dstpa,
 			}
 			okln("add", fwd)
 			fwdChan <- fwd
@@ -218,7 +225,7 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 			go func(fwd conf.Forward) {
 				nlines := 0
 				for _, line := range fwd.Lines {
-					nlines += line.Repeat + 1
+					nlines += len(line.Src.Ports)
 				}
 
 				res := forwardTest{name: fwd.Name}
@@ -229,7 +236,7 @@ func testForwards(dialer Dialer, cfg *conf.Config) <-chan forwardTest {
 				j := 0
 
 				for _, line := range fwd.Lines {
-					for i := 0; i <= line.Repeat; i++ {
+					for i := 0; i < len(line.Src.Ports); i++ {
 						// Do each line in parallell
 						go func(line conf.ForwardLine, i, j int) {
 							outstanding <- true
@@ -267,7 +274,7 @@ func testLineIndex(dialer Dialer, line conf.ForwardLine, i int) <-chan error {
 	}()
 
 	go func() {
-		debugln("test", line.DstString(i))
+		debugln("test, Src:", line.SrcString(i), " Dst:", line.DstString(i))
 		conn, err := dialer.Dial("tcp", line.DstString(i))
 		if err == nil && conn != nil {
 			conn.Close()

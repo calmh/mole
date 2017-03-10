@@ -161,7 +161,7 @@ func TestHosts(t *testing.T) {
 func TestForwards(t *testing.T) {
 	cfg, _ := loadFile("test/valid-forwards.ini")
 
-	if l := len(cfg.Forwards); l != 2 {
+	if l := len(cfg.Forwards); l != 5 {
 		t.Errorf("Incorrect len(Forwards) %d", l)
 	}
 
@@ -171,37 +171,37 @@ func TestForwards(t *testing.T) {
 	}
 
 	l1 := f.Lines[0]
-	if l1.SrcIP != "127.0.0.1" {
-		t.Errorf("Incorrect SrcIP %q", l1.SrcIP)
+	if l1.Src.Addr.String() != "127.0.0.1" {
+		t.Errorf("Incorrect SrcIP %q", l1.Src.Addr.String())
 	}
-	if l1.SrcPort != 42000 {
-		t.Errorf("Incorrect SrcPort %d", l1.SrcPort)
+	if l1.Src.Ports[0] != 42000 {
+		t.Errorf("Incorrect SrcPort %d", l1.Src.Ports[0])
 	}
-	if l1.DstIP != "192.168.173.10" {
-		t.Errorf("Incorrect DstIP %q", l1.DstIP)
+	if l1.Dst.Addr.String() != "192.168.173.10" {
+		t.Errorf("Incorrect DstIP %q", l1.Dst.Addr.String())
 	}
-	if l1.DstPort != 42000 {
-		t.Errorf("Incorrect DstPort %d", l1.DstPort)
+	if l1.Dst.Ports[0] != 42000 {
+		t.Errorf("Incorrect DstPort %d", l1.Dst.Ports[0])
 	}
-	if l1.Repeat != 2 {
-		t.Errorf("Incorrect Repeat %d", l1.Repeat)
+	if len(l1.Src.Ports) != 3 || len(l1.Dst.Ports) != 3 {
+		t.Errorf("Incorrect port range %d", l1.Src.Ports)
 	}
 
 	l2 := f.Lines[1]
-	if l2.SrcIP != "127.0.0.1" {
-		t.Errorf("Incorrect l2 SrcIP %q", l2.SrcIP)
+	if l2.Src.Addr.String() != "127.0.0.1" {
+		t.Errorf("Incorrect l2 SrcIP %q", l2.Src.Addr.String())
 	}
-	if l2.SrcPort != 8443 {
-		t.Errorf("Incorrect l2 SrcPort %d", l2.SrcPort)
+	if l2.Src.Ports[0] != 8443 {
+		t.Errorf("Incorrect l2 SrcPort %d", l2.Src.Ports[0])
 	}
-	if l2.DstIP != "192.168.173.10" {
-		t.Errorf("Incorrect l2 DstIP %q", l2.DstIP)
+	if l2.Dst.Addr.String() != "192.168.173.10" {
+		t.Errorf("Incorrect l2 DstIP %q", l2.Dst.Addr.String())
 	}
-	if l2.DstPort != 443 {
-		t.Errorf("Incorrect l2 DstPort %d", l2.DstPort)
+	if l2.Dst.Ports[0] != 443 {
+		t.Errorf("Incorrect l2 DstPort %d", l2.Dst.Ports[0])
 	}
-	if l2.Repeat != 0 {
-		t.Errorf("Incorrect l2 Repeat %d", l2.Repeat)
+	if len(l2.Src.Ports) != 1 || len(l2.Dst.Ports) != 1 {
+		t.Errorf("Incorrect l2 port range %d", l2.Src.Ports)
 	}
 
 	f = cfg.Forwards[1]

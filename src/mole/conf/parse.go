@@ -2,15 +2,13 @@ package conf
 
 import (
 	"fmt"
-	"regexp"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
 
 	"mole/ini"
 )
-
-var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)
 
 func parse(ic ini.Config) (cp *Config, err error) {
 	c := Config{}
@@ -21,7 +19,6 @@ func parse(ic ini.Config) (cp *Config, err error) {
 
 	for _, section := range ic.Sections() {
 		options := ic.OptionMap(section)
-
 		if section == "general" {
 			err := parseGeneral(&c, options)
 			if err != nil {
@@ -90,7 +87,7 @@ func parse(ic ini.Config) (cp *Config, err error) {
 	for _, fwd := range c.Forwards {
 		for _, line := range fwd.Lines {
 			// Check for duplicate forwards
-			for i := 0; i <= line.Repeat; i++ {
+			for i := 0; i < len(line.Src.Ports); i++ {
 				src := line.SrcString(i)
 				if seenSources[src] {
 					err = fmt.Errorf("duplicate forward source %q", src)
@@ -100,8 +97,8 @@ func parse(ic ini.Config) (cp *Config, err error) {
 			}
 
 			// Check for privileged ports
-			if line.SrcPort < 1024 {
-				err = fmt.Errorf("privileged source port %d in forward source %q", line.SrcPort, line.SrcString(0))
+			if line.Src.Ports[0] < 1024 {
+				err = fmt.Errorf("privileged source port %d in forward source %q", line.Src.Ports[0], line.SrcString(0))
 				return
 			}
 		}
@@ -213,61 +210,82 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 	forw = Forward{Name: name}
 	forw.Other = make(map[string]string)
 
-	var srcfs, dstfs, srcps []string
-	var srcport, dstport, repeat int
+	var srcps, dstps []string
+	var srcipstr, dstipstr, srcportsstr, dstportsstr string
+	var srcip, dstip net.IP
+	var srcport, dstport int
+	var srcports, dstports []int
 	for k, v := range options {
 		if k == "comment" {
 			forw.Comments = append(forw.Comments, strings.Split(v, "\n")...)
 			continue
 		}
-
-		srcfs = strings.SplitN(k, ":", 2)
-		if len(srcfs) != 2 || len(srcfs[0]) == 0 || len(srcfs[1]) == 0 {
+		srcipstr, srcportsstr, err = net.SplitHostPort(k)
+		if err != nil {
+			err = fmt.Errorf("malformed forward source %q", k)
+			return
+		}
+		srcip = net.ParseIP(srcipstr)
+		if srcip == nil {
+			err = fmt.Errorf("malformed forward source address %q", k)
+			return
+		}
+		if len(srcportsstr) == 0 {
 			err = fmt.Errorf("malformed forward source %q", k)
 			return
 		}
 
-		if !ipRe.MatchString(srcfs[0]) {
-			err = fmt.Errorf("malformed forward source %q", k)
-			return
-		}
-
-		srcps = strings.SplitN(srcfs[1], "-", 2)
+		srcps = strings.SplitN(srcportsstr, "-", 2)
 		srcport, _ = strconv.Atoi(srcps[0])
 		if len(srcps) == 2 {
 			ep, _ := strconv.Atoi(srcps[1])
-			repeat = ep - srcport
+			srcports = MakeRangeArray(srcport, ep)
 		} else {
-			repeat = 0
+			srcports = []int{srcport}
 		}
 
-		dstfs = strings.SplitN(v, ":", 2)
-
-		if !ipRe.MatchString(dstfs[0]) {
-			err = fmt.Errorf("malformed forward destination %q", v)
+		dstipstr, dstportsstr, err = net.SplitHostPort(v)
+		if err != nil {
+			dstipstr, _, err = net.SplitHostPort(v + ":0")
+			dstportsstr = srcportsstr
+		}
+		dstip = net.ParseIP(dstipstr)
+		if dstip == nil {
+			err = fmt.Errorf("malformed forward destination address %q", v)
 			return
 		}
 
-		if len(dstfs) == 2 {
-			if repeat > 0 {
-				err = fmt.Errorf("malformed forward destination %q (port range)", v)
-				return
-			}
-			if len(dstfs[0]) == 0 || len(dstfs[1]) == 0 {
-				err = fmt.Errorf("malformed forward destination %q", v)
-				return
-			}
-			dstport, _ = strconv.Atoi(dstfs[1])
+		if len(dstportsstr) == 0 {
+			err = fmt.Errorf("malformed forward destination %q", v)
+			return
+		}
+		dstps = strings.SplitN(dstportsstr, "-", 2)
+		dstport, _ = strconv.Atoi(dstps[0])
+		if len(dstps) == 2 {
+			ep, _ := strconv.Atoi(dstps[1])
+			dstports = MakeRangeArray(dstport, ep)
+		} else if len(dstps) == 1 {
+			dstports = []int{dstport}
 		} else {
-			dstport = srcport
+			dstports = srcports
+		}
+		if len(dstports) != len(srcports) {
+			err = fmt.Errorf("malformed forward, portranges not equally sized %q", v)
+			return
+		}
+
+		src := Addrports{
+			Addr:  srcip,
+			Ports: srcports,
+		}
+		dst := Addrports{
+			Addr:  dstip,
+			Ports: dstports,
 		}
 
 		l := ForwardLine{
-			SrcIP:   srcfs[0],
-			SrcPort: srcport,
-			DstIP:   dstfs[0],
-			DstPort: dstport,
-			Repeat:  repeat,
+			Src: src,
+			Dst: dst,
 		}
 
 		forw.Lines = append(forw.Lines, l)
@@ -275,4 +293,12 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 
 	forw.Comments = append(forw.Comments, ic.Comments(section)...)
 	return
+}
+
+func MakeRangeArray(start, stop int) []int {
+	array := make([]int, stop-start+1)
+	for i := range array {
+		array[i] = start + i
+	}
+	return array
 }

@@ -13,7 +13,7 @@ import (
 )
 
 var errNoLoopbackFound = errors.New("no loopback interface found")
-var keepAddressRe = regexp.MustCompile(`^127\.0\.0\.([0-9]|[0-2][0-9]|3[0-1])$`)
+var keepAddressRe = regexp.MustCompile(`^(127\.0\.0\.([0-9]|[0-2][0-9]|3[0-1])|::1)$`)
 
 func loInterface() string {
 	intfs, err := net.Interfaces()
@@ -56,6 +56,9 @@ func missingAddresses(cfg *conf.Config) []string {
 
 	var missing []string
 	for _, ip := range wanted {
+		if ip[0] == '[' {
+			ip = ip[1 : len(ip)-1]
+		}
 		if !curMap[ip] {
 			missing = append(missing, ip)
 		}
@@ -69,6 +72,9 @@ func extraneousAddresses(cfg *conf.Config) []string {
 	added := cfg.SourceAddresses()
 	addedMap := make(map[string]bool)
 	for _, ip := range added {
+		if ip[0] == '[' {
+			ip = ip[1 : len(ip)-1]
+		}
 		addedMap[ip] = true
 	}
 

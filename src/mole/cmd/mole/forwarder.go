@@ -34,7 +34,7 @@ func startForwarder(dialer Dialer) chan<- conf.ForwardLine {
 	fwdChan := make(chan conf.ForwardLine)
 	go func() {
 		for line := range fwdChan {
-			for i := 0; i <= line.Repeat; i++ {
+			for i := 0; i < len(line.Src.Ports); i++ {
 				src := line.SrcString(i)
 				dst := line.DstString(i)
 
