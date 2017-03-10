@@ -53,7 +53,7 @@ func addToHostsFile(tag string, domain string, cfg *conf.Config) {
 		if domain != "" {
 			name = name + "." + domain
 		}
-		ip := fwd.Lines[0].SrcIP
+		ip := fwd.Lines[0].Src.Addr.String()
 		entries = append(entries, hosts.Entry{IP: ip, Names: []string{name}})
 	}
 

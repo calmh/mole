@@ -3,6 +3,7 @@ package conf
 import (
 	"fmt"
 	"io"
+	"net"
 	"sort"
 
 	"github.com/calmh/ini"
@@ -66,42 +67,59 @@ type Forward struct {
 	Comments []string
 }
 
+// Addr is a composite type of IPAddr and TCP ports
+type Addrports struct {
+	Addr  net.IP
+	Ports []int
+}
+
 // ForwardLine is a specific port or range or ports to forward
 type ForwardLine struct {
-	SrcIP   string
-	SrcPort int
-	DstIP   string
-	DstPort int
-	Repeat  int
+	Src Addrports
+	Dst Addrports
+	//SrcIP   string
+	//SrcPort int
+	//DstIP   string
+	//DstPort int
+	//Repeat  int
 }
 
 // SrcString returns the source IP address and port as a string formatted for
 // use with Dial() and similar.
 func (line ForwardLine) SrcString(i int) string {
-	if i > line.Repeat {
+	if i >= len(line.Src.Ports) {
 		panic("index > repeat")
 	}
-	return fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort+i)
+	if line.Src.Addr.To4() != nil {
+		return fmt.Sprintf("%s:%d", line.Src.Addr.String(), line.Src.Ports[i])
+	} else {
+		return fmt.Sprintf("[%s]:%d", line.Src.Addr.String(), line.Src.Ports[i])
+	}
 }
 
 // DstString returns the destination IP address and port as a string formatted for
 // use with Dial() and similar.
 func (line ForwardLine) DstString(i int) string {
-	if i > line.Repeat {
+	//if i > line.Repeat {
+	if i >= len(line.Dst.Ports) {
 		panic("index > repeat")
 	}
-	return fmt.Sprintf("%s:%d", line.DstIP, line.DstPort+i)
+	if line.Dst.Addr.To4() != nil {
+		return fmt.Sprintf("%s:%d", line.Dst.Addr.String(), line.Dst.Ports[i])
+	} else {
+		return fmt.Sprintf("[%s]:%d", line.Dst.Addr.String(), line.Dst.Ports[i])
+	}
 }
 
 // String returns a human readable representation of the port forward.
 func (line ForwardLine) String() string {
-	if line.Repeat == 0 {
-		src := fmt.Sprintf("%s:%d", line.SrcIP, line.SrcPort)
-		dst := fmt.Sprintf("%s:%d", line.DstIP, line.DstPort)
+	if len(line.Src.Ports) == 1 {
+		src := fmt.Sprintf("%s:%d", line.Src.Addr.String(), line.Src.Ports[0])
+		dst := fmt.Sprintf("%s:%d", line.Dst.Addr.String(), line.Dst.Ports[0])
 		return fmt.Sprintf("%s -> %s", src, dst)
 	}
-	src := fmt.Sprintf("%s:%d-%d", line.SrcIP, line.SrcPort, line.SrcPort+line.Repeat)
-	dst := fmt.Sprintf("%s:%d-%d", line.DstIP, line.DstPort, line.DstPort+line.Repeat)
+	src := fmt.Sprintf("%s:%d-%d", line.Src.Addr.String(), line.Src.Ports[0], line.Src.Ports[len(line.Src.Ports)-1])
+	dst := fmt.Sprintf("%s:%d-%d", line.Dst.Addr.String(), line.Dst.Ports[0], line.Dst.Ports[len(line.Src.Ports)-1])
 	return fmt.Sprintf("%s -> %s", src, dst)
 }
 
@@ -117,7 +135,7 @@ func (c *Config) SourceAddresses() []string {
 	addrMap := make(map[string]bool)
 	for _, fwd := range c.Forwards {
 		for _, line := range fwd.Lines {
-			addrMap[line.SrcIP] = true
+			addrMap[line.Src.Addr.String()] = true
 		}
 	}
 
@@ -137,11 +155,13 @@ func (c *Config) Remap() {
 	port := 10000
 	for fi := range c.Forwards {
 		for li := range c.Forwards[fi].Lines {
-			if c.Forwards[fi].Lines[li].SrcIP != "127.0.0.1" && c.Forwards[fi].Lines[li].SrcIP != "[::1]" {
+			if c.Forwards[fi].Lines[li].Src.Addr.String() != "127.0.0.1" && c.Forwards[fi].Lines[li].Src.Addr.String() != "[::1]" {
 				// BUG: Need to keep track of used ports and not try to use them twice.
-				c.Forwards[fi].Lines[li].SrcIP = "127.0.0.1"
-				c.Forwards[fi].Lines[li].SrcPort = port
-				port += c.Forwards[fi].Lines[li].Repeat + 1
+				c.Forwards[fi].Lines[li].Src.Addr = net.ParseIP("127.0.0.1")
+				for sp := range c.Forwards[fi].Lines[li].Src.Ports {
+					c.Forwards[fi].Lines[li].Src.Ports[sp] = port
+					port += 1
+				}
 			}
 		}
 	}
