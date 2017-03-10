@@ -228,6 +228,11 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 		srcip = net.ParseIP(srcipstr)
 		if srcip == nil {
 			err = fmt.Errorf("malformed forward source address %q", k)
+			return
+		}
+		if len(srcportsstr) == 0 {
+			err = fmt.Errorf("malformed forward source %q", k)
+			return
 		}
 
 		srcps = strings.SplitN(srcportsstr, "-", 2)
@@ -250,6 +255,10 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			return
 		}
 
+		if len(dstportsstr) == 0 {
+			err = fmt.Errorf("malformed forward destination %q", v)
+			return
+		}
 		dstps = strings.SplitN(dstportsstr, "-", 2)
 		dstport, _ = strconv.Atoi(dstps[0])
 		if len(dstps) == 2 {
