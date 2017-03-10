@@ -77,11 +77,6 @@ type Addrports struct {
 type ForwardLine struct {
 	Src Addrports
 	Dst Addrports
-	//SrcIP   string
-	//SrcPort int
-	//DstIP   string
-	//DstPort int
-	//Repeat  int
 }
 
 // SrcString returns the source IP address and port as a string formatted for

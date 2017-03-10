@@ -222,12 +222,12 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 		}
 		srcipstr, srcportsstr, err = net.SplitHostPort(k)
 		if err != nil {
-			err = fmt.Errorf("Malformated forward source %q", k)
+			err = fmt.Errorf("malformed forward source %q", k)
 			return
 		}
 		srcip = net.ParseIP(srcipstr)
 		if srcip == nil {
-			err = fmt.Errorf("Malformated forward source address %q", k)
+			err = fmt.Errorf("malformed forward source address %q", k)
 		}
 
 		srcps = strings.SplitN(srcportsstr, "-", 2)
@@ -246,7 +246,7 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 		}
 		dstip = net.ParseIP(dstipstr)
 		if dstip == nil {
-			err = fmt.Errorf("Malformated forward destination address %q", v)
+			err = fmt.Errorf("malformed forward destination address %q", v)
 			return
 		}
 
@@ -259,6 +259,10 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 			dstports = []int{dstport}
 		} else {
 			dstports = srcports
+		}
+		if len(dstports) != len(srcports) {
+			err = fmt.Errorf("malformed forward, portranges not equally sized %q", v)
+			return
 		}
 
 		src := Addrports{
