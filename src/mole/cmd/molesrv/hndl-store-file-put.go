@@ -8,7 +8,7 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/calmh/ini"
+	"mole/ini"
 	"mole/conf"
 )
 

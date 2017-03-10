@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/calmh/ini"
+	"mole/ini"
 	"mole/ansi"
 )
 

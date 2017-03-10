@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/calmh/ini"
+	"mole/ini"
 )
 
 var ipRe = regexp.MustCompile(`^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)

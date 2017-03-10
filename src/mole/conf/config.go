@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/calmh/ini"
+	"mole/ini"
 )
 
 const (
