@@ -20,7 +20,7 @@ buildClient() {
 		tar zcf "mole-$arch.tar.gz" bin
 
 		mv bin/* auto
-		hash=$(sha1sum auto/mole-$arch | awk '{print $1}')
+		hash=$(shasum auto/mole-$arch | awk '{print $1}')
 		echo "{\"buildstamp\":$buildstamp, \"version\":\"$buildver\", \"hash\":\"$hash\"}" >> "auto/mole-$arch.json"
 		gzip -9 "auto/mole-$arch"
 	done
