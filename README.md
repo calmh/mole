@@ -1,4 +1,4 @@
-mole
+
 ====
 
 Elevator Pitch
@@ -60,4 +60,3 @@ License
 -------
 
 MIT
-
