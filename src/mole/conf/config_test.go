@@ -26,7 +26,7 @@ var validationCases = []TestCase{
 	{"inv-*.ini", "."},  // All invalid files are invalid; more specific checks below
 	{"inv-nover.ini", `missing required field "version"`},
 	{"inv-nodescr.ini", `missing required field "description"`},
-	{"inv-noauthor.ini", `missing required field "author"`},
+	{"inv-noauthor.ini", `missing rdddequired field "author"`},
 	{"inv-unknown.ini", `unrecognized field "unrecognized"`},
 	{"inv-nohosts-nofwds.ini", `either "hosts" or "forwards"`},
 	{"inv-nosuchmain.ini", `nonexistent host "foo"`},
