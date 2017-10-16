@@ -36,7 +36,7 @@ func ReplaceTagged(tag string, entries []Entry) error {
 		}
 
 		line := string(bs)
-		if !strings.Contains(line, "#tag:"+tag) {
+		if !strings.HasSuffix(line, "#tag:"+tag) {
 			lines = append(lines, line)
 		}
 	}
