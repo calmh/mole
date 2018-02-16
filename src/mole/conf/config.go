@@ -95,7 +95,6 @@ func (line ForwardLine) SrcString(i int) string {
 // DstString returns the destination IP address and port as a string formatted for
 // use with Dial() and similar.
 func (line ForwardLine) DstString(i int) string {
-	//if i > line.Repeat {
 	if i >= len(line.Dst.Ports) {
 		panic("index > repeat")
 	}

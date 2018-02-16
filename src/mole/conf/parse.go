@@ -292,6 +292,11 @@ func parseForward(ic ini.Config, section string) (forw Forward, err error) {
 	}
 
 	forw.Comments = append(forw.Comments, ic.Comments(section)...)
+
+	sort.Slice(forw.Lines, func(a, b int) bool {
+		return forw.Lines[a].String() < forw.Lines[b].String()
+	})
+
 	return
 }
 
