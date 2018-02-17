@@ -16,7 +16,8 @@ buildClient() {
 		export GOOS=${arch%-*}
 		export GOARCH=${arch#*-}
 		rm -rf bin
-		gb build -ldflags "$ldflags" mole/cmd/mole
+		mkdir -p bin
+		go build -i -v -ldflags "$ldflags" -o "bin/mole-$arch" ./cmd/mole
 		tar zcf "mole-$arch.tar.gz" bin
 
 		mv bin/* auto
@@ -29,22 +30,22 @@ buildClient() {
 		export GOOS=${arch%-*}
 		export GOARCH=${arch#*-}
 		rm -rf bin
-		gb build -ldflags "$ldflags" mole/cmd/mole
+		mkdir -p bin
+		go build -i -v -ldflags "$ldflags" -o "bin/mole-$arch.exe" ./cmd/mole
 		zip -qr "mole-$arch.zip" bin
 	done
 	rm -rf bin
 }
 
 buildServer() {
-	rm -rf srv bin
+	rm -rf srv
 	mkdir srv
 	for arch in linux-386 linux-amd64 darwin-amd64 ; do
 		echo "$arch"
 		export GOOS=${arch%-*}
 		export GOARCH=${arch#*-}
-		gb build -ldflags "$ldflags" mole/cmd/molesrv
+		go build -i -v -ldflags "$ldflags" -o "srv/molesrv-$arch" ./cmd/molesrv
 	done
-	mv bin srv
 	tar zcf molesrv-all.tar.gz srv
 }
 
