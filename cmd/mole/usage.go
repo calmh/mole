@@ -73,7 +73,7 @@ func mainUsage(w io.Writer) {
 		}
 	}
 	tw.Flush()
-	fmt.Fprintln(w, "\n  Commands can be abbreviated to their unique prefix.\n")
+	fmt.Fprintf(w, "\n  Commands can be abbreviated to their unique prefix.\n\n")
 
 	fmt.Fprintln(w, ansi.Bold("Examples:"))
 	examples := [][]string{
